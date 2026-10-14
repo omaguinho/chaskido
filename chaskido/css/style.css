@@ -1,0 +1,401 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+/* ---------- Escenario: fondo CSS + lienzo ---------- */
+
+/* --s: escala entera de los píxeles; --x, --y: cámara en píxeles del juego */
+#stage {
+  --s: 1;
+  --x: 0;
+  --y: 0;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  overflow: hidden;
+  background: #1b1035;
+}
+
+#stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+/* Cada capa se mueve a su velocidad: lejos 10 %, medio 30 %, cerca 60 % de la cámara */
+.bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+.bg.far  { background-position: calc(var(--x) * var(--s) * -0.1px) calc(var(--y) * var(--s) * -0.03px); }
+.bg.mid  { background-position: calc(var(--x) * var(--s) * -0.3px) calc(var(--y) * var(--s) * -0.08px); }
+.bg.near { background-position: calc(var(--x) * var(--s) * -0.6px) calc(var(--y) * var(--s) * -0.15px); }
+
+.theme-none .bg { display: none; }
+
+/* ---------- Ciudad de día (city) ---------- */
+
+#stage.theme-city {
+  background: linear-gradient(#9fd3e0, #cfe8ef 60%, #fbf6ec);
+}
+/* Nubes lejanas y edificios claros al fondo */
+.theme-city .bg.far {
+  background-image:
+    radial-gradient(ellipse calc(26px * var(--s)) calc(8px * var(--s)) at 50% 50%, #ffffff 0 70%, transparent 72%),
+    linear-gradient(90deg, #b8c8dc 0 60%, transparent 60%),
+    linear-gradient(90deg, #aebfd6 0 45%, transparent 45%);
+  background-size:
+    calc(110px * var(--s)) calc(30px * var(--s)),
+    calc(34px * var(--s)) 50%,
+    calc(52px * var(--s)) 66%;
+  background-repeat: repeat-x;
+  background-position:
+    calc(var(--x) * var(--s) * -0.05px) calc(14px * var(--s)),
+    calc(var(--x) * var(--s) * -0.1px) 100%,
+    calc(var(--x) * var(--s) * -0.1px + 13px * var(--s)) 100%;
+}
+/* Edificios del medio con ventanas de vidrio (celestes) */
+.theme-city .bg.mid {
+  background-color: #7f93b0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 calc(3px * var(--s)), #7f93b0 calc(3px * var(--s)) calc(7px * var(--s))),
+    repeating-linear-gradient(90deg, #cfe8ff 0 calc(2px * var(--s)), #7f93b0 calc(2px * var(--s)) calc(5px * var(--s)));
+  background-position: calc(var(--x) * var(--s) * -0.3px) 0;
+  -webkit-mask-image:
+    linear-gradient(90deg, #000 0 55%, transparent 55%),
+    linear-gradient(90deg, #000 0 40%, transparent 40%);
+  mask-image:
+    linear-gradient(90deg, #000 0 55%, transparent 55%),
+    linear-gradient(90deg, #000 0 40%, transparent 40%);
+  -webkit-mask-size: calc(60px * var(--s)) 42%, calc(84px * var(--s)) 56%;
+  mask-size: calc(60px * var(--s)) 42%, calc(84px * var(--s)) 56%;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-position: calc(var(--x) * var(--s) * -0.3px) 100%, calc(var(--x) * var(--s) * -0.3px + 31px * var(--s)) 100%;
+  mask-position: calc(var(--x) * var(--s) * -0.3px) 100%, calc(var(--x) * var(--s) * -0.3px + 31px * var(--s)) 100%;
+  opacity: 0.8;
+}
+.theme-city .bg.near {
+  background-image:
+    linear-gradient(90deg, #4a5a78 0 50%, transparent 50%),
+    linear-gradient(90deg, #3f4d68 0 35%, transparent 35%);
+  background-size: calc(96px * var(--s)) 24%, calc(140px * var(--s)) 32%;
+  background-repeat: repeat-x;
+  background-position:
+    calc(var(--x) * var(--s) * -0.6px) 100%,
+    calc(var(--x) * var(--s) * -0.6px + 57px * var(--s)) 100%;
+  opacity: 0.75;
+}
+
+/* ---------- Ciudad al atardecer (cityday): naranja y crepúsculo ---------- */
+
+#stage.theme-cityday {
+  background: linear-gradient(#5b4a7a, #a8679a 30%, #e07a8f 52%, #f4a261 74%, #f7e3a1);
+}
+/* Nubes del atardecer y edificios a contraluz */
+.theme-cityday .bg.far {
+  background-image:
+    radial-gradient(ellipse calc(26px * var(--s)) calc(8px * var(--s)) at 50% 50%, #f7c9a8 0 70%, transparent 72%),
+    linear-gradient(90deg, #a8679a 0 60%, transparent 60%),
+    linear-gradient(90deg, #9a5d8f 0 45%, transparent 45%);
+  background-size:
+    calc(110px * var(--s)) calc(30px * var(--s)),
+    calc(34px * var(--s)) 50%,
+    calc(52px * var(--s)) 66%;
+  background-repeat: repeat-x;
+  background-position:
+    calc(var(--x) * var(--s) * -0.05px) calc(14px * var(--s)),
+    calc(var(--x) * var(--s) * -0.1px) 100%,
+    calc(var(--x) * var(--s) * -0.1px + 13px * var(--s)) 100%;
+}
+/* Edificios del medio con ventanas que reflejan el sol */
+.theme-cityday .bg.mid {
+  background-color: #7a4f7c;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 calc(3px * var(--s)), #7a4f7c calc(3px * var(--s)) calc(7px * var(--s))),
+    repeating-linear-gradient(90deg, #f7e3a1 0 calc(2px * var(--s)), #7a4f7c calc(2px * var(--s)) calc(5px * var(--s)));
+  background-position: calc(var(--x) * var(--s) * -0.3px) 0;
+  -webkit-mask-image:
+    linear-gradient(90deg, #000 0 55%, transparent 55%),
+    linear-gradient(90deg, #000 0 40%, transparent 40%);
+  mask-image:
+    linear-gradient(90deg, #000 0 55%, transparent 55%),
+    linear-gradient(90deg, #000 0 40%, transparent 40%);
+  -webkit-mask-size: calc(60px * var(--s)) 42%, calc(84px * var(--s)) 56%;
+  mask-size: calc(60px * var(--s)) 42%, calc(84px * var(--s)) 56%;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-position: calc(var(--x) * var(--s) * -0.3px) 100%, calc(var(--x) * var(--s) * -0.3px + 31px * var(--s)) 100%;
+  mask-position: calc(var(--x) * var(--s) * -0.3px) 100%, calc(var(--x) * var(--s) * -0.3px + 31px * var(--s)) 100%;
+  opacity: 0.8;
+}
+.theme-cityday .bg.near {
+  background-image:
+    linear-gradient(90deg, #4a3358 0 50%, transparent 50%),
+    linear-gradient(90deg, #3e2b4c 0 35%, transparent 35%);
+  background-size: calc(96px * var(--s)) 24%, calc(140px * var(--s)) 32%;
+  background-repeat: repeat-x;
+  background-position:
+    calc(var(--x) * var(--s) * -0.6px) 100%,
+    calc(var(--x) * var(--s) * -0.6px + 57px * var(--s)) 100%;
+  opacity: 0.75;
+}
+
+/* ---------- Ciudad junto al mar con molinos de viento (sea) ---------- */
+
+/* Cielo, mar abajo con olas, casas bajas y molinos que giran (los molinos son
+   elementos que crea background.js; aquí solo su forma y su giro) */
+#stage.theme-sea {
+  background: linear-gradient(#7fd0ff, #c4ecff 55%, #f2fbff 64%, #2f8fc4 65%, #1f6f9e);
+}
+.theme-sea .bg.far {
+  /* olas: rayas claras que se mueven lento */
+  background-image: repeating-linear-gradient(0deg,
+    transparent 0 calc(5px * var(--s)), rgba(255, 255, 255, 0.35) calc(5px * var(--s)) calc(6px * var(--s)));
+  background-position: calc(var(--x) * var(--s) * -0.05px) 0;
+  -webkit-mask-image: linear-gradient(transparent 0 65%, #000 65%);
+  mask-image: linear-gradient(transparent 0 65%, #000 65%);
+}
+.theme-sea .bg.mid {
+  /* casas de colores junto a la costa */
+  background-image:
+    linear-gradient(90deg, #f2d6a8 0 30%, transparent 30%),
+    linear-gradient(90deg, #f0b8a8 0 25%, transparent 25%),
+    linear-gradient(90deg, #ffffff 0 35%, transparent 35%);
+  background-size: calc(40px * var(--s)) 14%, calc(56px * var(--s)) 18%, calc(70px * var(--s)) 11%;
+  background-repeat: repeat-x;
+  background-position:
+    calc(var(--x) * var(--s) * -0.3px) 72%,
+    calc(var(--x) * var(--s) * -0.3px + 21px * var(--s)) 74%,
+    calc(var(--x) * var(--s) * -0.3px + 43px * var(--s)) 70%;
+  opacity: 0.9;
+}
+.theme-sea .bg.near {
+  /* muelle cercano */
+  background-image: linear-gradient(90deg, #6a4a3a 0 70%, transparent 70%);
+  background-size: calc(30px * var(--s)) 6%;
+  background-repeat: repeat-x;
+  background-position: calc(var(--x) * var(--s) * -0.6px) 100%;
+  opacity: 0.8;
+}
+
+/* Molinos de viento: torre blanca y aspas que giran */
+.turbines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+}
+.theme-sea .turbines { display: block; }
+.turbine {
+  position: absolute;
+  bottom: 35%;
+  width: calc(2px * var(--s));
+  height: calc(54px * var(--s));
+  background: #f4f7fb;
+}
+.turbine .rotor {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: calc(40px * var(--s));
+  height: calc(40px * var(--s));
+  margin: calc(-20px * var(--s)) 0 0 calc(-20px * var(--s));
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #dfe6ee 0 8%, transparent 9%),
+    repeating-conic-gradient(from 0deg, #ffffff 0 5deg, transparent 5deg 120deg);
+  animation: chasqui-spin 4s linear infinite;
+}
+.turbine:nth-child(2n) .rotor { animation-duration: 5s; }
+.turbine:nth-child(3n) .rotor { animation-duration: 3.4s; }
+@keyframes chasqui-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Bosque de bambú (bamboo) ---------- */
+
+#stage.theme-bamboo {
+  background: linear-gradient(#0b1a2a, #12324a 55%, #163d33);
+}
+.theme-bamboo .bg.far {
+  background-image: repeating-linear-gradient(90deg,
+    transparent 0, transparent calc(9px * var(--s)),
+    #1d4a5c calc(9px * var(--s)), #1d4a5c calc(11px * var(--s)),
+    transparent calc(11px * var(--s)), transparent calc(23px * var(--s)),
+    #1a3f52 calc(23px * var(--s)), #1a3f52 calc(26px * var(--s)),
+    transparent calc(26px * var(--s)), transparent calc(37px * var(--s)));
+  opacity: 0.8;
+}
+.theme-bamboo .bg.mid {
+  background-image:
+    repeating-linear-gradient(90deg,
+      transparent 0, transparent calc(14px * var(--s)),
+      #2f7a4a calc(14px * var(--s)), #3e9a5a calc(17px * var(--s)), #2f7a4a calc(19px * var(--s)),
+      transparent calc(19px * var(--s)), transparent calc(41px * var(--s)),
+      #276b44 calc(41px * var(--s)), #357f4e calc(43px * var(--s)),
+      transparent calc(43px * var(--s)), transparent calc(61px * var(--s)));
+  opacity: 0.55;
+}
+.theme-bamboo .bg.near {
+  background-image: repeating-linear-gradient(90deg,
+    transparent 0, transparent calc(70px * var(--s)),
+    #0f2a1e calc(70px * var(--s)), #174a2c calc(74px * var(--s)), #0f2a1e calc(78px * var(--s)),
+    transparent calc(78px * var(--s)), transparent calc(131px * var(--s)));
+  opacity: 0.7;
+}
+
+/* ---------- Cueva (cave): estalactitas arriba, estalagmitas abajo ---------- */
+
+#stage.theme-cave {
+  background: radial-gradient(ellipse at 50% 60%, #2a1c2e, #120a14 75%);
+}
+.theme-cave .bg.far {
+  background-image: radial-gradient(ellipse calc(30px * var(--s)) calc(20px * var(--s)),
+    #2c1f33 60%, transparent 62%);
+  background-size: calc(80px * var(--s)) calc(56px * var(--s));
+  opacity: 0.6;
+}
+.theme-cave .bg.mid {
+  /* estalactitas colgando del techo: solo se mueven de lado */
+  background-image: conic-gradient(from -25deg at 50% 100%, #46324c 0 50deg, transparent 0);
+  background-size: calc(40px * var(--s)) calc(70px * var(--s));
+  background-repeat: repeat-x;
+  background-position: calc(var(--x) * var(--s) * -0.3px) 0;
+}
+.theme-cave .bg.near {
+  /* estalagmitas desde el suelo, más cerca y más oscuras */
+  background-image: conic-gradient(from 155deg at 50% 0%, #2a1c30 0 50deg, transparent 0);
+  background-size: calc(64px * var(--s)) calc(80px * var(--s));
+  background-repeat: repeat-x;
+  background-position: calc(var(--x) * var(--s) * -0.6px) 100%;
+}
+
+/* ---------- Ciudad tecnológica futurista (tech) ---------- */
+
+#stage.theme-tech {
+  background: linear-gradient(#060814, #0d1430 60%, #1a0f2e);
+}
+.theme-tech .bg.far {
+  background-image:
+    repeating-linear-gradient(90deg, rgba(60, 200, 255, 0.12) 0 calc(1px * var(--s)),
+      transparent calc(1px * var(--s)) calc(16px * var(--s))),
+    repeating-linear-gradient(0deg, rgba(60, 200, 255, 0.12) 0 calc(1px * var(--s)),
+      transparent calc(1px * var(--s)) calc(16px * var(--s)));
+}
+.theme-tech .bg.mid {
+  background-image: repeating-linear-gradient(90deg,
+    transparent 0, transparent calc(24px * var(--s)),
+    #1b2650 calc(24px * var(--s)), #1b2650 calc(36px * var(--s)),
+    #3cc8ff calc(36px * var(--s)), #3cc8ff calc(37px * var(--s)),
+    transparent calc(37px * var(--s)), transparent calc(67px * var(--s)),
+    #16204a calc(67px * var(--s)), #16204a calc(75px * var(--s)),
+    transparent calc(75px * var(--s)), transparent calc(97px * var(--s)));
+  opacity: 0.7;
+}
+.theme-tech .bg.near {
+  background-image: repeating-linear-gradient(90deg,
+    transparent 0, transparent calc(110px * var(--s)),
+    rgba(255, 70, 200, 0.35) calc(110px * var(--s)), rgba(255, 70, 200, 0.35) calc(112px * var(--s)),
+    transparent calc(112px * var(--s)), transparent calc(170px * var(--s)));
+}
+
+/* ---------- Torre de los jefes (tower): interior de piedra ocre con columnas y arcos ---------- */
+
+#stage.theme-tower {
+  background: linear-gradient(#e9c46a, #e8c58e 40%, #d98b6a 85%, #a8603f);
+}
+/* Bloques de piedra lejanos */
+.theme-tower .bg.far {
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 calc(11px * var(--s)), rgba(91, 84, 120, 0.25) calc(11px * var(--s)) calc(12px * var(--s))),
+    repeating-linear-gradient(90deg, transparent 0 calc(23px * var(--s)), rgba(91, 84, 120, 0.2) calc(23px * var(--s)) calc(24px * var(--s)));
+}
+/* Columnas */
+.theme-tower .bg.mid {
+  background-image:
+    linear-gradient(90deg, transparent 0 40%, #c98a5c 40% 46%, #f3e3c3 46% 50%, #c98a5c 50% 60%, transparent 60%);
+  background-size: calc(80px * var(--s)) 100%;
+  background-repeat: repeat-x;
+  opacity: 0.8;
+}
+/* Arcos oscuros abajo */
+.theme-tower .bg.near {
+  background-image:
+    radial-gradient(ellipse calc(30px * var(--s)) calc(40px * var(--s)) at 50% 100%, #5b5478 0 60%, transparent 62%);
+  background-size: calc(120px * var(--s)) 45%;
+  background-position: calc(var(--x) * var(--s) * -0.6px) 100%;
+  background-repeat: repeat-x;
+  opacity: 0.55;
+}
+
+/* ---------- Legibilidad: que plataformas y objetos se distingan del fondo ---------- */
+/* --bg-fade: cuánto se lava el fondo (0 = tal cual, 1 = muy suave). Se cambia por tema.
+   Sirve igual para los fondos de CSS y para los dibujados (PNG). */
+#stage { --bg-fade: 0.3; --sat: 1; }
+/* Sala sin afinar: colores apagados hasta llevar la llave al tótem */
+#stage.muted { --sat: 0.42; }
+#stage.theme-sea { --bg-fade: 0.5; }
+#stage.theme-cityday { --bg-fade: 0.35; }
+.bg, .turbines {
+  transition: filter 1.6s ease;
+  filter:
+    saturate(calc((1 - var(--bg-fade) * 0.6) * var(--sat)))
+    contrast(calc(1 - var(--bg-fade) * 0.45))
+    brightness(calc(1 + var(--bg-fade) * 0.12));
+}
+/* Sombra de tinta bajo todo lo que se dibuja en el lienzo (bloques, objetos, personajes):
+   los despega del fondo. Si el teléfono va lento, cambia "drop-shadow(...)" por "none" */
+#stage canvas {
+  transition: filter 1.6s ease;
+  filter: saturate(var(--sat)) drop-shadow(0 calc(1px * var(--s)) 0 rgba(46, 42, 71, 0.55));
+}
+
+/* ---------- Boca de la Mina (mine): galerías ocres con vigas y cristales ---------- */
+
+#stage.theme-mine {
+  background: linear-gradient(#3a2a26, #5c3a28 45%, #a8603f);
+}
+.theme-mine .bg.far {
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 calc(46px * var(--s)), rgba(232, 197, 142, 0.25) calc(46px * var(--s)) calc(50px * var(--s)));
+}
+.theme-mine .bg.mid {
+  background-image: radial-gradient(circle calc(3px * var(--s)) at 50% 50%, #9fd3e0 0 60%, transparent 70%);
+  background-size: calc(70px * var(--s)) calc(50px * var(--s));
+  opacity: 0.6;
+}
+
+/* ---------- Salitas: tienda (cálida) y bonus (con banderines) ---------- */
+
+#stage.theme-salita_tienda {
+  background: linear-gradient(#5c3a20, #a0784a 70%, #e8c58e);
+}
+.theme-salita_tienda .bg.far {
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 calc(30px * var(--s)), rgba(46, 42, 71, 0.35) calc(30px * var(--s)) calc(32px * var(--s))),
+    radial-gradient(circle calc(4px * var(--s)) at 50% 50%, #f7e3a1 0 50%, transparent 60%);
+  background-size: 100% 100%, calc(40px * var(--s)) calc(32px * var(--s));
+}
+#stage.theme-salita_bonus {
+  background: linear-gradient(#3a3050, #a08cc4 60%, #f4b6c2);
+}
+.theme-salita_bonus .bg.far {
+  background-image: repeating-linear-gradient(90deg,
+    #e07a8f 0 calc(8px * var(--s)), #f7e3a1 calc(8px * var(--s)) calc(16px * var(--s)),
+    #9fd3e0 calc(16px * var(--s)) calc(24px * var(--s)));
+  background-size: 100% calc(10px * var(--s));
+  background-repeat: repeat-x;
+  opacity: 0.6;
+}

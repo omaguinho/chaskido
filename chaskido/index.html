@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script>
+    window.onerror = function (msg, src, line) {
+      var box = document.getElementById('errors');
+      if (!box) {
+        box = document.createElement('pre');
+        box.id = 'errors';
+        box.style.cssText = 'color:#0f0;position:fixed;top:0;left:0;z-index:9;white-space:pre-wrap;background:rgba(0,0,0,.8)';
+        document.documentElement.appendChild(box);
+      }
+      box.textContent += msg + '\n' + src + ':' + line + '\n\n';
+    };
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Chaskido</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body>
+  <!-- Escenario: 3 capas de fondo en CSS (parallax) y el lienzo del juego encima -->
+  <div id="stage" class="theme-none">
+    <div class="bg far"></div>
+    <div class="bg mid"></div>
+    <div class="bg near"></div>
+    <canvas id="game"></canvas>
+  </div>
+  <!-- Carga del juego: los archivos de js/ se piden de a uno y en este orden.
+       Si el servidor no entrega alguno (pasa en la vista previa cuando el proyecto
+       es grande), lo vuelve a pedir; si aun así falla, avisa arriba cuál y por qué.
+       Para agregar un archivo nuevo: súmalo a FILES en su lugar, con lo que define. -->
+  <script>
+    (function () {
+      // Súbelo cuando cambies archivos y el navegador siga mostrando lo viejo
+      const VERSION = 6;
+      const TRIES = 4;
+      const FILES = [
+        ['config.js', 'CONFIG'], ['util.js', 'clamp'], ['catalogo.js', 'CATALOGO'],
+        ['input.js', 'Input'], ['sprites.js', 'Sprites'], ['audio.js', 'Music'], ['sfx.js', 'Sfx'],
+        ['echoes.js', 'Echoes'], ['save.js', 'Save'], ['background.js', 'Backdrop'],
+        ['levels.js', 'LEVELS'], ['world.js', 'WORLD'], ['tower.js', 'TOWER'],
+        ['level.js', 'Level'], ['deco.js', 'Deco'], ['items.js', 'Items'], ['corcheas.js', 'Corcheas'],
+        ['player.js', 'Player'], ['ui.js', 'UI'], ['fx.js', 'Effects'], ['enemies.js', 'Enemies'],
+        ['bosses.js', 'BOSS_TYPES'], ['menu.js', 'PauseMenu'], ['game.js', 'Game'], ['main.js', null]
+      ];
+
+      function report(text) {
+        if (window.onerror) window.onerror(text, 'index.html', '');
+      }
+
+      function defined(name) {
+        return new Function('return typeof ' + name)() !== 'undefined';
+      }
+
+      // Después de todos los intentos: averigua si el archivo no está o no se pudo leer
+      function diagnose(path) {
+        fetch(path, { cache: 'no-store' }).then(function (r) {
+          report('Problema con ' + path + ': ' + (r.ok
+            ? 'el servidor no lo entregó a tiempo. Recarga la página.'
+            : 'no está en la carpeta js/ con ese nombre exacto (' + r.status + ').'));
+        }).catch(function () {
+          report('Problema con ' + path + ': no se pudo leer. ¿Sigue abierto el servidor de Acode?');
+        });
+      }
+
+      function load(i, attempt) {
+        if (i >= FILES.length) return;
+        const path = 'js/' + FILES[i][0];
+        const needs = FILES[i][1];
+        const tag = document.createElement('script');
+        tag.src = path + '?v=' + VERSION + (attempt ? '-' + attempt : '');
+        tag.onload = function () {
+          // Llegó, pero si tiene un error adentro no define lo suyo (el error sale arriba)
+          if (needs && !defined(needs)) {
+            return report('Problema con ' + path + ': tiene un error adentro o no es el archivo correcto (no define ' + needs + ').');
+          }
+          load(i + 1, 0);
+        };
+        tag.onerror = function () {
+          tag.remove();
+          if (attempt + 1 < TRIES) setTimeout(function () { load(i, attempt + 1); }, 300 * (attempt + 1));
+          else diagnose(path);
+        };
+        document.body.appendChild(tag);
+      }
+
+      load(0, 0);
+    })();
+  </script>
+</body>
+</html>

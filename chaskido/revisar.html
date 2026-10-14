@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chaskido · revisar archivos</title>
+  <style>
+    body { margin: 0; padding: 16px; font: 15px/1.4 system-ui, sans-serif; background: #1b1035; color: #fbf6ec; }
+    h1 { font-size: 20px; margin: 0 0 4px; color: #ffd34d; }
+    h2 { font-size: 16px; margin: 20px 0 6px; }
+    p { margin: 4px 0 12px; color: #c9c2d6; }
+    .sum { padding: 10px 12px; border-radius: 8px; background: #2e2a47; margin: 12px 0; }
+    ul { list-style: none; padding: 0; margin: 0; columns: 2 260px; }
+    li { padding: 2px 0; break-inside: avoid; font-family: monospace; font-size: 13px; }
+    .ok { color: #7bd389; }
+    .no { color: #ff6b8a; }
+    .wait { color: #9a93b0; }
+  </style>
+</head>
+<body>
+  <!-- Revisa qué dibujos y músicas están en assets/ con el nombre exacto.
+       Se abre igual que el juego (en Acode o con doble clic) desde la carpeta chaskido/. -->
+  <h1>Chaskido · ¿están todos los archivos?</h1>
+  <p>Verde: está. Rojo: falta o tiene otro nombre. El juego funciona aunque falten: dibuja un reemplazo simple en su lugar.</p>
+  <div class="sum" id="sum">Revisando…</div>
+  <div id="groups"></div>
+  <script>
+    const LIST = {"assets/sprites/": ["aji.png", "anilla.png", "ascensor.png", "aura_poder.png", "aviso.png", "aviso_accion.png", "aviso_boton.png", "banderita.png", "barrendero_aplastado.png", "barrendero_barrer.png", "barrendero_caminar.png", "bombo_cansado.png", "bombo_colgado.png", "bombo_dano.png", "bombo_derrota.png", "bombo_golpe.png", "bombo_quieto.png", "bombo_redoble.png", "bombo_rodar.png", "bombo_sacudir.png", "bombo_salto.png", "brillo_aji.png", "cartel.png", "cartel_mision.png", "cartel_zona.png", "charanguero_bola.png", "charanguero_dano.png", "charanguero_derrota.png", "charanguero_rasgueo.png", "charanguero_sacudir.png", "charanguero_salto.png", "charanguero_tocar.png", "chispa.png", "chispa_suelo.png", "cinta.png", "cocinera_hablar.png", "cocinera_quieta.png", "coco.png", "colibri_aplastado.png", "colibri_picada.png", "colibri_volar.png", "condor_dano.png", "condor_derrota.png", "condor_lanzar.png", "condor_picada.png", "condor_sacudir.png", "condor_volar.png", "corazon_extra.png", "corchea.png", "corchea_alerta.png", "corchea_huir.png", "corona_piedra.png", "cubo.png", "cuy_alerta.png", "cuy_aplastado.png", "cuy_caminar.png", "cuy_correr.png", "cuygig_dano.png", "cuygig_derrota.png", "cuygig_embestir.png", "cuygig_mareado.png", "cuygig_mirar.png", "cuygig_sacudir.png", "cuygig_salto.png", "cuygig_techo.png", "deco_antena.png", "deco_bote.png", "deco_cadena.png", "deco_cana_alta.png", "deco_cana_baja.png", "deco_casa.png", "deco_cristal.png", "deco_edificio.png", "deco_edificio_bajo.png", "deco_engranaje.png", "deco_enredadera.png", "deco_estalactita.png", "deco_estalagmita.png", "deco_farol.png", "deco_flores.png", "deco_helecho.png", "deco_letrero.png", "deco_liana.png", "deco_molino.png", "deco_mostrador.png", "deco_pantalla.png", "deco_pasto.png", "deco_piedritas.png", "deco_roca_chica.png", "deco_roca_grande.png", "deco_tanque.png", "deco_tuberia.png", "deco_ventana.png", "deco_viga.png", "disparador_aplastado.png", "disparador_carga.png", "disparador_quieto.png", "escarabajo_aplastado.png", "escarabajo_caminar.png", "escombros.png", "fruta.png", "fruto.png", "gancho.png", "guardando.png", "huaca_bumeran.png", "huaca_dano.png", "huaca_derrota.png", "huaca_desaparecer.png", "huaca_hundirse.png", "huaca_lanzar.png", "huaca_quieta.png", "huaca_sacudir.png", "humo.png", "iconos.png", "instrumento_cuerdas.png", "instrumento_tambor.png", "llave.png", "llave_brillo.png", "llave_color.png", "maiz.png", "mapa_marcas.png", "menu_iconos.png", "menu_marco.png", "mercader_hablar.png", "mercader_quieto.png", "molino_rotor.png", "moneda.png", "moneda_chica.png", "mono_aplastado.png", "mono_colgar.png", "mono_lanzar.png", "movil.png", "muro_arena.png", "muro_grieta.png", "nota.png", "nota_escala.png", "onda_bombo.png", "oruga_aplastada.png", "oruga_caminar.png", "paloma_aplastada.png", "paloma_picada.png", "paloma_volar.png", "papa_caida.png", "papa_colgada.png", "papa_correr.png", "papa_dano.png", "papa_dash.png", "papa_derrota.png", "papa_descanso.png", "papa_doble_salto.png", "papa_hablar.png", "papa_nadar.png", "papa_pared.png", "papa_planeo.png", "papa_poder.png", "papa_portal.png", "papa_quieta.png", "papa_salto.png", "pared_bamboo.png", "pared_cave.png", "pared_city.png", "pared_cityday.png", "pared_mine.png", "pared_sea.png", "pared_tech.png", "pared_tower.png", "piedra.png", "piedra_poder.png", "poderes.png", "poliedro_octaedro.png", "poliedro_piramide.png", "polvo.png", "poof.png", "porton.png", "posta.png", "posta_llama.png", "puerta.png", "puerta_color.png", "puerta_e.png", "puerta_n.png", "puerta_q.png", "puerta_r.png", "quipu_dorado.png", "rafaga.png", "ritmica.png", "rollo_mapa.png", "sello_poder.png", "semilla.png", "tambor.png", "tiles_bamboo.png", "tiles_bamboo_extra.png", "tiles_cave.png", "tiles_cave_extra.png", "tiles_city.png", "tiles_city_extra.png", "tiles_cityday.png", "tiles_cityday_extra.png", "tiles_ciudad.png", "tiles_mine.png", "tiles_mine_extra.png", "tiles_sea.png", "tiles_sea_extra.png", "tiles_tech.png", "tiles_tech_extra.png", "tiles_tower.png", "tiles_tower_extra.png", "totem_activo.png", "totem_apagado.png", "totem_despierto.png", "totem_viaje.png", "viento.png"], "assets/bg/": ["bg_bamboo_far.png", "bg_bamboo_mid.png", "bg_bamboo_near.png", "bg_cave_far.png", "bg_cave_mid.png", "bg_cave_near.png", "bg_city_far.png", "bg_city_mid.png", "bg_city_near.png", "bg_cityday_far.png", "bg_cityday_mid.png", "bg_cityday_near.png", "bg_coliseo_far.png", "bg_coliseo_mid.png", "bg_coliseo_near.png", "bg_mine_far.png", "bg_mine_mid.png", "bg_mine_near.png", "bg_salita_bonus.png", "bg_salita_descanso.png", "bg_salita_tienda.png", "bg_sea_far.png", "bg_sea_mid.png", "bg_sea_near.png", "bg_tech_far.png", "bg_tech_mid.png", "bg_tech_near.png", "logo.png", "placa_piso.png", "portada.png", "retrato_bombo.png", "retrato_charanguero.png", "retrato_condor.png", "retrato_cuygig.png", "retrato_huaca.png"], "assets/music/": ["blues_do_mayor.mp3", "blues_mi_menor.mp3"]};
+    const groups = document.getElementById('groups');
+    let total = 0;
+    let found = 0;
+    let pending = 0;
+
+    function summary() {
+      document.getElementById('sum').textContent = pending > 0
+        ? 'Revisando… (' + found + ' de ' + total + ')'
+        : 'Están ' + found + ' de ' + total + ' archivos. Faltan ' + (total - found) + '.';
+    }
+
+    function check(path, li) {
+      const done = function (ok) {
+        li.className = ok ? 'ok' : 'no';
+        li.textContent = (ok ? '✓ ' : '✗ ') + li.dataset.name;
+        if (ok) found++;
+        pending--;
+        summary();
+      };
+      if (/\.mp3$/.test(path)) {
+        const a = new Audio();
+        a.oncanplaythrough = function () { done(true); a.oncanplaythrough = null; a.onerror = null; };
+        a.onerror = function () { done(false); };
+        a.preload = 'auto';
+        a.src = path;
+        return;
+      }
+      const img = new Image();
+      img.onload = function () { done(true); };
+      img.onerror = function () { done(false); };
+      img.src = path;
+    }
+
+    Object.keys(LIST).forEach(function (folder) {
+      const h = document.createElement('h2');
+      h.textContent = folder + ' (' + LIST[folder].length + ')';
+      const ul = document.createElement('ul');
+      LIST[folder].forEach(function (name) {
+        const li = document.createElement('li');
+        li.className = 'wait';
+        li.dataset.name = name;
+        li.textContent = '… ' + name;
+        ul.appendChild(li);
+        total++;
+        pending++;
+        check(folder + name, li);
+      });
+      groups.appendChild(h);
+      groups.appendChild(ul);
+    });
+    summary();
+  </script>
+</body>
+</html>

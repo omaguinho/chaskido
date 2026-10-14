@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Змейка</title>
+    <style>
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #14171c;
+            color: #e6e6e6;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+        #hud {
+            display: flex;
+            gap: 24px;
+            font-size: 18px;
+            font-variant-numeric: tabular-nums;
+        }
+        #hud b { color: #4ade80; }
+        #board {
+            background: #1e232b;
+            border: 2px solid #333b47;
+            border-radius: 8px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+            touch-action: none;
+        }
+        #hint {
+            font-size: 13px;
+            color: #7c8794;
+            text-align: center;
+            line-height: 1.6;
+        }
+        kbd {
+            background: #2a313b;
+            border: 1px solid #3d4653;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 12px;
+        }
+        #overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            background: rgba(20, 23, 28, 0.82);
+            backdrop-filter: blur(2px);
+        }
+        #overlay.visible { display: flex; }
+        #overlay h1 { font-size: 32px; color: #f87171; }
+        #overlay p { color: #cbd5e1; }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <span>Счёт: <b id="score">0</b></span>
+        <span>Рекорд: <b id="best">0</b></span>
+    </div>
+
+    <canvas id="board" width="440" height="440"></canvas>
+
+    <p id="hint">
+        <kbd>&larr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd> <kbd>&rarr;</kbd> или <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> — движение &nbsp;·&nbsp;
+        <kbd>Пробел</kbd> — пауза / рестарт &nbsp;·&nbsp;
+        <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Enter</kbd> — полный экран
+    </p>
+
+    <div id="overlay">
+        <h1 id="overlay-title">Игра окончена</h1>
+        <p id="overlay-text">Нажмите «Пробел», чтобы начать заново</p>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        const CELL = 22;          // размер клетки в пикселях
+        const GRID = 20;          // поле GRID x GRID клеток
+        const TICK_MS = 110;      // интервал шага змейки
+        const BEST_KEY = 'snake_best_score';
+
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const bestEl = document.getElementById('best');
+        const overlay = document.getElementById('overlay');
+        const overlayTitle = document.getElementById('overlay-title');
+        const overlayText = document.getElementById('overlay-text');
+
+        let snake, dir, nextDir, food, score, best, alive, paused, timer;
+
+        best = readBest();
+        bestEl.textContent = best;
+
+        function readBest() {
+            try {
+                return parseInt(localStorage.getItem(BEST_KEY), 10) || 0;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function writeBest(value) {
+            try {
+                localStorage.setItem(BEST_KEY, String(value));
+            } catch (e) {
+                /* приватный режим / хранилище недоступно — не критично */
+            }
+        }
+
+        function reset() {
+            const mid = Math.floor(GRID / 2);
+            snake = [
+                { x: mid, y: mid },
+                { x: mid - 1, y: mid },
+                { x: mid - 2, y: mid }
+            ];
+            dir = { x: 1, y: 0 };
+            nextDir = dir;
+            score = 0;
+            alive = true;
+            paused = false;
+            scoreEl.textContent = '0';
+            overlay.classList.remove('visible');
+            placeFood();
+            draw();
+        }
+
+        function placeFood() {
+            let cell;
+            do {
+                cell = {
+                    x: Math.floor(Math.random() * GRID),
+                    y: Math.floor(Math.random() * GRID)
+                };
+            } while (snake.some(s => s.x === cell.x && s.y === cell.y));
+            food = cell;
+        }
+
+        function step() {
+            if (!alive || paused) return;
+
+            dir = nextDir;
+            const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+            const hitWall = head.x < 0 || head.y < 0 || head.x >= GRID || head.y >= GRID;
+            const hitSelf = snake.some(s => s.x === head.x && s.y === head.y);
+            if (hitWall || hitSelf) {
+                gameOver();
+                return;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score += 1;
+                scoreEl.textContent = score;
+                placeFood();
+            } else {
+                snake.pop();
+            }
+
+            draw();
+        }
+
+        function gameOver() {
+            alive = false;
+            if (score > best) {
+                best = score;
+                bestEl.textContent = best;
+                writeBest(best);
+            }
+            overlayTitle.textContent = 'Игра окончена';
+            overlayText.textContent = 'Счёт: ' + score + '. Нажмите «Пробел», чтобы начать заново';
+            overlay.classList.add('visible');
+
+            // Демонстрация моста JS <-> Go: если лаунчер предоставил window.api.
+            if (window.api && typeof window.api.Ping === 'function') {
+                window.api.Ping('Snake game over, score=' + score)
+                    .then(res => console.log('[api.Ping]', res))
+                    .catch(err => console.warn('[api.Ping] error', err));
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#1e232b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // сетка
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            for (let i = 1; i < GRID; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * CELL, 0);
+                ctx.lineTo(i * CELL, canvas.height);
+                ctx.moveTo(0, i * CELL);
+                ctx.lineTo(canvas.width, i * CELL);
+                ctx.stroke();
+            }
+
+            // еда
+            drawCell(food.x, food.y, '#f87171', 0.28);
+
+            // змейка
+            for (let i = snake.length - 1; i >= 0; i--) {
+                const shade = i === 0 ? '#4ade80' : '#37b46a';
+                drawCell(snake[i].x, snake[i].y, shade, 0.16);
+            }
+        }
+
+        function drawCell(gx, gy, color, radiusRatio) {
+            const pad = 2;
+            const x = gx * CELL + pad;
+            const y = gy * CELL + pad;
+            const size = CELL - pad * 2;
+            const r = size * radiusRatio;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(x, y, size, size, r);
+            ctx.fill();
+        }
+
+        function setDirection(x, y) {
+            // запрет разворота на 180°
+            if (x === -dir.x && y === -dir.y) return;
+            nextDir = { x, y };
+        }
+
+        function onKeyDown(e) {
+            switch (e.key) {
+                case 'ArrowUp': case 'w': case 'W': case 'ц': case 'Ц':
+                    setDirection(0, -1); break;
+                case 'ArrowDown': case 's': case 'S': case 'ы': case 'Ы':
+                    setDirection(0, 1); break;
+                case 'ArrowLeft': case 'a': case 'A': case 'ф': case 'Ф':
+                    setDirection(-1, 0); break;
+                case 'ArrowRight': case 'd': case 'D': case 'в': case 'В':
+                    setDirection(1, 0); break;
+                case ' ': case 'Spacebar':
+                    if (!alive) {
+                        reset();
+                    } else {
+                        paused = !paused;
+                        overlayTitle.textContent = 'Пауза';
+                        overlayText.textContent = 'Нажмите «Пробел», чтобы продолжить';
+                        overlay.classList.toggle('visible', paused);
+                    }
+                    break;
+                default:
+                    return;
+            }
+            e.preventDefault();
+        }
+
+        window.addEventListener('keydown', onKeyDown);
+
+        // Простое свайп-управление для тач-экранов.
+        let touchStart = null;
+        canvas.addEventListener('pointerdown', e => {
+            touchStart = { x: e.clientX, y: e.clientY };
+        });
+        canvas.addEventListener('pointerup', e => {
+            if (!touchStart) return;
+            const dx = e.clientX - touchStart.x;
+            const dy = e.clientY - touchStart.y;
+            touchStart = null;
+            if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+                if (!alive) reset();
+                return;
+            }
+            if (Math.abs(dx) > Math.abs(dy)) {
+                setDirection(dx > 0 ? 1 : -1, 0);
+            } else {
+                setDirection(0, dy > 0 ? 1 : -1);
+            }
+        });
+
+        timer = setInterval(step, TICK_MS);
+        reset();
+    })();
+    </script>
+</body>
+</html>
