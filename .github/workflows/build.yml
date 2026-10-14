@@ -1,0 +1,27 @@
+name: Build EXE
+on: [push]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      - name: Descargar html5player
+        run: git clone https://github.com/khameleonium/html5player.git
+        shell: bash
+      - name: Mover tu juego a la carpeta correcta
+        run: |
+          cp -r * html5player/game_data/ || true
+          cp index.html html5player/game_data/ || true
+        shell: bash
+      - name: Compilar EXE
+        run: go run ./cmd/build build -mode embed -out chaskido.exe
+        working-directory: html5player
+        shell: bash
+      - name: Guardar el EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaskido-exe
+          path: html5player/chaskido.exe
