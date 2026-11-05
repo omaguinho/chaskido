@@ -1,0 +1,888 @@
+<title>Editor Chasqui</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  /* Layout: barra superior, panel de herramientas a la izquierda, lienzo con scroll a la derecha. Apila en pantallas angostas. */
+  :root {
+    color-scheme: dark;
+    --bg: #14111c;
+    --panel: #1d1928;
+    --panel-2: #262036;
+    --line: #342d48;
+    --fg: #ece8f5;
+    --muted: #9a93b0;
+    --accent: #ffd34d;
+    --accent-ink: #1a1408;
+    --danger: #ff6b6b;
+    --font-display: 'Pixelify Sans', ui-monospace, monospace;
+    --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+  .app {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 250px 1fr;
+    grid-template-areas: "top top" "side main" "status status";
+  }
+  header {
+    grid-area: top;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+  }
+  #group-name {
+    flex: 1 1 180px;
+    min-width: 0;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font: inherit;
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  button {
+    font: inherit;
+    color: var(--fg);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  button.danger { color: var(--danger); }
+  aside {
+    grid-area: side;
+    overflow-y: auto;
+    padding: 12px 16px;
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .section-title {
+    margin: 0 0 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .palette { display: grid; grid-template-columns: 1fr; gap: 3px; }
+  .swatch {
+    display: grid;
+    grid-template-columns: 22px 18px 1fr;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    padding: 4px 6px;
+  }
+  .chip { width: 22px; height: 16px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.15); }
+  .sym { font-family: var(--font-mono); color: var(--muted); }
+  .swatch.on .sym { color: var(--accent-ink); }
+  .measures { margin: 0; padding-left: 16px; color: var(--muted); line-height: 1.5; }
+  main { grid-area: main; overflow: auto; position: relative; background: #0d0b13; }
+  #map { display: block; touch-action: none; cursor: crosshair; }
+  .status {
+    grid-area: status;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    padding: 6px 16px;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .panel-io {
+    position: fixed;
+    inset: auto 16px calc(16px + env(safe-area-inset-bottom, 0px)) 16px;
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    z-index: 5;
+  }
+  .panel-io p { margin: 0; color: var(--muted); }
+  #io-text {
+    width: 100%;
+    height: 220px;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: pre;
+    overflow: auto;
+  }
+  .note { color: var(--accent); font-size: 12px; }
+  @media (max-width: 760px) {
+    .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      grid-template-areas: "top" "side" "main" "status";
+    }
+    aside { max-height: 40vh; border-right: none; border-bottom: 1px solid var(--line); }
+    main { min-height: 50vh; }
+  }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Editor Chasqui</h1>
+    <input id="group-name" type="text" value="Grupo 1 · niveles 1 a 3" aria-label="Nombre del grupo">
+    <div class="actions">
+      <button id="btn-undo" type="button" title="Ctrl+Z">Deshacer</button>
+      <button id="btn-redo" type="button" title="Ctrl+Y">Rehacer</button>
+      <button id="btn-zoom-out" type="button" aria-label="Alejar">−</button>
+      <button id="btn-zoom-in" type="button" aria-label="Acercar">+</button>
+      <button id="btn-export" type="button">Exportar</button>
+      <button id="btn-import" type="button">Importar</button>
+      <button id="btn-new" type="button" class="danger">Nuevo</button>
+    </div>
+  </header>
+
+  <aside>
+    <div>
+      <p class="section-title">Herramienta</p>
+      <div class="row" id="tools"></div>
+    </div>
+    <div>
+      <p class="section-title">Capa</p>
+      <div class="row">
+        <button id="layer-tiles" type="button" class="on">Bloques</button>
+        <button id="layer-zones" type="button">Zonas de nivel</button>
+      </div>
+    </div>
+    <div id="palette-wrap"></div>
+    <div>
+      <p class="section-title">Medidas del personaje</p>
+      <ul class="measures">
+        <li>Pantalla: 20 × 11 bloques</li>
+        <li>Salto: 3 alto, 4 largo</li>
+        <li>Doble salto: 6 alto</li>
+        <li>Dash: +2,5 de largo</li>
+        <li>Tambor: 8 alto</li>
+        <li>Pasillos: mínimo 2 alto</li>
+      </ul>
+    </div>
+    <p class="note">Clic derecho borra. Se guarda solo en este navegador.</p>
+  </aside>
+
+  <main id="scroller">
+    <canvas id="map"></canvas>
+  </main>
+
+  <div class="status">
+    <span id="st-pos">x – · y –</span>
+    <span id="st-screen">pantalla –</span>
+    <span id="st-brush"></span>
+  </div>
+</div>
+
+<div class="panel-io" id="io-panel" hidden>
+  <p id="io-help"></p>
+  <textarea id="io-text" spellcheck="false" aria-label="Texto del mapa"></textarea>
+  <div class="row">
+    <button id="io-copy" type="button">Copiar</button>
+    <button id="io-copy-js" type="button">Copiar para levels.js</button>
+    <button id="io-load" type="button">Cargar este texto</button>
+    <button id="io-close" type="button">Cerrar</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---------- Datos ----------
+  const W = 80;
+  const H = 44;
+  const SCREEN_W = 20;
+  const SCREEN_H = 11;
+  const STORAGE_KEY = 'chasqui-editor-v1';
+  const EMPTY = '.';
+
+  // Mismos símbolos que usa levels.js del juego
+  const TILES = [
+    { ch: '#', name: 'Suelo', group: 'Estructura', color: '#7a4a3a' },
+    { ch: 'B', name: 'Ladrillo', group: 'Estructura', color: '#a84a5a' },
+    { ch: '=', name: 'Plataforma delgada', group: 'Estructura', color: '#d39a5e', shape: 'half' },
+    { ch: '^', name: 'Espinas', group: 'Obstáculos', color: '#e6e2f0', shape: 'spikes' },
+    { ch: '~', name: 'Se cae al pisar', group: 'Obstáculos', color: '#b08c5c', shape: 'crumble' },
+    { ch: 'X', name: 'Muro rompible (dash)', group: 'Obstáculos', color: '#6d6a8a', shape: 'cracked' },
+    { ch: '1', name: 'Rítmica A', group: 'Obstáculos', color: '#3fd1c4' },
+    { ch: '2', name: 'Rítmica B', group: 'Obstáculos', color: '#c46bff' },
+    { ch: 'T', name: 'Tambor trampolín', group: 'Obstáculos', color: '#d2423a' },
+    { ch: 'M', name: 'Plataforma móvil (lados)', group: 'Obstáculos', color: '#4d8cff' },
+    { ch: 'I', name: 'Plataforma móvil (sube y baja)', group: 'Obstáculos', color: '#2f6bd9' },
+    { ch: '>', name: 'Cinta hacia la derecha', group: 'Obstáculos', color: '#8a8a96' },
+    { ch: '<', name: 'Cinta hacia la izquierda', group: 'Obstáculos', color: '#8a8a96' },
+    { ch: 'V', name: 'Viento hacia arriba', group: 'Obstáculos', color: '#bfe9ff', shape: 'wind' },
+    { ch: 'P', name: 'Inicio', group: 'Objetos', color: '#ffb347' },
+    { ch: 'n', name: 'Corchea', group: 'Objetos', color: '#ffe066' },
+    { ch: 'c', name: 'Cubo', group: 'Objetos', color: '#3fd16b' },
+    { ch: 'k', name: 'Llave', group: 'Objetos', color: '#ffd34d' },
+    { ch: 'D', name: 'Puerta principal', group: 'Objetos', color: '#e0a83a' },
+    { ch: 'N', name: 'Puerta N (secreta, con candado)', group: 'Objetos', color: '#c98a3a' },
+    { ch: 'R', name: 'Puerta de vuelta (nivel anterior)', group: 'Objetos', color: '#6fb7ff' },
+    { ch: 'E', name: 'Puerta extra (habilidad)', group: 'Objetos', color: '#9b6bd6' },
+    { ch: 'S', name: 'Punto de guardado', group: 'Objetos', color: '#7be0a0' },
+    { ch: 'a', name: 'Ají', group: 'Objetos', color: '#ff4d3a' },
+    { ch: 'o', name: 'Anilla del gancho', group: 'Objetos', color: '#f0d9a8' },
+    { ch: 'H', name: 'Habilidad escondida', group: 'Objetos', color: '#f0b860' },
+    { ch: 'F', name: 'Final del juego', group: 'Objetos', color: '#ffffff' },
+    { ch: 'G', name: 'Portón (abre con la misión)', group: 'Obstáculos', color: '#ffd34d' },
+    { ch: 'e', name: 'Escarabajo', group: 'Enemigos', color: '#3a6fd1' },
+    { ch: 'u', name: 'Cuy patrullero', group: 'Enemigos', color: '#c8955a' },
+    { ch: 'd', name: 'Disparador (dispara sin parar)', group: 'Enemigos', color: '#9be36b' },
+    { ch: 'J', name: 'Jefe', group: 'Enemigos', color: '#c0392b' },
+    { ch: 'L', name: 'Muro de arena', group: 'Enemigos', color: '#ff7a6b' },
+    { ch: EMPTY, name: 'Borrar', group: 'Objetos', color: '#0d0b13' }
+  ];
+  const TILE_BY_CH = {};
+  TILES.forEach(function (t) { TILE_BY_CH[t.ch] = t; });
+
+  const ZONES = [
+    { id: 1, name: 'Nivel A', color: '255,107,138' },
+    { id: 2, name: 'Nivel B', color: '77,195,255' },
+    { id: 3, name: 'Nivel C', color: '255,211,77' },
+    { id: 0, name: 'Sin zona', color: '0,0,0' }
+  ];
+
+  const TOOLS = [
+    { id: 'pencil', name: 'Lápiz' },
+    { id: 'line', name: 'Línea' },
+    { id: 'rect', name: 'Rectángulo' },
+    { id: 'frame', name: 'Marco' },
+    { id: 'fill', name: 'Balde' }
+  ];
+
+  const state = {
+    map: new Array(W * H).fill(EMPTY),
+    zones: new Array(W * H).fill(0),
+    tool: 'pencil',
+    layer: 'tiles',
+    brushTile: '#',
+    brushZone: 1,
+    cell: 14,
+    undo: [],
+    redo: [],
+    drag: null
+  };
+
+  // ---------- Elementos ----------
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d');
+  const scroller = document.getElementById('scroller');
+  const groupName = document.getElementById('group-name');
+
+  // ---------- Guardado ----------
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        name: groupName.value,
+        map: state.map.join(''),
+        zones: state.zones.join('')
+      }));
+    } catch (e) { /* sin almacenamiento: se sigue trabajando igual */ }
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (!data.map || data.map.length !== W * H) return false;
+      state.map = data.map.split('');
+      state.zones = (data.zones || '').padEnd(W * H, '0').split('').map(Number);
+      groupName.value = data.name || groupName.value;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Ejemplo inicial (se reemplaza con "Nuevo")
+  function loadExample() {
+    groupName.value = 'Ejemplo · bórralo con Nuevo';
+    for (let x = 0; x < 40; x++) {
+      setCell('tiles', x, 42, '#');
+      setCell('tiles', x, 43, '#');
+    }
+    for (let x = 8; x < 12; x++) setCell('tiles', x, 39, '=');
+    for (let x = 14; x < 17; x++) setCell('tiles', x, 41, '^');
+    for (let y = 33; y < 42; y++) setCell('tiles', 24, y, 'B');
+    setCell('tiles', 20, 41, 'T');
+    setCell('tiles', 2, 41, 'P');
+    setCell('tiles', 9, 38, 'n');
+    setCell('tiles', 30, 41, 'n');
+    setCell('tiles', 26, 36, 'n');
+    setCell('tiles', 37, 41, 'D');
+    setCell('tiles', 35, 34, 'E');
+    for (let y = 33; y < 44; y++) {
+      for (let x = 0; x < 20; x++) setCell('zones', x, y, 1);
+      for (let x = 20; x < 40; x++) setCell('zones', x, y, 2);
+    }
+  }
+
+  // ---------- Celdas ----------
+  function idx(x, y) { return y * W + x; }
+  function inside(x, y) { return x >= 0 && x < W && y >= 0 && y < H; }
+
+  function setCell(layer, x, y, value) {
+    if (!inside(x, y)) return;
+    if (layer === 'tiles') state.map[idx(x, y)] = value;
+    else state.zones[idx(x, y)] = value;
+  }
+
+  function getCell(layer, x, y) {
+    return layer === 'tiles' ? state.map[idx(x, y)] : state.zones[idx(x, y)];
+  }
+
+  function brushValue(erase) {
+    if (state.layer === 'tiles') return erase ? EMPTY : state.brushTile;
+    return erase ? 0 : state.brushZone;
+  }
+
+  // ---------- Deshacer ----------
+  function snapshot() {
+    return { map: state.map.join(''), zones: state.zones.join('') };
+  }
+
+  function restore(snap) {
+    state.map = snap.map.split('');
+    state.zones = snap.zones.split('').map(Number);
+  }
+
+  function pushUndo() {
+    state.undo.push(snapshot());
+    if (state.undo.length > 60) state.undo.shift();
+    state.redo = [];
+  }
+
+  function undo() {
+    if (!state.undo.length) return;
+    state.redo.push(snapshot());
+    restore(state.undo.pop());
+    draw();
+    save();
+  }
+
+  function redo() {
+    if (!state.redo.length) return;
+    state.undo.push(snapshot());
+    restore(state.redo.pop());
+    draw();
+    save();
+  }
+
+  // ---------- Formas ----------
+  function lineCells(a, b) {
+    const cells = [];
+    const horizontal = Math.abs(b.x - a.x) >= Math.abs(b.y - a.y);
+    if (horizontal) {
+      const from = Math.min(a.x, b.x);
+      const to = Math.max(a.x, b.x);
+      for (let x = from; x <= to; x++) cells.push({ x: x, y: a.y });
+    } else {
+      const from = Math.min(a.y, b.y);
+      const to = Math.max(a.y, b.y);
+      for (let y = from; y <= to; y++) cells.push({ x: a.x, y: y });
+    }
+    return cells;
+  }
+
+  function rectCells(a, b, hollow) {
+    const cells = [];
+    const x0 = Math.min(a.x, b.x);
+    const x1 = Math.max(a.x, b.x);
+    const y0 = Math.min(a.y, b.y);
+    const y1 = Math.max(a.y, b.y);
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const edge = x === x0 || x === x1 || y === y0 || y === y1;
+        if (!hollow || edge) cells.push({ x: x, y: y });
+      }
+    }
+    return cells;
+  }
+
+  function shapeCells(drag) {
+    if (state.tool === 'line') return lineCells(drag.start, drag.end);
+    if (state.tool === 'rect') return rectCells(drag.start, drag.end, false);
+    if (state.tool === 'frame') return rectCells(drag.start, drag.end, true);
+    return [];
+  }
+
+  function floodFill(x, y, value) {
+    const layer = state.layer;
+    const target = getCell(layer, x, y);
+    if (target === value) return;
+    const stack = [{ x: x, y: y }];
+    while (stack.length) {
+      const p = stack.pop();
+      if (!inside(p.x, p.y) || getCell(layer, p.x, p.y) !== target) continue;
+      setCell(layer, p.x, p.y, value);
+      stack.push({ x: p.x + 1, y: p.y }, { x: p.x - 1, y: p.y },
+                 { x: p.x, y: p.y + 1 }, { x: p.x, y: p.y - 1 });
+    }
+  }
+
+  // ---------- Dibujo ----------
+  function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * state.cell * dpr;
+    canvas.height = H * state.cell * dpr;
+    canvas.style.width = W * state.cell + 'px';
+    canvas.style.height = H * state.cell + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function drawTile(t, px, py, s) {
+    ctx.fillStyle = t.color;
+    if (t.shape === 'half') {
+      ctx.fillRect(px, py, s, s / 2);
+    } else if (t.shape === 'spikes') {
+      ctx.beginPath();
+      const teeth = 3;
+      for (let i = 0; i < teeth; i++) {
+        const bx = px + (s / teeth) * i;
+        ctx.moveTo(bx, py + s);
+        ctx.lineTo(bx + s / teeth / 2, py + s * 0.3);
+        ctx.lineTo(bx + s / teeth, py + s);
+      }
+      ctx.fill();
+    } else if (t.shape === 'wind') {
+      ctx.globalAlpha = 0.35;
+      ctx.fillRect(px, py, s, s);
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.fillRect(px, py, s, s);
+    }
+
+    if (t.shape === 'crumble') {
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillRect(px + s * 0.3, py, 1, s);
+      ctx.fillRect(px + s * 0.7, py, 1, s);
+    }
+    if (t.shape === 'cracked') {
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.beginPath();
+      ctx.moveTo(px + s * 0.2, py + s * 0.2);
+      ctx.lineTo(px + s * 0.5, py + s * 0.55);
+      ctx.lineTo(px + s * 0.8, py + s * 0.35);
+      ctx.stroke();
+    }
+
+    if (s >= 12 && t.shape !== 'spikes') {
+      ctx.fillStyle = t.shape === 'wind' ? '#bfe9ff' : 'rgba(0,0,0,0.65)';
+      ctx.font = Math.floor(s * 0.7) + 'px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const label = t.shape === 'wind' ? '↑' : t.ch;
+      ctx.fillText(label, px + s / 2, py + (t.shape === 'half' ? s / 4 : s / 2) + 1);
+    }
+  }
+
+  function drawGrid(s) {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath();
+    for (let x = 0; x <= W; x++) { ctx.moveTo(x * s + 0.5, 0); ctx.lineTo(x * s + 0.5, H * s); }
+    for (let y = 0; y <= H; y++) { ctx.moveTo(0, y * s + 0.5); ctx.lineTo(W * s, y * s + 0.5); }
+    ctx.stroke();
+
+    // Bordes de pantalla (20 × 11)
+    ctx.strokeStyle = 'rgba(255,211,77,0.35)';
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += SCREEN_W) { ctx.moveTo(x * s + 0.5, 0); ctx.lineTo(x * s + 0.5, H * s); }
+    for (let y = 0; y <= H; y += SCREEN_H) { ctx.moveTo(0, y * s + 0.5); ctx.lineTo(W * s, y * s + 0.5); }
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,211,77,0.35)';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    for (let sy = 0; sy < H / SCREEN_H; sy++) {
+      for (let sx = 0; sx < W / SCREEN_W; sx++) {
+        ctx.fillText((sx + 1) + '-' + (sy + 1), sx * SCREEN_W * s + 3, sy * SCREEN_H * s + 3);
+      }
+    }
+  }
+
+  function draw() {
+    const s = state.cell;
+    ctx.fillStyle = '#0d0b13';
+    ctx.fillRect(0, 0, W * s, H * s);
+
+    // Zonas de nivel
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const z = state.zones[idx(x, y)];
+        if (!z) continue;
+        ctx.fillStyle = 'rgba(' + ZONES[z - 1].color + ',0.13)';
+        ctx.fillRect(x * s, y * s, s, s);
+      }
+    }
+
+    // Bloques
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const ch = state.map[idx(x, y)];
+        if (ch !== EMPTY) drawTile(TILE_BY_CH[ch] || TILE_BY_CH['#'], x * s, y * s, s);
+      }
+    }
+
+    drawGrid(s);
+
+    // Vista previa de línea / rectángulo / marco
+    if (state.drag && state.drag.shape) {
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      shapeCells(state.drag).forEach(function (c) {
+        ctx.fillRect(c.x * s, c.y * s, s, s);
+      });
+    }
+  }
+
+  // ---------- Puntero ----------
+  function cellFromEvent(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: Math.floor((e.clientX - r.left) / state.cell),
+      y: Math.floor((e.clientY - r.top) / state.cell)
+    };
+  }
+
+  canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+  canvas.addEventListener('pointerdown', function (e) {
+    const c = cellFromEvent(e);
+    if (!inside(c.x, c.y)) return;
+    canvas.setPointerCapture(e.pointerId);
+    const erase = e.button === 2;
+    const value = brushValue(erase);
+    pushUndo();
+
+    if (state.tool === 'fill') {
+      floodFill(c.x, c.y, value);
+      draw();
+      save();
+      return;
+    }
+
+    const shape = state.tool !== 'pencil';
+    state.drag = { start: c, end: c, value: value, shape: shape };
+    if (!shape) setCell(state.layer, c.x, c.y, value);
+    draw();
+  });
+
+  canvas.addEventListener('pointermove', function (e) {
+    const c = cellFromEvent(e);
+    updateStatus(c);
+    if (!state.drag || !inside(c.x, c.y)) return;
+    if (state.drag.shape) {
+      state.drag.end = c;
+    } else {
+      // Rellena el trazo entre puntos para que no queden huecos
+      lineCells(state.drag.end, c).forEach(function (p) {
+        setCell(state.layer, p.x, p.y, state.drag.value);
+      });
+      state.drag.end = c;
+    }
+    draw();
+  });
+
+  function endDrag() {
+    if (!state.drag) return;
+    if (state.drag.shape) {
+      const value = state.drag.value;
+      shapeCells(state.drag).forEach(function (p) { setCell(state.layer, p.x, p.y, value); });
+    }
+    state.drag = null;
+    draw();
+    save();
+  }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('pointerleave', function () { updateStatus(null); });
+
+  // ---------- Estado ----------
+  function updateStatus(c) {
+    const pos = document.getElementById('st-pos');
+    const screen = document.getElementById('st-screen');
+    if (!c || !inside(c.x, c.y)) {
+      pos.textContent = 'x – · y –';
+      screen.textContent = 'pantalla –';
+      return;
+    }
+    pos.textContent = 'x ' + c.x + ' · y ' + c.y;
+    screen.textContent = 'pantalla ' + (Math.floor(c.x / SCREEN_W) + 1) + '-' + (Math.floor(c.y / SCREEN_H) + 1);
+  }
+
+  function updateBrushLabel() {
+    const label = state.layer === 'tiles'
+      ? TILE_BY_CH[state.brushTile].name + ' (' + state.brushTile + ')'
+      : ZONES.find(function (z) { return z.id === state.brushZone; }).name;
+    const tool = TOOLS.find(function (t) { return t.id === state.tool; }).name;
+    document.getElementById('st-brush').textContent = tool + ' · ' + label;
+  }
+
+  // ---------- Interfaz ----------
+  function buildTools() {
+    const wrap = document.getElementById('tools');
+    wrap.innerHTML = '';
+    TOOLS.forEach(function (t) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.id = 'tool-' + t.id;
+      b.textContent = t.name;
+      b.className = state.tool === t.id ? 'on' : '';
+      b.addEventListener('click', function () {
+        state.tool = t.id;
+        buildTools();
+        updateBrushLabel();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function swatch(id, chipColor, sym, name, active, onClick) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.id = id;
+    b.className = 'swatch' + (active ? ' on' : '');
+    b.innerHTML = '<span class="chip"></span><span class="sym"></span><span></span>';
+    b.children[0].style.background = chipColor;
+    b.children[1].textContent = sym;
+    b.children[2].textContent = name;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function buildPalette() {
+    const wrap = document.getElementById('palette-wrap');
+    wrap.innerHTML = '';
+
+    if (state.layer === 'zones') {
+      const title = document.createElement('p');
+      title.className = 'section-title';
+      title.textContent = 'Zonas (marca qué parte es cada nivel)';
+      const list = document.createElement('div');
+      list.className = 'palette';
+      ZONES.forEach(function (z) {
+        list.appendChild(swatch('zone-' + z.id, 'rgba(' + z.color + ',0.8)', z.id || '·', z.name,
+          state.brushZone === z.id, function () {
+            state.brushZone = z.id;
+            buildPalette();
+            updateBrushLabel();
+          }));
+      });
+      wrap.appendChild(title);
+      wrap.appendChild(list);
+      return;
+    }
+
+    const groups = ['Estructura', 'Obstáculos', 'Objetos', 'Enemigos'];
+    groups.forEach(function (g) {
+      const box = document.createElement('div');
+      const title = document.createElement('p');
+      title.className = 'section-title';
+      title.textContent = g;
+      const list = document.createElement('div');
+      list.className = 'palette';
+      TILES.filter(function (t) { return t.group === g; }).forEach(function (t) {
+        list.appendChild(swatch('tile-' + t.ch.charCodeAt(0), t.color, t.ch, t.name,
+          state.brushTile === t.ch, function () {
+            state.brushTile = t.ch;
+            buildPalette();
+            updateBrushLabel();
+          }));
+      });
+      box.appendChild(title);
+      box.appendChild(list);
+      wrap.appendChild(box);
+    });
+  }
+
+  function setLayer(layer) {
+    state.layer = layer;
+    document.getElementById('layer-tiles').className = layer === 'tiles' ? 'on' : '';
+    document.getElementById('layer-zones').className = layer === 'zones' ? 'on' : '';
+    buildPalette();
+    updateBrushLabel();
+  }
+
+  // ---------- Exportar / importar ----------
+  function exportText() {
+    const lines = ['# ' + groupName.value + ' · ' + W + 'x' + H, 'MAPA'];
+    for (let y = 0; y < H; y++) lines.push(state.map.slice(y * W, (y + 1) * W).join(''));
+    lines.push('ZONAS');
+    for (let y = 0; y < H; y++) lines.push(state.zones.slice(y * W, (y + 1) * W).join(''));
+    return lines.join('\n');
+  }
+
+  // Solo el mapa, con comillas y comas: se pega directo dentro de "map: [ ... ]"
+  function levelsText() {
+    const lines = [];
+    for (let y = 0; y < H; y++) {
+      const row = state.map.slice(y * W, (y + 1) * W).join('');
+      lines.push("      '" + row + "'" + (y < H - 1 ? ',' : ''));
+    }
+    return lines.join('\n');
+  }
+
+  function importText(text) {
+    const lines = text.replace(/\r/g, '').split('\n');
+    const mapStart = lines.indexOf('MAPA');
+    const zoneStart = lines.indexOf('ZONAS');
+    const mapLines = mapStart >= 0
+      ? lines.slice(mapStart + 1, zoneStart >= 0 ? zoneStart : undefined)
+      : lines.filter(function (l) { return l && l[0] !== '#'; });
+    const zoneLines = zoneStart >= 0 ? lines.slice(zoneStart + 1) : [];
+
+    const title = lines[0] && lines[0].indexOf('# ') === 0 ? lines[0].slice(2).split(' · ')[0] : null;
+
+    pushUndo();
+    for (let y = 0; y < H; y++) {
+      const row = (mapLines[y] || '').padEnd(W, EMPTY);
+      const zrow = (zoneLines[y] || '').padEnd(W, '0');
+      for (let x = 0; x < W; x++) {
+        state.map[idx(x, y)] = TILE_BY_CH[row[x]] ? row[x] : EMPTY;
+        const z = Number(zrow[x]);
+        state.zones[idx(x, y)] = z >= 1 && z <= 3 ? z : 0;
+      }
+    }
+    if (title) groupName.value = title;
+    draw();
+    save();
+  }
+
+  const ioPanel = document.getElementById('io-panel');
+  const ioText = document.getElementById('io-text');
+  const ioHelp = document.getElementById('io-help');
+  const ioCopy = document.getElementById('io-copy');
+  const ioLoad = document.getElementById('io-load');
+
+  function openIO(mode) {
+    ioPanel.hidden = false;
+    if (mode === 'export') {
+      ioHelp.textContent = 'El cuadro muestra solo una parte, pero "Copiar" copia el mapa completo (80 × 44). Pégalo en el chat.';
+      ioText.value = exportText();
+      ioCopy.hidden = false;
+      ioCopyJs.hidden = false;
+      ioLoad.hidden = true;
+    } else {
+      ioHelp.textContent = 'Pega aquí un mapa exportado y toca "Cargar este texto".';
+      ioText.value = '';
+      ioCopy.hidden = true;
+      ioCopyJs.hidden = true;
+      ioLoad.hidden = false;
+    }
+    ioText.focus();
+  }
+
+  // Copia un texto; si el navegador no deja, lo deja seleccionado en el cuadro
+  function copyText(button, label, str) {
+    const done = function () { button.textContent = 'Copiado'; setTimeout(function () { button.textContent = label; }, 1500); };
+    const fallback = function () { ioText.value = str; ioText.select(); button.textContent = 'Seleccionado: copia con Ctrl+C'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(str).then(done, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  const ioCopyJs = document.getElementById('io-copy-js');
+  ioCopy.addEventListener('click', function () { copyText(ioCopy, 'Copiar', ioText.value); });
+  ioCopyJs.addEventListener('click', function () { copyText(ioCopyJs, 'Copiar para levels.js', levelsText()); });
+  ioLoad.addEventListener('click', function () {
+    importText(ioText.value);
+    ioPanel.hidden = true;
+  });
+  document.getElementById('io-close').addEventListener('click', function () { ioPanel.hidden = true; });
+
+  // ---------- Botones ----------
+  const newBtn = document.getElementById('btn-new');
+  let confirmNew = false;
+  newBtn.addEventListener('click', function () {
+    if (!confirmNew) {
+      confirmNew = true;
+      newBtn.textContent = '¿Borrar todo? Toca otra vez';
+      setTimeout(function () { confirmNew = false; newBtn.textContent = 'Nuevo'; }, 3000);
+      return;
+    }
+    confirmNew = false;
+    newBtn.textContent = 'Nuevo';
+    pushUndo();
+    state.map.fill(EMPTY);
+    state.zones.fill(0);
+    groupName.value = 'Grupo 1 · niveles 1 a 3';
+    draw();
+    save();
+  });
+
+  function zoom(delta) {
+    state.cell = Math.max(6, Math.min(28, state.cell + delta));
+    resizeCanvas();
+    draw();
+  }
+
+  document.getElementById('btn-undo').addEventListener('click', undo);
+  document.getElementById('btn-redo').addEventListener('click', redo);
+  document.getElementById('btn-zoom-in').addEventListener('click', function () { zoom(2); });
+  document.getElementById('btn-zoom-out').addEventListener('click', function () { zoom(-2); });
+  document.getElementById('btn-export').addEventListener('click', function () { openIO('export'); });
+  document.getElementById('btn-import').addEventListener('click', function () { openIO('import'); });
+  document.getElementById('layer-tiles').addEventListener('click', function () { setLayer('tiles'); });
+  document.getElementById('layer-zones').addEventListener('click', function () { setLayer('zones'); });
+  groupName.addEventListener('input', save);
+
+  window.addEventListener('keydown', function (e) {
+    if (e.target === ioText || e.target === groupName) return;
+    const key = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && key === 'z') { e.preventDefault(); undo(); }
+    if ((e.ctrlKey || e.metaKey) && key === 'y') { e.preventDefault(); redo(); }
+  });
+
+  // ---------- Inicio ----------
+  if (!load()) loadExample();
+  buildTools();
+  setLayer('tiles');
+  resizeCanvas();
+  draw();
+  scroller.scrollTop = scroller.scrollHeight;   // el suelo queda a la vista
+})();
+</script>

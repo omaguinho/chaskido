@@ -1,0 +1,9 @@
+CHASKIDO v24 · El Silencio en tres formas
+
+1. Respaldo primero. Descomprime DENTRO de chasqui y reemplaza todo (assets no se toca).
+
+- El Silencio pelea tres veces seguidas, como Sigma en Mega Man X: al caer una forma aparece
+  la siguiente (6, 7 y 9 vidas; cada una más rápida). CONFIG.BOSSES.silencio.FORMS.
+- Dibujos nuevos que usa si están: silencio1_*, silencio2_*, silencio3_* (flotar, cantar, caer,
+  recalentado, dano, derrota, transformar) y bg/retrato_silencio.png. Si faltan, usa los del Eco.
+- revisar.html ya los lista.

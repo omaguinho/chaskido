@@ -1,0 +1,1152 @@
+[
+ {
+  "file": "sprites/papa_quieta.png",
+  "width": 256,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/papa_correr.png",
+  "width": 512,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 8
+ },
+ {
+  "file": "sprites/papa_salto.png",
+  "width": 128,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/papa_caida.png",
+  "width": 128,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/papa_doble_salto.png",
+  "width": 256,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/papa_dash.png",
+  "width": 128,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/papa_pared.png",
+  "width": 64,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/papa_colgada.png",
+  "width": 128,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/papa_planeo.png",
+  "width": 128,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/papa_dano.png",
+  "width": 64,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/papa_poder.png",
+  "width": 256,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/papa_derrota.png",
+  "width": 256,
+  "height": 96,
+  "frame": [
+   64,
+   96
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/escarabajo_caminar.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/escarabajo_aplastado.png",
+  "width": 64,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/cuy_caminar.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/cuy_alerta.png",
+  "width": 64,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/cuy_correr.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/cuy_aplastado.png",
+  "width": 64,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/disparador_quieto.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/disparador_carga.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/disparador_aplastado.png",
+  "width": 64,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/semilla.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/condor_volar.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/condor_lanzar.png",
+  "width": 384,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/condor_picada.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/condor_dano.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/condor_derrota.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/charanguero_tocar.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/charanguero_rasgueo.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/charanguero_salto.png",
+  "width": 384,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/charanguero_dano.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/charanguero_derrota.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/huaca_quieta.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/huaca_lanzar.png",
+  "width": 384,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/huaca_hundirse.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/huaca_dano.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/huaca_derrota.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/cuygig_mirar.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/cuygig_embestir.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/cuygig_salto.png",
+  "width": 384,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/cuygig_mareado.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/cuygig_dano.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/cuygig_derrota.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/bombo_quieto.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/bombo_salto.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/bombo_golpe.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/bombo_redoble.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/bombo_cansado.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/bombo_dano.png",
+  "width": 256,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/bombo_derrota.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/coco.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/aviso.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/nota.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/piedra.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/onda_bombo.png",
+  "width": 192,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/tiles_city.png",
+  "width": 512,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 8
+ },
+ {
+  "file": "sprites/tiles_cityday.png",
+  "width": 512,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 8
+ },
+ {
+  "file": "sprites/tiles_sea.png",
+  "width": 512,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 8
+ },
+ {
+  "file": "sprites/tiles_bamboo.png",
+  "width": 512,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 8
+ },
+ {
+  "file": "sprites/tiles_cave.png",
+  "width": 512,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 8
+ },
+ {
+  "file": "sprites/tiles_tech.png",
+  "width": 512,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 8
+ },
+ {
+  "file": "sprites/tiles_tower.png",
+  "width": 512,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 8
+ },
+ {
+  "file": "sprites/tambor.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/ritmica.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/movil.png",
+  "width": 64,
+  "height": 32,
+  "frame": [
+   64,
+   32
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/ascensor.png",
+  "width": 64,
+  "height": 32,
+  "frame": [
+   64,
+   32
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/cinta.png",
+  "width": 192,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/muro_grieta.png",
+  "width": 64,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/escombros.png",
+  "width": 192,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/porton.png",
+  "width": 192,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/muro_arena.png",
+  "width": 64,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/viento.png",
+  "width": 192,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/molino_rotor.png",
+  "width": 128,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/corchea.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/llave.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/cubo.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/maiz.png",
+  "width": 64,
+  "height": 32,
+  "frame": [
+   32,
+   32
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/aji.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/banderita.png",
+  "width": 192,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/anilla.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/gancho.png",
+  "width": 128,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/quipu_dorado.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/puerta.png",
+  "width": 128,
+  "height": 128,
+  "frame": [
+   64,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/puerta_n.png",
+  "width": 128,
+  "height": 128,
+  "frame": [
+   64,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/puerta_e.png",
+  "width": 128,
+  "height": 128,
+  "frame": [
+   64,
+   128
+  ],
+  "frames": 2
+ },
+ {
+  "file": "sprites/puerta_r.png",
+  "width": 64,
+  "height": 128,
+  "frame": [
+   64,
+   128
+  ],
+  "frames": 1
+ },
+ {
+  "file": "sprites/poof.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/chispa.png",
+  "width": 256,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/polvo.png",
+  "width": 192,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/humo.png",
+  "width": 192,
+  "height": 64,
+  "frame": [
+   64,
+   64
+  ],
+  "frames": 3
+ },
+ {
+  "file": "sprites/brillo_aji.png",
+  "width": 512,
+  "height": 128,
+  "frame": [
+   128,
+   128
+  ],
+  "frames": 4
+ },
+ {
+  "file": "sprites/iconos.png",
+  "width": 192,
+  "height": 32,
+  "frame": [
+   32,
+   32
+  ],
+  "frames": 6
+ },
+ {
+  "file": "bg/logo.png",
+  "width": 640,
+  "height": 192,
+  "frame": [
+   640,
+   192
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/portada.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_city_far.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_city_mid.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_city_near.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_cityday_far.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_cityday_mid.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_cityday_near.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_sea_far.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_sea_mid.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_sea_near.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_bamboo_far.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_bamboo_mid.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_bamboo_near.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_cave_far.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_cave_mid.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_cave_near.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_tech_far.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_tech_mid.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_tech_near.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_tower_far.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_tower_mid.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ },
+ {
+  "file": "bg/bg_tower_near.png",
+  "width": 1280,
+  "height": 720,
+  "frame": [
+   1280,
+   720
+  ],
+  "frames": 1
+ }
+]

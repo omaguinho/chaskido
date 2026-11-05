@@ -1,0 +1,56 @@
+CHASKIDO · Hoja de trabajo para pulir los niveles (sin ayuda)
+
+HERRAMIENTAS
+- editor-chasqui.html: abre, "Importar" y pega js/levels.js entero. Elige una sala, pinta, y al
+  final "Copiar todos para levels.js" y pega el resultado en js/levels.js (reemplaza todo).
+  Antes de pegar, guarda una copia de levels.js (levels_respaldo.js).
+- Probar: recarga localhost:8158. Con un teclado, la tecla 0 prende el modo de prueba y las
+  teclas 1 a 6, Y, U, I y O dan o quitan poderes
+  (para revisar caminos).
+- revisar.html: dice qué dibujos y músicas están (verde), cuáles faltan (rojo) y cuáles
+  tienen una medida rara (amarillo).
+
+REGLAS PARA QUE UNA SALA FUNCIONE
+1. Cada sala principal tiene: una P (inicio), un tótem W, 3 corcheas n y una llave k
+   (lejos del tótem). La sala del jefe tiene además el portón G y el jefe J.
+2. La papa mide casi 1,5 bloques de alto: deja siempre 2 filas libres para pasar.
+3. Un salto sube 3 bloques; con doble salto, 6. De lado, salta unos 5 bloques corriendo.
+   Repisas de vuelta: cada 3 filas como mucho.
+4. Las plataformas delgadas (= y _) se cruzan desde abajo y se bajan con abajo. Si algo
+   no debe alcanzarse desde abajo, ponlo sobre bloque macizo (# o B).
+5. Cada zona tiene 7 notas de la escala (q, con la nota en Opciones): repártelas entre sus 3 salas.
+6. Pasos entre salas (:): los dos lados deben decir a qué sala llevan (pestaña Nivel).
+7. Después de cambiar una sala, juégala entera: inicio → corcheas → llave → tótem, y vuelve
+   desde cada rincón al tótem. Si te quedas atrapada, agrega una repisa de paso.
+
+TAREAS SUGERIDAS (en este orden)
+A. Enemigos (un rato por zona)
+   - Que no haya enemigos justo en la llegada de una sala ni encima de una repisa de 3 bloques.
+   - 4 a 8 enemigos por sala. Los que vuelan (paloma, colibrí, libélula) sobre huecos;
+     los que caminan, en suelos largos. El barrendero es un vecino: ponlo en calles y plazas.
+   - Usa los enemigos de cada zona (ver la pestaña Piezas del editor, por región).
+B. Monedas y cubos
+   - Líneas de monedas que muestren el salto bueno (arco de 4-5 monedas sobre un hueco).
+   - Cubos (c) en rincones escondidos: premian explorar.
+C. Banderitas (S)
+   - Una antes de cada parte difícil (espinas, nubes que caen, rítmicas). Máximo cada pantalla y media.
+D. Decoración (capa Deco)
+   - 2 o 3 piezas por pantalla, en el fondo. Que no tapen repisas ni la llave.
+   - Rompe las líneas rectas: piedras, matas, faroles al borde de los suelos largos.
+E. Carteles (?)
+   - Uno por sala, cerca del inicio, con una frase corta (texto en Opciones). Si agregas
+     uno, avísame en la próxima versión para traducirlo (o déjalo en español).
+F. Formas de las salas
+   - Cambia suelos planos largos por escalones de 1 bloque o pequeños pozos.
+   - Agrega techos y repisas altas para que la sala no sea una línea.
+
+QUÉ NO TOCAR (para no romper nada)
+- Las letras de las puertas de color (Y), los sellos (A) y los muros de nota (5 al 0, [ ] ( )):
+  ordenan qué poder o nota se necesita.
+- El portón G y el jefe J de las salas de jefe.
+- Las salas p1, p2 y p3 (el prólogo tiene escenas programadas).
+
+ANOTA PARA LA PRÓXIMA VERSIÓN
+- Qué sala cambiaste y qué te pareció difícil o aburrido.
+- Si un jefe es muy fácil o muy difícil (se ajusta en js/config.js, CONFIG.BOSSES: HP, velocidades).
+- Textos nuevos que haya que traducir.

@@ -1,0 +1,63 @@
+CHASKIDO · Cómo avanzar hasta el final
+(Solo el camino principal; no hace falta juntar todo para llegar.)
+
+CÓMO FUNCIONA CADA SALA
+- Cada sala principal tiene un tótem. Al tocarlo empieza la misión: atrapa las 3 corcheas,
+  aparece la llave y la llevas al tótem antes de que termine la canción. La sala queda afinada.
+- En la sala del jefe, el portón de la arena se abre solo cuando afinas esa sala.
+- Cada jefe da un poder, una nota del diapasón y la llave de color que abre la zona siguiente.
+- Desde cualquier tótem puedes viajar a las salas donde ya estuviste.
+- Los muros de colores se abren con su nota: mantén el diapasón (F o Triángulo) hasta la nota y suelta.
+
+PRÓLOGO · La noche en que se fue la música
+1. La Fiesta → Bajo la Ciudad: vence al Eco del Silencio. Da el diapasón (notas La y Si).
+2. La Caída te deja en las Calles del Ocaso.
+
+ZONA 1 · Ciudad Ocaso
+3. Afina las Calles del Ocaso, las Acequias Hondas (abajo) y el Puerto de los Molinos (a la izquierda).
+4. En el Puerto, el Guardián del Tambor da el doble salto, la nota Do y la llave celeste.
+
+ZONA 2 · Barrio de Cañas
+5. La puerta celeste está arriba a la derecha de las Calles del Ocaso: lleva al Barrio Alto
+   (se llega con el doble salto).
+6. Sigue al Cañaveral Gigante y al Taller del Silencio. El Cuy Gigante da el salto en la pared,
+   la nota Re y la llave verde.
+
+ZONA 3 · Bosque Profundo
+7. La puerta verde está al fondo de las Acequias Hondas, detrás del muro de Re (amarillo).
+   Baja por el pozo a la Linde del Bosque.
+8. Linde del Bosque → Bosque Hondo → Pantano. El Gusano Taladro da el dash, la nota Mi y la llave naranja.
+
+ZONA 4 · Ciudad Dorada
+9. La puerta naranja está al este de la arena del Pantano: lleva a la Escalinata del Sol.
+10. Escalinata del Sol → Calzada de las Estatuas → Templo del Toro. El Toro Dorado da el
+    zapateo, la nota Fa y la llave rosa.
+
+ZONA 5 · Cumbres de Escarcha
+11. La puerta rosa está arriba del Templo del Toro: lleva a la Avenida Congelada.
+12. Avenida Congelada → Metro Sumergido → Antena de la Tormenta. El Oso de Escarcha da el
+    planeo, la nota Sol y la llave lavanda.
+
+ZONA 6 · Lago Espejo
+13. Viaja al Puerto de los Molinos. La puerta lavanda está en el muelle del oeste: cruza el mar
+    planeando hasta la Orilla de Juncos.
+14. Orilla de Juncos → Islas Flotantes (baja por la tabla de paso) → Bajo el Espejo (baja por el pozo).
+    La Rana Gigante da el buceo y la llave azul.
+
+ZONA 7 · Ciudadela de Niebla
+15. La puerta azul está en la Orilla de Juncos, al pie de la cascada: sube buceando.
+16. Puerta de Nubes → Templo sin Nombre → Mirador del Eco. El Cóndor de Bronce da el caracol del
+    eco y la llave dorada.
+
+EL FINAL · El Gran Silencio
+17. La puerta dorada está abajo a la izquierda de la Linde del Bosque. Además de la llave dorada pide
+    las 21 salas afinadas (viaja por los tótems a las que te falten).
+18. Baja por El Gran Silencio hasta el portón del fondo y vence a El Silencio (suena el blues en
+    Mi menor). Vuelve la música: todos salen a celebrar y llega el final según la dificultad.
+
+Jefes: todos tienen 3 etapas. Bajo 2/3 de la vida se apuran; bajo 1/3 se ponen furiosos
+(halo rojo) y van todavía más rápido.
+
+Atajos útiles
+- Abajo: baja de cualquier plataforma delgada. Todas se cruzan saltando desde abajo.
+- Si te falta un poder para un camino, sigue adelante: casi siempre se vuelve después.
