@@ -136,19 +136,43 @@ const Music = (function () {
     return mono;
   }
 
-  // Los buffers se guardan por archivo (no por nombre): cada sala puede tener los suyos
-  function loadStem(file) {
+  // Los buffers se guardan por archivo (no por nombre): cada sala puede tener los suyos.
+  // El servidor de Acode a veces corta un archivo grande: si una pista no llega o no se
+  // puede leer, se vuelve a pedir (hasta STEM_TRIES veces). Antes quedaba muda para
+  // siempre (por eso a veces no sonaba la percusión).
+  const STEM_TRIES = 5;
+  function loadStem(file, n) {
+    n = n || 0;
     if (stemBuffers[file]) return Promise.resolve(stemBuffers[file]);
     if (stemBuffers[file + '#p']) return stemBuffers[file + '#p'];
-    const p = fetch(CONFIG.MUSIC.PATH + file)
-      .then(function (res) { return res.arrayBuffer(); })
+    const url = CONFIG.MUSIC.PATH + file + (n ? '?r=' + n : '');
+    const p = fetch(url)
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.arrayBuffer();
+      })
       .then(function (data) {
         return new Promise(function (ok, fail) { audioCtx.decodeAudioData(data, ok, fail); });
       })
       .then(function (buffer) { stemBuffers[file] = toMono(buffer); return stemBuffers[file]; })
-      .catch(function () { console.error('Error cargando pista:', file); return null; });
+      .catch(function () {
+        delete stemBuffers[file + '#p'];
+        if (n + 1 >= STEM_TRIES) { console.error('No se pudo cargar la pista:', file); return null; }
+        return new Promise(function (ok) { setTimeout(ok, 600 * (n + 1)); })
+          .then(function () { return loadStem(file, n + 1); });
+      });
     stemBuffers[file + '#p'] = p;
     return p;
+  }
+
+  // Las pistas se piden una tras otra (no las tres juntas): menos carga para el
+  // servidor y menos memoria a la vez al decodificarlas
+  function loadAllStems(files) {
+    return files.reduce(function (chain, f) {
+      return chain.then(function (list) {
+        return loadStem(f).then(function (b) { return list.concat([b]); });
+      });
+    }, Promise.resolve([]));
   }
 
   // Volumen que debe tener cada instrumento ahora
@@ -210,6 +234,8 @@ const Music = (function () {
       collected[name] = false;
       stemDistances[name] = Infinity;
     });
+    // Se empiezan a descargar al entrar a la sala (así suenan apenas empieza la misión)
+    loadAllStems(stemNames.map(function (n) { return stemFiles[n]; }));
   }
 
   // Empieza a sonar (en silencio) todo junto; cuando las pistas terminan de cargar,
@@ -218,7 +244,7 @@ const Music = (function () {
     initCtx();
     stemMode = mode;
     const level = stemLevel;
-    Promise.all(stemNames.map(function (n) { return loadStem(stemFiles[n]); })).then(function () {
+    loadAllStems(stemNames.map(function (n) { return stemFiles[n]; })).then(function () {
       if (stemLevel !== level || stemMode === 'off') return;
       if (!stemStart) stemStart = audioCtx.currentTime + 0.05;
       stemNames.forEach(startStem);
@@ -237,6 +263,10 @@ const Music = (function () {
     if (stemNames.indexOf(name) === -1 || collected[name]) return false;
     collected[name] = true;
     if (stemMode === 'off') beginStems('search');
+    // Si su pista no había llegado, se pide otra vez y entra en su lugar del compás
+    if (!activeSources[name] && stemMode !== 'off' && stemStart) {
+      loadStem(stemFiles[name]).then(function () { startStem(name); });
+    }
     applyStem(name);                 // queda sonando (ya no se apaga)
     return true;
   }
