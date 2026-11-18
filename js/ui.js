@@ -144,6 +144,9 @@ const UI = (function () {
       R.headH = 18;
       R.title = '¡+' + s.coins + ' monedas!';
       R.rows.push({ str: 'Se gastan con los vendedores.', color: GREY, align: 'center' });
+    } else if (s.kind === 'heart') {
+      R.title = '¡Corazón extra!';
+      R.rows.push({ str: 'Ahora tienes ' + s.max + ' corazones.', color: GREY, align: 'center' });
     } else if (s.kind === 'poliedro') {
       R.title = '¡' + s.poliedro.nombre + '!';
       R.rows.push({ str: s.poliedro.que, color: GREY, align: 'center' });

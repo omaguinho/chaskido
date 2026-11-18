@@ -14,13 +14,14 @@ function roomNumber(id) {
 // Textos de la partida
 const TEXT = {
   intro: 'Muévete con A/D o el joystick. Salta con Espacio o X. Corre manteniendo E o Cuadrado. Toca el tótem para empezar la misión.',
-  missionStart: function (n) { return '¡Misión iniciada! Los ' + n + ' instrumentos despertaron. Si te ven, huyen: atrápalas.'; },
-  missionTimed: function (n, t) { return '¡Misión iniciada! Tienes ' + t + ' para atrapar las ' + n + ' instrumentos, tomar la llave y volver.'; },
+  missionStart: function (n) { return '¡Misión iniciada! Los ' + n + ' instrumentos despertaron. Si te ven, huyen: atrápalos.'; },
+  missionTimed: function (n, t) { return '¡Misión iniciada! Tienes ' + t + ' para atrapar los ' + n + ' instrumentos, tomar la llave y volver.'; },
+  caught: function (name) { return '¡Atrapaste: ' + name + '!'; },
   escapeBoss: '¡Apareció la llave del jefe! Tómala: abre su portón.',
   escape: '¡Apareció la llave! Tómala y llévala al tótem antes de que termine la canción.',
-  timeout: 'Se acabó la canción. Las corcheas volvieron a dormir: toca el tótem para intentarlo otra vez.',
+  timeout: 'Se acabó la canción. Los instrumentos volvieron a su lugar: toca el tótem para intentarlo otra vez.',
   afinada: function (song) { return '¡La sala se afinó! «' + song + '» entró al Catálogo de músicas.'; },
-  totemBusy: function (n) { return 'Faltan ' + n + (n === 1 ? ' corchea.' : ' corcheas.'); },
+  totemBusy: function (n) { return n === 1 ? 'Falta 1 instrumento.' : 'Faltan ' + n + ' instrumentos.'; },
   totemKey: 'Busca la llave y tráela antes de que termine la canción.',
   noTravel: 'Todavía no hay otras salas a las que viajar.',
   rested: 'Descansaste junto al fogón: corazones llenos. Partida guardada.',
@@ -33,7 +34,7 @@ const TEXT = {
   stone: function (p, has) { return 'Piedra del poder: ' + p + (has ? '. Ya lo tienes.' : '. Todavía no lo tienes.'); },
   notBuilt: 'Este paso lleva a una sala que todavía está en obras.',
   missionLeft: function (room) { return 'Dejaste la misión de ' + room + '. Vuelve a su tótem para empezarla otra vez.'; },
-  missionKept: 'La misión sigue: tus corcheas te esperan.',
+  missionKept: 'La misión sigue: tus instrumentos te esperan.',
   // wall: la nota del muro; known: si ya se aprendió
   tuneWrong: function (wall, known) {
     const N = CONFIG.TUNER.NOTES[wall];
@@ -1040,10 +1041,10 @@ class Game {
 
   // Mostramos el mensaje y la "miniatura" por cada uno que comimos
   caughtList.forEach(tipo => {
-    const nombreBonito = tipo.charAt(0).toUpperCase() + tipo.slice(1); // Ej: 'Bajo'
+    const nombreBonito = (CONFIG.MUSIC.STEM_NAMES || {})[tipo] || (tipo.charAt(0).toUpperCase() + tipo.slice(1)); // Ej: 'Bajo'
     
     // 1. El mensaje rápido
-    this.say('¡Atrapaste: ' + nombreBonito + '!', 2.5, false); 
+    this.say(TEXT.caught(nombreBonito), 2.5, false); 
     
     // 2. El texto flotante (cubo rojo por ahora)
     // Cambia esto:
@@ -1537,6 +1538,7 @@ class Game {
     if (note && !this.progress.tunerNotes[note]) steps.push({ kind: 'note', note: note });
     // (las llaves de color ya no existen: la zona siguiente se abre con la nota del jefe)
     if (jefe && jefe.da === 'monedas') steps.push({ kind: 'coins', coins: 100 });
+    if (jefe && jefe.da === 'corazon' && this.progress.maxHearts < CONFIG.GAME.MAX_HEARTS) steps.push({ kind: 'heart' });
     if (jefe && jefe.da === 'poliedro') {
       const p = CATALOGO.POLIEDROS.find(function (x) { return x.region === (L.region || 1); });
       if (p) steps.push({ kind: 'poliedro', poliedro: p });
@@ -1574,6 +1576,11 @@ class Game {
     } else if (s.kind === 'poliedro') {
       P.poliedros[s.poliedro.id] = true;
       Sfx.play('ability');
+    } else if (s.kind === 'heart') {
+      P.maxHearts = Math.min(CONFIG.GAME.MAX_HEARTS, P.maxHearts + 1);
+      this.hearts = P.maxHearts;
+      s.max = P.maxHearts;
+      Sfx.play('lifeUp');
     }
   }
 

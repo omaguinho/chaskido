@@ -202,7 +202,7 @@ const CATALOGO = (function () {
   // Sólidos de cristal con una nota adentro (no se usan cubos de colores de ninguna marca).
   const POLIEDROS = [
     { id: 'piramide',   nombre: 'Pirámide sonora', region: 1, color: '#ff6b6b', ic: '▲',
-      que: 'Muestra en el mapa dónde están las 3 corcheas de la sala.' },
+      que: 'Muestra en el mapa dónde están los 3 instrumentos de la sala.' },
     { id: 'octaedro',   nombre: 'Octaedro sonoro', region: 2, color: '#ffb84d', ic: '◆',
       que: 'Escudo: aguanta un golpe sin perder vida, una vez por sala.' },
     { id: 'espejo',     nombre: 'Prisma espejo', region: 3, color: '#d0d6e0', ic: '◩',
@@ -210,7 +210,7 @@ const CATALOGO = (function () {
     { id: 'cilindro',   nombre: 'Cilindro torcido', region: 4, color: '#6bc6ff', ic: '◍',
       que: 'El escape con la llave dura 20 segundos más.' },
     { id: 'dodecaedro', nombre: 'Dodecaedro estrella', region: 5, color: '#b48cff', ic: '✸',
-      que: 'Las corcheas huyen más despacio.' },
+      que: 'Los instrumentos huyen más despacio.' },
     { id: 'engranaje',  nombre: 'Esfera de engranajes', region: 6, color: '#c9a35b', ic: '⚙',
       que: 'Imán: atrae monedas, maíz y cubos cercanos.' },
     { id: 'teseracto',  nombre: 'Cristal de mil caras', region: 7, color: '#ffffff', ic: '⧈',
@@ -509,7 +509,7 @@ const CATALOGO = (function () {
       que: 'A: rueda de pared a pared. B: se cuelga del techo y su redoble levanta un ventarrón.' },
     { id: 'charanguero', region: 1, nombre: 'El Rasgueador',         da: 'monedas',    estado: 'hecho', sala: 'j1', mmx: 'Armored Armadillo', apodo: 'cuerdas sin dueño',
       que: 'A: se enrolla como bola y rebota. B: dispara notas.' },
-    { id: 'huaca',       region: 1, nombre: 'Tótem de Piedra',       da: 'poliedro',   estado: 'hecho', sala: 'j2', mmx: 'Boomer Kuwanger', apodo: 'la corona que siempre vuelve',
+    { id: 'huaca',       region: 1, nombre: 'Tótem de Piedra',       da: 'corazon',    estado: 'hecho', sala: 'j2', mmx: 'Boomer Kuwanger', apodo: 'la corona que siempre vuelve',
       que: 'A: desaparece y reaparece junto a la papa. B: lanza su corona como bumerán.' },
     { id: 'cuy',         region: 2, nombre: 'Cuy Gigante',           da: 'wallJump', llave: 'verde',   estado: 'hecho', sala: 'n6', mmx: 'Spark Mandrill', apodo: 'el que nunca frena',
       que: 'A: embestida hasta la pared. B: se cuelga del techo, cae y suelta chispas por el suelo y las paredes.' },

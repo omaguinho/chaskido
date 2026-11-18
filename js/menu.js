@@ -626,7 +626,7 @@ class PauseMenu {
     const songs = P.songs;
     if (!songs.length) {
       UI.text(ctx, 'Todavía no hay canciones.', CONFIG.WIDTH / 2, 80, '#fbf6ec', 7, 'center');
-      UI.text(ctx, 'Afina una sala (atrapa sus corcheas y vuelve al tótem)', CONFIG.WIDTH / 2, 94, '#9a93b0', 6, 'center');
+      UI.text(ctx, 'Afina una sala (atrapa sus 3 instrumentos)', CONFIG.WIDTH / 2, 94, '#9a93b0', 6, 'center');
       UI.text(ctx, 'y su canción queda aquí.', CONFIG.WIDTH / 2, 103, '#9a93b0', 6, 'center');
       return;
     }
