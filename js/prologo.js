@@ -448,51 +448,60 @@ const Scenes = (function () {
   };
 
   Fiesta.prototype.update = function (dt, game) {
-    this.t += dt;
-    const level = game.level;
-    const phase = level.beatPhase();
-    if (phase < this.lastBeat) this.onBeat(game);
-    this.lastBeat = phase;
-    // La música no se apaga sola en esta sala
-    updateHints(this.hints, dt, game.player);
-    if (!this.event) {
+  this.t += dt;
+  const level = game.level;
+  const phase = level.beatPhase();
+  if (phase < this.lastBeat) this.onBeat(game);
+  this.lastBeat = phase;
+  // La música no se apaga sola en esta sala
+  updateHints(this.hints, dt, game.player);
+  
+  if (!this.event) {
+    // SI NO ESTAMOS EN LA MISIÓN, MANTENER LA MÚSICA AL 100%
+    if (game.mission !== 'collect') {
       game.musicNear = 1;
       Music.setNear(1);
-      const plaza = this.data.plaza || [0, 0];
-      if (game.player.x / T >= plaza[0]) this.startSilence(game);
-    } else {
-      this.updateSilence(dt, game);
     }
-    this.fireworks.forEach(function (f) {
-      f.t += dt;
-      f.parts.forEach(function (p) {
-        p.vy += 40 * dt;
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-      });
+    
+    const plaza = this.data.plaza || [0, 0];
+    if (game.player.x / T >= plaza[0]) this.startSilence(game);
+  } else {
+    this.updateSilence(dt, game);
+  }
+
+  this.fireworks.forEach(function (f) {
+    f.t += dt;
+    f.parts.forEach(function (p) {
+      p.vy += 40 * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
     });
-    this.fireworks = this.fireworks.filter(function (f) { return f.t < 1.6; });
-    this.notes.forEach(function (n) {
-      n.t += dt;
-      const k = smooth(n.t / n.time);
-      const target = this.machineWorld(game);
-      n.x = n.x0 + (target.x - n.x0) * k + Math.sin(n.t * 5 + n.seed) * 10 * (1 - k);
-      n.y = n.y0 + (target.y - n.y0) * k - Math.sin(k * Math.PI) * 30;
-    }, this);
-    this.notes = this.notes.filter(function (n) { return n.t < n.time; });
-    this.debris.forEach(function (d) {
-      d.vy += 600 * dt;
-      d.x += d.vx * dt;
-      d.y += d.vy * dt;
-      d.t += dt;
-    });
-    this.debris = this.debris.filter(function (d) { return d.t < 1.5; });
-    this.crowd.forEach(function (c) {
-      if (c.vy === undefined) return;
-      c.vy += 600 * dt;
-      c.feet += c.vy * dt;
-    });
-  };
+  });
+  this.fireworks = this.fireworks.filter(function (f) { return f.t < 1.6; });
+  
+  this.notes.forEach(function (n) {
+    n.t += dt;
+    const k = smooth(n.t / n.time);
+    const target = this.machineWorld(game);
+    n.x = n.x0 + (target.x - n.x0) * k + Math.sin(n.t * 5 + n.seed) * 10 * (1 - k);
+    n.y = n.y0 + (target.y - n.y0) * k - Math.sin(k * Math.PI) * 30;
+  }, this);
+  this.notes = this.notes.filter(function (n) { return n.t < n.time; });
+  
+  this.debris.forEach(function (d) {
+    d.vy += 600 * dt;
+    d.x += d.vx * dt;
+    d.y += d.vy * dt;
+    d.t += dt;
+  });
+  this.debris = this.debris.filter(function (d) { return d.t < 1.5; });
+  
+  this.crowd.forEach(function (c) {
+    if (c.vy === undefined) return;
+    c.vy += 600 * dt;
+    c.feet += c.vy * dt;
+  });
+};
 
   // En cada tiempo: la banda suelta notas y, cada 2 tiempos, un fuego artificial
   Fiesta.prototype.onBeat = function (game) {
@@ -1027,48 +1036,58 @@ const Scenes = (function () {
     }
   };
 
-  // "CHASKIDO" armado con notas que llegan volando (t: segundos desde que empieza)
-  function drawTitleWord(ctx, t, life, y, alphaMax) {
-    const word = 'CHASKIDO';
-    const size = 24;
-    const spacing = 26;
-    const x0 = W / 2 - (word.length - 1) * spacing / 2;
-    const out = life ? smooth((t - (life - 1)) / 1) : 0;
-    ctx.font = gameFont(size);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i < word.length; i++) {
-      const arrive = 0.35 + i * 0.12;
-      const k = smooth((t - i * 0.12) / arrive);
-      const tx = x0 + i * spacing;
-      const sx = W / 2 + (rand(i * 9) - 0.5) * 360;
-      const sy = H + 40 + rand(i * 5) * 60;
-      const x = sx + (tx - sx) * k;
-      const yy = sy + (y - sy) * k + Math.sin(t * 2 + i) * (k >= 1 ? 1.5 : 0);
-      const a = (alphaMax || 1) * (1 - out);
-      if (k < 1) {
-        ctx.globalAlpha = a;
-        BossShow.drawNote(ctx, x, yy, FLAG_COLORS[i % FLAG_COLORS.length], i % 3);
-        continue;
-      }
-      Light.drawGlow(ctx, tx, yy, 22, FLAG_COLORS[i % FLAG_COLORS.length], 0.45 * a);
+  const titleSounds = {}; // Guarda qué letras ya sonaron
+
+function drawTitleWord(ctx, t, life, y, alphaMax) {
+  const word = 'CHASKIDO';
+  const size = 24;
+  const spacing = 26;
+  const x0 = W / 2 - (word.length - 1) * spacing / 2;
+  const out = life ? smooth((t - (life - 1)) / 1) : 0;
+  ctx.font = gameFont(size);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  for (let i = 0; i < word.length; i++) {
+    const arrive = 0.35 + i * 0.12;
+    const k = smooth((t - i * 0.12) / arrive);
+    const tx = x0 + i * spacing;
+    const sx = W / 2 + (rand(i * 9) - 0.5) * 360;
+    const sy = H + 40 + rand(i * 5) * 60;
+    const x = sx + (tx - sx) * k;
+    const yy = sy + (y - sy) * k + Math.sin(t * 2 + i) * (k >= 1 ? 1.5 : 0);
+    const a = (alphaMax || 1) * (1 - out);
+    
+    if (k < 1) {
       ctx.globalAlpha = a;
-      ctx.fillStyle = '#5e2433';
-      ctx.fillText(word[i], tx + 2, yy + 2);
-      ctx.fillStyle = '#ffd34d';
-      ctx.fillText(word[i], tx, yy);
-      // Destello al llegar
-      const since = t - i * 0.12 - arrive;
-      if (since < 0.15) {
-        ctx.globalAlpha = a * (1 - since / 0.15);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(word[i], tx, yy);
-      }
+      BossShow.drawNote(ctx, x, yy, FLAG_COLORS[i % FLAG_COLORS.length], i % 3);
+      continue;
     }
-    ctx.globalAlpha = 1;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
+    
+    // SONIDO DE LA LETRA AL APARECER
+    if (!titleSounds[i] && !out) {
+      titleSounds[i] = true;
+      Sfx.scaleNote(i); // Toca una nota distinta por letra
+    }
+
+    Light.drawGlow(ctx, tx, yy, 22, FLAG_COLORS[i % FLAG_COLORS.length], 0.45 * a);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#5e2433';
+    ctx.fillText(word[i], tx + 2, yy + 2);
+    ctx.fillStyle = '#ffd34d';
+    ctx.fillText(word[i], tx, yy);
+    
+    const since = t - i * 0.12 - arrive;
+    if (since < 0.15) {
+      ctx.globalAlpha = a * (1 - since / 0.15);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(word[i], tx, yy);
+    }
   }
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+}
 
   // ---------- Pantalla de inicio ----------
 
@@ -1113,10 +1132,13 @@ const Scenes = (function () {
     return null;
   }
 
-  return {
+   return {
     create: create,
     drawTitleBackground: drawTitleBackground,
     drawButtonHint: drawButtonHint,
-    drawNightSky: drawNightSky
+    drawNightSky: drawNightSky,
+    resetTitleSound: function() {
+      for (let k in titleSounds) delete titleSounds[k];
+    }
   };
 })();

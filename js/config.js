@@ -129,6 +129,7 @@ const CONFIG = {
     BOSS_HIT: 1.05,
     GROW: [
       { prefix: 'papa_', scale: 1.35, anchor: 'bottom' },
+      { prefix: 'sprite_', scale: 1.5, anchor: 'center' },
       { names: ['corchea', 'corchea_alerta', 'corchea_huir'], scale: 1.35, anchor: 'bottom' },
       { names: ['moneda', 'moneda_chica', 'fruta', 'fruto', 'maiz', 'aji', 'cubo', 'corazon_extra',
                 'llave', 'llave_color', 'nota_escala'], scale: 1.15, anchor: 'center' },
@@ -187,25 +188,41 @@ const CONFIG = {
   RETRY_AFTER: 3,  // segundos después de empezar: se piden otra vez los dibujos que no llegaron
 
   MUSIC: {
-    PATH: 'assets/music/',
-    // Por ahora todo usa el blues en Do: cada sala lo toca en su tono y a su
-    // velocidad ("pitch" en levels.js). Cuando estén las músicas de cada sala,
-    // se agregan aquí y se cambia "music" en la sala.
-    TRACKS: {
-      main: 'blues_do_mayor.mp3',   // mientras juegas
-      key: 'blues_do_mayor.mp3',    // con la llave (el mismo tema, más agudo y rápido)
-      final: 'blues_mi_menor.mp3'   // El Gran Silencio (si falta, suena el blues de siempre)
-    },
-    FALLBACK: { final: 'blues_do_mayor.mp3' },
-    // Semitonos extra de cada pista sobre el tono de la sala
-    TRACK_PITCH: { key: 3 },
-    BPM: 120,
-    // Cada nivel puede subir o bajar la música en semitonos ("pitch" en levels.js).
-    // Al cambiar el tono también cambia la velocidad, y el ritmo del nivel la sigue.
-    BOSS_TRACK: 'key',              // durante la pelea suena la versión en menor
-    ERROR_SHOW: 6                   // segundos que se ve el aviso si una música no carga
+  PATH: 'assets/music/',
+  TRACKS: {
+    main: 'blues_do_mayor.mp3',   
+    key: 'blues_do_mayor.mp3',    
+    final: 'blues_mi_menor.mp3'   
+  },
+  FALLBACK: { final: 'blues_do_mayor.mp3' },
+
+  // ESTO YA LO TENÍAS (Rutas de los archivos):
+  STEMS: {
+    bajo: 'instrument/bajo.m4a',
+    percusion: 'instrument/percusion.m4a',
+    teclado: 'instrument/teclado.m4a'
   },
 
+  // ESTO ES LO NUEVO QUE DEBES AGREGAR (Nombres para el menú):
+  STEM_NAMES: {
+    bajo: 'Bajo',
+    percusion: 'Percusión',
+    teclado: 'Teclado'
+  },
+
+  STEM_RATE: 24000,     // Hz de las pistas de instrumentos (menos = menos memoria en el celular)
+  INSTRUMENT_SEARCH: {
+    MAX_DISTANCE: 15,   
+    MIN_VOLUME: 0.0,    
+    MAX_VOLUME: 1.0,    
+    CURVE: 1.5          
+  },
+
+  TRACK_PITCH: { key: 3 },
+  BPM: 120,
+  BOSS_TRACK: 'key',              
+  ERROR_SHOW: 6                   
+},
   // Efectos de sonido (generados por código) y vibración del mando
   SFX: {
     // Cubo: arpegio 1-5-7-3 de Do mayor 7 (Do, Sol, Si, Mi), 3 veces en medio segundo

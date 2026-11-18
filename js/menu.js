@@ -436,10 +436,9 @@ class PauseMenu {
     if (L.boss && !rs.boss && L.bossSpawn) {
       this.mark(ctx, M.BOSS, ox + L.bossSpawn.tx * s + s / 2, oy + L.bossSpawn.ty * s, '#ff6b8a');
     }
-    // Corcheas que faltan (con la Pirámide sonora o durante la misión)
-    if (G.corcheas && (P.poliedros.piramide || G.mission === 'collect')) {
-      G.corcheas.remaining().forEach(function (c) {
-        if (c.state === 'asleep' && !P.poliedros.piramide) return;
+    // Instrumentos que faltan: solo durante la misión de esta sala
+    if (G.instrumentos && G.mission === 'collect') {
+      G.instrumentos.remaining().forEach(function (c) {
         this.mark(ctx, M.CORCHEA, ox + (c.x + c.w / 2) / CONFIG.TILE * s, oy + (c.y + c.h / 2) / CONFIG.TILE * s, '#ffe066');
       }, this);
     }

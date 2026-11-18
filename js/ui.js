@@ -239,7 +239,7 @@ const UI = (function () {
       x += 46;
       if (game.mission === 'collect' || game.mission === 'escape') {
         if (!icon(ctx, 'NOTE', x, 3)) Sprites.drawFrame(ctx, 'corchea', 0, x - 4, -1, false);
-        text(ctx, game.notes + '/' + game.corcheas.total(), x + 10, 3, '#ffe066');
+        text(ctx, game.notes + '/' + game.instrumentos.total(), x + 10, 3, '#ffe066');
         x += 42;
       }
       if (game.bonus) {
@@ -274,6 +274,25 @@ const UI = (function () {
         ctx.globalAlpha = 1;
       }
       if (game.savedIcon > 0) this.drawSaving(ctx, game.time);
+      // --- HUD DE INSTRUMENTOS COLECCIONADOS ---
+// --- HUD DE INSTRUMENTOS COLECCIONADOS ---
+if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 'merging') {
+  const insts = game.instrumentos.list;
+  const caught = insts.filter(c => c.state === 'caught');
+  if (caught.length > 0) {
+    const startX = W / 2 - (caught.length * 24) / 2;
+    const yPos = H - 26; 
+    
+    caught.forEach((c, i) => {
+      const x = startX + i * 24;
+      ctx.fillStyle = 'rgba(46, 42, 71, 0.8)';
+      ctx.fillRect(x, yPos, 20, 20);
+      
+      // ACÁ ESTÁ EL CAMBIO: Ya no usamos ctx.scale, solo lo dibujamos.
+      Sprites.drawAnchored(ctx, 'sprite_' + c.tipo, 0, x + 10, yPos + 18, false); 
+    });
+  }
+}
     },
 
     drawTimer(ctx, seconds, scale) {
@@ -326,6 +345,48 @@ const UI = (function () {
       ctx.fillRect(x, y, w, lines.length * step + 3);
       lines.forEach(function (l, i) { text(ctx, l, W / 2, y + 2 + i * step, color || '#ff6b6b', 6, 'center'); });
     },
+    drawMergeAnimation(ctx, game) {
+  const t = game.mergeTimer;
+  const insts = game.instrumentos.list;
+  const cx = game.player.x + game.player.w / 2;
+  const cy = game.player.y + game.player.h / 2;
+  
+  // 1. Los iconos vuelan desde el HUD al centro de la pantalla
+  if (t < 1.2) {
+    const progress = t / 1.2; // De 0 a 1
+    insts.forEach((c, i) => {
+      const startX = CONFIG.WIDTH / 2 + (i - 1) * 24;
+      const startY = CONFIG.HEIGHT - 16;
+      // Interpolación hacia el centro de la pantalla
+      const currentX = startX + (CONFIG.WIDTH / 2 - startX) * progress;
+      const currentY = startY + (CONFIG.HEIGHT / 2 - startY) * progress;
+      
+      ctx.globalAlpha = 1 - progress;
+      Sprites.drawAnchored(ctx, 'sprite_' + c.tipo, 0, currentX, currentY, false, null, 0.8);
+      ctx.globalAlpha = 1;
+    });
+  }
+  
+  // 2. Explosión de partículas (cuando chocan en el centro)
+  if (t > 1.2 && t < 2.5) {
+    const explodeProgress = (t - 1.2) / 1.3;
+    // Generamos muchas chispas
+    for(let i=0; i<15; i++) {
+      const angle = (Math.PI * 2 / 15) * i;
+      const radius = explodeProgress * 60;
+      const px = CONFIG.WIDTH / 2 + Math.cos(angle) * radius;
+      const py = CONFIG.HEIGHT / 2 + Math.sin(angle) * radius;
+      
+      ctx.fillStyle = ['#ffd34d', '#ff6b8a', '#6fd3ff'][i % 3];
+      ctx.fillRect(px, py, 3, 3);
+    }
+    
+    // Texto grande de "¡MIX!"
+    ctx.globalAlpha = Math.sin(explodeProgress * Math.PI);
+    UI.shadowText(ctx, '¡MIX!', CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2 - 10, '#ffd34d', 16, 'center');
+    ctx.globalAlpha = 1;
+  }
+},
 
     // Ventana de mensaje arriba (bajo el HUD). Los avisos cortos no muestran "cerrar"
     drawMessageBox(ctx, str, top, isHint) {

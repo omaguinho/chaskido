@@ -14,8 +14,8 @@ function roomNumber(id) {
 // Textos de la partida
 const TEXT = {
   intro: 'Muévete con A/D o el joystick. Salta con Espacio o X. Corre manteniendo E o Cuadrado. Toca el tótem para empezar la misión.',
-  missionStart: function (n) { return '¡Misión iniciada! Las ' + n + ' corcheas despertaron. Si te ven, huyen: atrápalas.'; },
-  missionTimed: function (n, t) { return '¡Misión iniciada! Tienes ' + t + ' para atrapar las ' + n + ' corcheas, tomar la llave y volver.'; },
+  missionStart: function (n) { return '¡Misión iniciada! Los ' + n + ' instrumentos despertaron. Si te ven, huyen: atrápalas.'; },
+  missionTimed: function (n, t) { return '¡Misión iniciada! Tienes ' + t + ' para atrapar las ' + n + ' instrumentos, tomar la llave y volver.'; },
   escapeBoss: '¡Apareció la llave del jefe! Tómala: abre su portón.',
   escape: '¡Apareció la llave! Tómala y llévala al tótem antes de que termine la canción.',
   timeout: 'Se acabó la canción. Las corcheas volvieron a dormir: toca el tótem para intentarlo otra vez.',
@@ -218,6 +218,7 @@ class Game {
   // arrive: null (inicio P), { spot }, { exit, from, offset, vx, vy } (por un paso),
   // { totem: true } (viaje) o { item: { x, y } } (volver a una puerta Q)
   loadRoom(id, arrive) {
+    Music.stopStems();
     const data = this.levelData(id) || LEVELS[0];
     this.levelIndex = LEVELS.indexOf(data);
     const L = this.level = new Level(data);
@@ -240,7 +241,7 @@ class Game {
 
     this.player = new Player(L.spawn.x, L.spawn.y);
     this.player.abilities = this.abilities;
-    this.corcheas = new Corcheas(L);
+    this.instrumentos = new Instrumentos(L);
     this.enemies = new Enemies(L);
     this.drops = new Drops();
     const b = L.bossSpawn;
@@ -406,6 +407,7 @@ class Game {
     }
     Music.setRate(L.rate);
     if (this.mission === 'escape') Music.play('key');
+    else if (this.mission === 'done' && this.isMissionRoom(L) && !L.boss) Music.playStems(L.id, true);
     else Music.play(this.mission === 'done' || !this.isMissionRoom(L) ? L.music : 'main');
     this.musicNear = 0;
     Music.setNear(this.baseMusic());
@@ -421,13 +423,19 @@ class Game {
   // ---------- Pantalla de inicio ----------
 
   openTitle() {
-    this.state = 'splash';
-    this.screenTime = 0;
-    Music.stop();
-    Backdrop.set('none');
-    Backdrop.setMuted(false);
-  }
+  this.state = 'splash';
+  this.screenTime = 0;
+  Backdrop.set('none');
+  Backdrop.setMuted(false);
 
+  // Música de la portada (blues en mi menor a 1/3 de velocidad)
+  Music.play('final'); 
+  Music.setRate(0.33); 
+  Music.setNear(1);
+
+  // Reinicia el sonido de las letras si vuelves al inicio
+  if (typeof Scenes !== 'undefined' && Scenes.resetTitleSound) Scenes.resetTitleSound();
+}
   screenReady() {
     return this.screenTime >= CONFIG.GAME.READY_DELAY;
   }
@@ -795,6 +803,11 @@ class Game {
 
   updateWorld(dt) {
     const p = this.player;
+    // Mientras la cámara muestra la llave o el portón, el juego queda congelado
+    if (this.camPan) {
+      this.updateCamera(CONFIG.CAMERA_LERP);
+      return;
+    }
     this.level.update(dt);
     p.frozen = !!(this.boss && this.boss.holdsPlayer()) || !!(this.scene && this.scene.holdsPlayer && this.scene.holdsPlayer());
     p.push = this.bossWind + p.current * CONFIG.WATER.CURRENT;
@@ -811,7 +824,7 @@ class Game {
     if (p.onGround && p.material(this.level) === CONFIG.MATERIALS.barro) this.showTip('mud');
     this.level.touchCrumbles(p);
     this.playerEvents();
-    this.corcheas.update(dt, this.level, p);
+    this.instrumentos.update(dt, this.level, p, this.level.id);
     this.enemies.update(dt, this.level, p, this.camera);
     this.enemies.takeShoves().forEach(function (e) { p.shove(e.dir); Sfx.play('stomp'); });
     this.dropCoins();
@@ -831,7 +844,7 @@ class Game {
       this.useAction();
       this.collectItems();
       this.collectCoins();
-      this.catchCorcheas();
+      this.catchInstrumentos();
       this.checkTotem();
       this.checkColorDoors();
       this.checkSeals();
@@ -842,6 +855,24 @@ class Game {
 
     this.updateTower(dt);
     this.updateMissionTimer(dt);
+    if (this.mission === 'merging') {
+  this.mergeTimer += dt;
+  if (this.mergeTimer > 2.5) {
+    this.mission = 'escape';
+    
+    if (!this.level.boss) {
+      // Si NO hay jefe (Nivel 1, 2, 4, 5...), afinamos directo sin llave
+      const t = this.totem();
+      if (t) this.afinarSala(t);
+    } else {
+      // Si HAY jefe (Nivel 3, 6...), llamamos a startEscape para que suelte la llave
+      this.startEscape();
+    }
+    
+    this.say('¡Pistas fusionadas!', 4, true);
+  }
+  return; 
+}
     this.updateBonus(dt);
     this.updateKeyFx(dt);
     if (this.tip) {
@@ -977,11 +1008,14 @@ class Game {
   }
 
   startMission(t) {
-    const n = this.corcheas.total();
+    const n = this.instrumentos.total();
     this.mission = 'collect';
     this.notes = 0;
     this.missionClock = 0;
-    this.corcheas.wakeAll();
+    this.instrumentos.wakeAll();
+// Activamos el sistema de audio de instrumentos
+    Music.stop(); 
+    Music.setStemLevel(this.level.id);
     t.state = 'despierto';
     Sfx.play('door');
     const limit = this.rules().MISSION_TIME;
@@ -995,44 +1029,65 @@ class Game {
     if (n === 0) this.startEscape();
   }
 
-  catchCorcheas() {
-    if (this.mission !== 'collect') return;
-    const got = this.corcheas.catchWith(this.player);
-    if (!got) return;
-    this.notes += got;
-    Sfx.play('note');
-    this.musicBoost = CONFIG.ECHO.CATCH_BOOST;   // al atrapar una, la música suena fuerte un momento
-    if (this.notes >= this.corcheas.total()) this.startEscape();
-  }
+  catchInstrumentos() {
+  if (this.mission !== 'collect') return;
+  const caughtList = this.instrumentos.catchWith(this.player);
+  if (!caughtList.length) return;
+  
+  this.notes += caughtList.length;
+  Sfx.play('note');
+  this.musicBoost = CONFIG.ECHO.CATCH_BOOST;
 
-  // Con las 3 corcheas aparece la llave y empieza la cuenta de la canción
+  // Mostramos el mensaje y la "miniatura" por cada uno que comimos
+  caughtList.forEach(tipo => {
+    const nombreBonito = tipo.charAt(0).toUpperCase() + tipo.slice(1); // Ej: 'Bajo'
+    
+    // 1. El mensaje rápido
+    this.say('¡Atrapaste: ' + nombreBonito + '!', 2.5, false); 
+    
+    // 2. El texto flotante (cubo rojo por ahora)
+    // Cambia esto:
+// Effects.popup('['+nombreBonito+']', this.player.x + this.player.w/2, this.player.y - 10, '#ff0000');
+// Por esto:
+  Effects.popup('+ ' + nombreBonito, this.player.x + this.player.w/2, this.player.y - 10, '#ffd34d');
+  });
+
+  // Si ya juntamos todos, empezamos la animación de fusión en lugar del escape directo
+  if (this.notes >= this.instrumentos.total()) {
+    this.mission = 'merging';
+    this.mergeTimer = 0;
+    Sfx.play('ability'); // Sonido de fusión
+  }
+}
+
+  // Con los 3 instrumentos aparece la llave y empieza la cuenta de la canción
   // Solo las salas con jefe tienen llave: la cámara va a mostrarla y vuelve. Tomarla
   // afina la sala y abre el portón del jefe. En las demás, las 3 corcheas ya la afinan
   startEscape() {
-    if (!this.level.boss) {
-      const t = this.totem();
-      if (t) {
-        this.mission = 'escape';
-        this.afinarSala(t);
-        return;
-      }
-    }
-    this.mission = 'escape';
-    if (this.rules().MISSION_TIME <= 0) this.timeLeft = this.level.time;
-    this.keyTime = 0;
-    this.lastTick = 0;
-    const key = this.level.items.find(function (i) { return i.type === 'key'; });
-    if (key) {
-      key.hidden = false;
-      key.taken = false;
-      Effects.play('poof', key.x + 8, key.y + 8);
-      this.panCamera(key.x + 8, key.y + 8);
-    } else {
-      this.hasKey = true;
-    }
-    this.say(this.level.boss ? TEXT.escapeBoss : TEXT.escape, 4, true);
-    Music.play('key');
+  // 1. SI NO HAY JEFE: Afinamos la sala directo y salimos (sin llave)
+  if (!this.level.boss) {
+    const t = this.totem();
+    if (t) this.afinarSala(t);
+    return;
   }
+
+  // 2. SI HAY JEFE: Hacemos la lógica de la llave
+  this.mission = 'escape';
+  if (this.rules().MISSION_TIME <= 0) this.timeLeft = this.level.time;
+  this.keyTime = 0;
+  this.lastTick = 0;
+  
+  const key = this.level.items.find(function (i) { return i.type === 'key'; });
+  if (key) {
+    key.hidden = false;
+    key.taken = false;
+    Effects.play('poof', key.x + 8, key.y + 8);
+    this.panCamera(key.x + 8, key.y + 8);
+  } else {
+    this.hasKey = true;
+  }
+  this.say(TEXT.escapeBoss, 4, true);
+}
 
   // Con la llave en la mano, al tocar el tótem la sala se afina
   checkTotem() {
@@ -1041,7 +1096,7 @@ class Game {
     const near = overlaps(Items.nearBox(t), this.player);
     if (!near) return;
     if (this.mission === 'escape' && this.hasKey) this.afinarSala(t);
-    else if (this.mission === 'collect') this.hint(TEXT.totemBusy(this.corcheas.remaining().length));
+    else if (this.mission === 'collect') this.hint(TEXT.totemBusy(this.instrumentos.remaining().length));
     else if (this.mission === 'escape') this.hint(TEXT.totemKey);
   }
 
@@ -1066,7 +1121,7 @@ class Game {
     const record = this.saveRecord();
     if (record) msg += ' ' + record;
     this.say(msg, 7, true);
-    Music.play(L.music);
+    Music.playStems(L.id, true);     // la sala afinada suena con todos sus instrumentos
     this.saveGame();
   }
 
@@ -1078,7 +1133,7 @@ class Game {
     return {
       room: this.level.id, mission: this.mission, notes: this.notes, hasKey: this.hasKey,
       timeLeft: this.timeLeft, missionClock: this.missionClock, keyTime: this.keyTime,
-      caught: this.corcheas.list.map(function (c) { return c.state === 'caught'; }),
+      caught: this.instrumentos.list.map(function (c) { return c.state === 'caught'; }),
       keyTaken: !!(key && key.taken)
     };
   }
@@ -1091,8 +1146,8 @@ class Game {
     this.timeLeft = m.timeLeft;
     this.missionClock = m.missionClock;
     this.keyTime = m.keyTime;
-    this.corcheas.wakeAll();
-    this.corcheas.list.forEach(function (c, i) { if (m.caught[i]) c.state = 'caught'; });
+    this.instrumentos.wakeAll();
+    this.instrumentos.list.forEach(function (c, i) { if (m.caught[i]) c.state = 'caught'; });
     const t = this.totem();
     if (t) t.state = 'despierto';
     this.level.items.forEach(function (i) {
@@ -1110,7 +1165,7 @@ class Game {
     this.hasKey = false;
     this.missionClock = 0;
     this.timeLeft = this.level.time;
-    this.corcheas.resetAll();
+    this.instrumentos.resetAll();
     const t = this.totem();
     if (t) t.state = 'dormido';
     this.level.items.forEach(function (i) {
@@ -1119,7 +1174,9 @@ class Game {
         i.hidden = true;
       }
     });
+    Music.stopStems();
     Music.play('main');
+    this.mergeTimer = 0;
   }
 
   timerRunning() {
@@ -1545,7 +1602,28 @@ class Game {
     Save.writeSettings(this.settings);
     Sfx.play(item === 'sfx' ? 'maize' : 'move');
   }
+  // Tu función actual que ya tienes:
+changeVolume(item, step) {
+  const max = CONFIG.VOLUME.STEPS;
+  this.settings[item] = Math.max(0, Math.min(max, this.settings[item] + step));
+  this.applyVolume();
+  Save.writeSettings(this.settings);
+  Sfx.play(item === 'sfx' ? 'maize' : 'move');
+}
 
+// AÑADE LA NUEVA FUNCIÓN AQUÍ DEBAJO:
+changeStemVolume(stemName, step) {
+  const max = CONFIG.VOLUME.STEPS;
+  if (!this.settings.stemVolumes) this.settings.stemVolumes = {};
+  
+  let current = this.settings.stemVolumes[stemName];
+  if (current === undefined) current = max; // Por defecto al máximo
+  
+  this.settings.stemVolumes[stemName] = Math.max(0, Math.min(max, current + step));
+  this.applyVolume();
+  Save.writeSettings(this.settings);
+  Sfx.play('move');
+}
   toggleRumble() {
     this.settings.rumble = !this.settings.rumble;
     this.applyVolume();
@@ -1569,6 +1647,13 @@ class Game {
     Music.setVolume(this.settings.music / max * master);
     Sfx.setVolume(this.settings.sfx / max * master);
     Input.setRumble(this.settings.rumble);
+    // Aplicar volúmenes del ecualizador
+const stemVolumes = this.settings.stemVolumes || {};
+const stems = Object.keys(CONFIG.MUSIC.STEMS || {});
+stems.forEach(stem => {
+  const val = stemVolumes[stem] !== undefined ? stemVolumes[stem] : CONFIG.VOLUME.STEPS;
+  Music.setStemBaseVolume(stem, val / CONFIG.VOLUME.STEPS);
+});
   }
 
   // ---------- Daño y corazones ----------
@@ -2152,7 +2237,7 @@ class Game {
   // ---------- Música por cercanía ----------
 
   soundSources() {
-    const notes = this.mission === 'collect' ? this.corcheas.remaining() : [];
+    const notes = this.mission === 'collect' ? this.instrumentos.remaining() : [];
     const bosses = [];
     const J = this.level.bossSpawn;
     if (this.boss && J && (this.arenaPhase === 'idle' || this.arenaPhase === 'guards')) {
@@ -2164,7 +2249,13 @@ class Game {
 
   // Sin misión no suena (en las principales); buscando corcheas suena según la más
   // cercana; con las corcheas juntas, según la llave; con la llave, se apaga
-  updateEchoes(dt) {
+updateEchoes(dt) {
+  // CAMBIA ESTO:
+  // if (this.scene && this.scene.music) return;
+  // POR ESTO:
+  if (this.scene && this.scene.music && this.mission !== 'collect') return;
+
+  // ... el resto sigue igual
     const src = this.soundSources();
     const E = CONFIG.ECHO;
     let goal = this.baseMusic();
@@ -2341,7 +2432,7 @@ class Game {
       const p = this.player;
       let best = null;
       let bestD = Infinity;
-      this.corcheas.remaining().forEach(function (c) {
+      this.instrumentos.remaining().forEach(function (c) {
         const d = Math.abs(c.x - p.x) + Math.abs(c.y - p.y);
         if (d < bestD) { bestD = d; best = c; }
       });
@@ -2391,7 +2482,7 @@ class Game {
     }
     UI.drawExitSigns(ctx, this);
     this.drawItems(ctx);
-    this.corcheas.draw(ctx);
+    this.instrumentos.draw(ctx);
     this.drops.draw(ctx, this.time);
     this.enemies.draw(ctx);
     if (this.boss) this.boss.draw(ctx);
@@ -2412,7 +2503,9 @@ class Game {
     if (scene && scene.drawFront) scene.drawFront(ctx, this);
     this.drawArenaLight(ctx);
     ctx.restore();
-
+    if (this.mission === 'merging') UI.drawMergeAnimation(ctx, this);
+if (this.mission === 'escape') UI.drawFilter(ctx, this.time);
+if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
     // Luz: oscuridad, brillos y partículas del aire (en pantalla)
     Light.drawAmbientBack(ctx);
     Light.draw(ctx, this);
@@ -2422,7 +2515,6 @@ class Game {
       UI.drawPrompt(ctx, this.prompt, this.time);
       ctx.restore();
     }
-    if (this.mission === 'escape') UI.drawFilter(ctx, this.time);
     if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
     BossShow.drawBar(ctx, this.boss);
     if (this.banner && !this.menu.open) UI.drawBanner(ctx, this.banner);

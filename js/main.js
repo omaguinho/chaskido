@@ -25,8 +25,49 @@
     ctx.setTransform(render, 0, 0, render, 0, 0);
     ctx.imageSmoothingEnabled = false;
   }
-  window.addEventListener('resize', resize);
+  // En el celular, al girar o cambiar de tamaño, el navegador a veces avisa antes de
+  // tener la medida final: se vuelve a medir un poco después
+  function resizeSoon() {
+    resize();
+    setTimeout(resize, 150);
+    setTimeout(resize, 600);
+  }
+  window.addEventListener('resize', resizeSoon);
+  window.addEventListener('orientationchange', resizeSoon);
+  document.addEventListener('fullscreenchange', resizeSoon);
+  document.addEventListener('webkitfullscreenchange', resizeSoon);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeSoon);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) resizeSoon(); });
+  // Si el celular se queda sin memoria, el lienzo se borra (pantalla negra): al
+  // recuperarlo se vuelve a preparar
+  canvas.addEventListener('contextrestored', resizeSoon);
   resize();
+
+  // Botón de pantalla completa (⛶): solo si el navegador lo permite
+  (function fullscreenButton() {
+    const root = document.documentElement;
+    const req = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (!req) return;
+    const btn = document.createElement('button');
+    btn.id = 'fullscreen';
+    btn.textContent = '⛶';
+    btn.setAttribute('aria-label', 'Pantalla completa');
+    document.body.appendChild(btn);
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const on = document.fullscreenElement || document.webkitFullscreenElement;
+      if (on) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        return;
+      }
+      const p = req.call(root, { navigationUI: 'hide' });
+      const lock = function () {
+        if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {});
+      };
+      if (p && p.then) p.then(lock).catch(function () {}); else lock();
+      btn.blur();
+    });
+  })();
 
   // Pantalla simple de texto (carga o error)
   function drawText(text) {

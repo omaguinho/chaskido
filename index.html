@@ -17,7 +17,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>Chaskido</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=17">
+  <link rel="stylesheet" href="css/style.css?v=18">
 </head>
 <body>
   <!-- Escenario: 3 capas de fondo en CSS (parallax) y el lienzo del juego encima -->
@@ -27,26 +27,25 @@
     <div class="bg near"></div>
     <canvas id="game"></canvas>
   </div>
-  <!-- Carga del juego: los archivos de js/ se piden de a uno y en este orden.
-       Si el servidor no entrega alguno (pasa en la vista previa cuando el proyecto
-       es grande), lo vuelve a pedir; si aun así falla, avisa arriba cuál y por qué.
-       Para agregar un archivo nuevo: súmalo a FILES en su lugar, con lo que define. -->
+  <!-- Esse jogo foi feito por Vicente Francisco Acuna Silva, com assistencia da IA Claude e DeepSeek,
+  desde um tablet, ainda nao tenho computador pra facilitar a prorgamañao, mas consegui,
+  as musicass foram todas compostas por mim, e tenia essa idea deasde um jogo  mas antigo-->
   <script>
     (function () {
-      // Súbelo cuando cambies archivos y el navegador siga mostrando lo viejo
-      const VERSION = 32;
+      const VERSION = 69;
       const TRIES = 4;
       const FILES = [
-        ['config.js', 'CONFIG'], ['util.js', 'clamp'], ['idiomas.js', 'I18N'], ['catalogo.js', 'CATALOGO'],
-        ['input.js', 'Input'], ['sprites.js', 'Sprites'], ['audio.js', 'Music'], ['sfx.js', 'Sfx'],
-        ['echoes.js', 'Echoes'], ['save.js', 'Save'], ['background.js', 'Backdrop'],
-        ['levels.js', 'LEVELS'], ['world.js', 'WORLD'], ['tower.js', 'TOWER'],
-        ['level.js', 'Level'], ['deco.js', 'Deco'], ['items.js', 'Items'], ['corcheas.js', 'Corcheas'],
-        ['player.js', 'Player'], ['ui.js', 'UI'], ['fx.js', 'Effects'], ['enemies.js', 'Enemies'],
-        ['bosses.js', 'BOSS_TYPES'], ['menu.js', 'PauseMenu'], ['tuner.js', 'Tuner'],
-        ['light.js', 'Light'], ['bossshow.js', 'BossShow'], ['prologo.js', 'Scenes'], ['game.js', 'Game'],
-        ['main.js', null]
-      ];
+  ['config.js', 'CONFIG'], ['util.js', 'clamp'], ['idiomas.js', 'I18N'], ['catalogo.js', 'CATALOGO'],
+  ['input.js', 'Input'], ['sprites.js', 'Sprites'], ['audio.js', 'Music'], ['sfx.js', 'Sfx'],
+  ['echoes.js', 'Echoes'], ['save.js', 'Save'], ['background.js', 'Backdrop'],
+  ['levels.js', 'LEVELS'], ['world.js', 'WORLD'], ['tower.js', 'TOWER'],
+  ['level.js', 'Level'], ['deco.js', 'Deco'], ['items.js', 'Items'], ['corcheas.js', 'Corcheas'],
+  ['instrumentos.js', 'Instrumentos'], // <-- AÑADE ESTA LÍNEA AQUÍ
+  ['player.js', 'Player'], ['ui.js', 'UI'], ['fx.js', 'Effects'], ['enemies.js', 'Enemies'],
+  ['bosses.js', 'BOSS_TYPES'], ['menu.js', 'PauseMenu'], ['tuner.js', 'Tuner'],
+  ['light.js', 'Light'], ['bossshow.js', 'BossShow'], ['prologo.js', 'Scenes'], ['game.js', 'Game'],
+  ['main.js', null]
+];
 
       function report(text) {
         if (window.onerror) window.onerror(text, 'index.html', '');
