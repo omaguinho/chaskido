@@ -40,12 +40,9 @@ const Backdrop = (function () {
   const FILES = { tower: 'coliseo' };
   const SINGLE = ['salita_tienda', 'salita_descanso', 'salita_bonus'];
   const LAYERS = { far: 0.1, mid: 0.3, near: 0.6 };   // velocidad de cada capa
-  // Parallax vertical: cada capa es un poco más alta que la pantalla (ZOOM) y se corre
-  // hacia arriba o abajo según la altura de la cámara en la sala (0 arriba, 1 abajo)
-  const ZOOM = { far: 1.08, mid: 1.16, near: 1.26 };
-  let roomH = 0;
   const found = {};     // 'city_far' -> ruta del archivo que sí cargó
   const asked = {};     // temas ya pedidos
+  const gaveUp = {};    // capa -> veces que falló del todo (si no existe, se deja de pedir)
   // Cada tema se pide al entrar a una sala que lo usa (con reintentos: ver Loader
   // en js/util.js). Si llega cuando el tema ya está puesto, se aplica en ese momento.
   function preload(key, srcs) {
@@ -67,7 +64,8 @@ const Backdrop = (function () {
       }, function () {
         i++;
         if (i < srcs.length) attempt();
-      }, 4, true);
+        else gaveUp[key] = (gaveUp[key] || 0) + 1;
+      }, 6, true);
     }
     attempt();
   }
@@ -75,7 +73,9 @@ const Backdrop = (function () {
   // otra vez (como mucho cada 5 segundos)
   function requestTheme(t) {
     const now = performance.now();
-    const missing = ['far', 'mid', 'near'].some(function (l) { return !found[t + '_' + l]; });
+    const missing = ['far', 'mid', 'near'].some(function (l) {
+      return !found[t + '_' + l] && (gaveUp[t + '_' + l] || 0) < 3;
+    });
     if (asked[t] && (!missing || now - asked[t] < 5000)) return;
     asked[t] = now;
     if (SINGLE.indexOf(t) >= 0) {
@@ -84,10 +84,11 @@ const Backdrop = (function () {
     }
     if (THEMES.indexOf(t) < 0) return;
     Object.keys(LAYERS).forEach(function (layer) {
+      if (found[t + '_' + layer]) return;
       const names = [FILES[t], t].filter(Boolean);
       preload(t + '_' + layer, names.map(function (n) { return 'assets/bg/bg_' + n + '_' + layer + '.png'; }));
     });
-    preload(t + '_fg', ['assets/bg/fg_' + (FILES[t] || t) + '.png']);
+    if (!found[t + '_fg'] && (gaveUp[t + '_fg'] || 0) < 3) preload(t + '_fg', ['assets/bg/fg_' + (FILES[t] || t) + '.png']);
   }
   // Hélice dibujada para los molinos (si está)
   const rotorImg = new Image();
@@ -110,11 +111,9 @@ const Backdrop = (function () {
       const speed = LAYERS[layer];
       el.style.backgroundImage = 'url(' + src + ')';
       el.style.backgroundColor = 'transparent';
-      const z = ZOOM[layer];
-      el.style.backgroundSize = 'calc(' + (320 * z) + 'px * var(--s)) calc(' + (180 * z) + 'px * var(--s))';
+      el.style.backgroundSize = 'calc(320px * var(--s)) calc(180px * var(--s))';
       el.style.backgroundRepeat = 'repeat-x';
-      el.style.backgroundPosition = 'calc(var(--x) * var(--s) * -' + speed + 'px) ' +
-        'calc(var(--vy, 0) * var(--s) * -' + (180 * (z - 1)).toFixed(1) + 'px)';
+      el.style.backgroundPosition = 'calc(var(--x) * var(--s) * -' + speed + 'px) 0';
       el.style.webkitMaskImage = 'none';
       el.style.maskImage = 'none';
       el.style.opacity = '1';
@@ -170,6 +169,9 @@ const Backdrop = (function () {
 
   // Posición de la cámara en píxeles del juego (solo se actualiza si cambia)
   function scroll(x, y) {
+    // Si alguna capa del tema no llegó (servidor de Acode lento), se vuelve a pedir
+    // sola cada 5 segundos mientras se juega en esa sala
+    if (theme && theme !== 'none') requestTheme(theme);
     const rx = Math.round(x);
     const ry = Math.round(y);
     if (rx === lastX && ry === lastY) return;
@@ -177,17 +179,9 @@ const Backdrop = (function () {
     lastY = ry;
     stage.style.setProperty('--x', rx);
     stage.style.setProperty('--y', ry);
-    const span = roomH - CONFIG.HEIGHT;
-    stage.style.setProperty('--vy', span > 0 ? Math.max(0, Math.min(1, ry / span)).toFixed(3) : 0);
     const shift = (rx * TURBINE_SPEED) % TURBINE_GAP;
     turbines.style.transform = 'translateX(' + (-shift * scale) + 'px)';
   }
 
-  // Alto de la sala en píxeles del juego (para el parallax vertical)
-  function setRoomHeight(h) {
-    roomH = h || 0;
-    lastY = null;
-  }
-
-  return { resize: resize, set: set, scroll: scroll, setMuted: setMuted, setRoomHeight: setRoomHeight };
+  return { resize: resize, set: set, scroll: scroll, setMuted: setMuted };
 })();

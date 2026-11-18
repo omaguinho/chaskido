@@ -283,7 +283,6 @@ class Game {
     this.markVisited(L.id);
     this.setupBonus();
     Backdrop.set(L.theme);
-    if (Backdrop.setRoomHeight) Backdrop.setRoomHeight(L.pxH);
     // Sin afinar, la sala se ve apagada; las de CONFIG.GAME.FULL_COLOR_ROOMS empiezan con color
     const fullColor = CONFIG.GAME.FULL_COLOR_ROOMS.indexOf(L.id) >= 0;
     Backdrop.setMuted(false);   // cada sala con su color original (antes se apagaba sin afinar)
