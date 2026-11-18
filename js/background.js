@@ -40,6 +40,10 @@ const Backdrop = (function () {
   const FILES = { tower: 'coliseo' };
   const SINGLE = ['salita_tienda', 'salita_descanso', 'salita_bonus'];
   const LAYERS = { far: 0.1, mid: 0.3, near: 0.6 };   // velocidad de cada capa
+  // Parallax vertical: cada capa es un poco más alta que la pantalla (ZOOM) y se corre
+  // hacia arriba o abajo según la altura de la cámara en la sala (0 arriba, 1 abajo)
+  const ZOOM = { far: 1.08, mid: 1.16, near: 1.26 };
+  let roomH = 0;
   const found = {};     // 'city_far' -> ruta del archivo que sí cargó
   const asked = {};     // temas ya pedidos
   // Cada tema se pide al entrar a una sala que lo usa (con reintentos: ver Loader
@@ -106,9 +110,11 @@ const Backdrop = (function () {
       const speed = LAYERS[layer];
       el.style.backgroundImage = 'url(' + src + ')';
       el.style.backgroundColor = 'transparent';
-      el.style.backgroundSize = 'calc(320px * var(--s)) calc(180px * var(--s))';
+      const z = ZOOM[layer];
+      el.style.backgroundSize = 'calc(' + (320 * z) + 'px * var(--s)) calc(' + (180 * z) + 'px * var(--s))';
       el.style.backgroundRepeat = 'repeat-x';
-      el.style.backgroundPosition = 'calc(var(--x) * var(--s) * -' + speed + 'px) 0';
+      el.style.backgroundPosition = 'calc(var(--x) * var(--s) * -' + speed + 'px) ' +
+        'calc(var(--vy, 0) * var(--s) * -' + (180 * (z - 1)).toFixed(1) + 'px)';
       el.style.webkitMaskImage = 'none';
       el.style.maskImage = 'none';
       el.style.opacity = '1';
@@ -171,9 +177,17 @@ const Backdrop = (function () {
     lastY = ry;
     stage.style.setProperty('--x', rx);
     stage.style.setProperty('--y', ry);
+    const span = roomH - CONFIG.HEIGHT;
+    stage.style.setProperty('--vy', span > 0 ? Math.max(0, Math.min(1, ry / span)).toFixed(3) : 0);
     const shift = (rx * TURBINE_SPEED) % TURBINE_GAP;
     turbines.style.transform = 'translateX(' + (-shift * scale) + 'px)';
   }
 
-  return { resize: resize, set: set, scroll: scroll, setMuted: setMuted };
+  // Alto de la sala en píxeles del juego (para el parallax vertical)
+  function setRoomHeight(h) {
+    roomH = h || 0;
+    lastY = null;
+  }
+
+  return { resize: resize, set: set, scroll: scroll, setMuted: setMuted, setRoomHeight: setRoomHeight };
 })();

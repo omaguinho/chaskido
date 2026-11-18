@@ -20,7 +20,7 @@ const CONFIG = {
     RIM_WIDTH: 1                            // grosor en px del juego
   },
   MAX_RENDER_SCALE: 4,    // el lienzo dibuja hasta 4x más fino (sprites a 4x)
-  TITLE_MENU: { TOP: 90, STEP: 11, LEFT: 176 },   // filas del menú de inicio (para tocarlas)
+  TITLE_MENU: { TOP: 84, STEP: 10, LEFT: 176 },   // filas del menú de inicio (para tocarlas)
   TITLE_PORTADA: false,   // true: la pantalla de inicio usa portada.png y logo.png en vez de la escena animada
   LANG_MENU: { TOP: 104, STEP: 16 },      // filas del menú de idioma (la primera vez)
   GAME_OVER_MENU: { TOP: 96, STEP: 16 },   // filas del menú de game over

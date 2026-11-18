@@ -171,11 +171,17 @@ class Game {
   }
 
   // Guarda la partida: sala y lugar donde se vuelve (la posta, o el último punto seguro)
-  saveGame(spot) {
+  // Sin spot (guardados automáticos: sala afinada, premio de jefe, bonus...) se vuelve
+  // a la última posta: antes se guardaba el punto donde estabas y "Continuar" no
+  // llevaba a la posta. here = true (guardar desde el menú): el lugar actual.
+  saveGame(spot, here) {
     if (this.mode !== 'story') return false;
     const P = this.progress;
     const back = this.salitaReturn;
-    if (back) {
+    if (!spot && !here && P.posta && LEVELS.some(function (l) { return l.id === P.posta.room; })) {
+      P.room = P.posta.room;
+      P.spot = { x: P.posta.x, y: P.posta.y };
+    } else if (back) {
       // Dentro de una salita se guarda la sala de afuera, delante de su puerta
       const T = CONFIG.TILE;
       P.room = back.room;
@@ -277,6 +283,7 @@ class Game {
     this.markVisited(L.id);
     this.setupBonus();
     Backdrop.set(L.theme);
+    if (Backdrop.setRoomHeight) Backdrop.setRoomHeight(L.pxH);
     // Sin afinar, la sala se ve apagada; las de CONFIG.GAME.FULL_COLOR_ROOMS empiezan con color
     const fullColor = CONFIG.GAME.FULL_COLOR_ROOMS.indexOf(L.id) >= 0;
     Backdrop.setMuted(false);   // cada sala con su color original (antes se apagaba sin afinar)
@@ -507,11 +514,25 @@ class Game {
     if (this.records.plusUnlocked) items.push('plus');
     items.push('tower');
     items.push('lang');
+    items.push('credits');
     return items;
+  }
+
+  // El coliseo se abre al terminar la historia en Normal o Difícil
+  towerUnlocked() {
+    return !!this.records.towerUnlocked;
   }
 
   updateTitle() {
     if (!this.screenReady()) return;
+    // Créditos abiertos: cualquier botón los cierra
+    if (this.showCredits) {
+      if (Input.pressed('confirm') || Input.pressed('pause') || Input.tapPoint()) {
+        this.showCredits = false;
+        Sfx.play('move');
+      }
+      return;
+    }
     const items = this.titleItems();
     const n = items.length;
     const row = this.tappedRow(CONFIG.TITLE_MENU, n);
@@ -545,6 +566,15 @@ class Game {
       return;
     }
     if (!accept) return;
+    if (item === 'tower' && !this.towerUnlocked()) {
+      Sfx.play('tuneWrong');           // todavía cerrado (se ve en gris)
+      return;
+    }
+    if (item === 'credits') {
+      this.showCredits = true;
+      Sfx.play('select');
+      return;
+    }
     Sfx.play('select');
     if (item === 'continue') {
       this.continueGame();
@@ -684,10 +714,16 @@ class Game {
     this.endTimer = 0;
     Music.stop();
     Sfx.play('final');
+    let changed = false;
     if (this.rules().ENDING === 'true' && !this.records.plusUnlocked) {
       this.records.plusUnlocked = true;
-      Save.writeRecords(this.records);
+      changed = true;
     }
+    if ((this.difficulty === 'normal' || this.difficulty === 'hard') && !this.records.towerUnlocked) {
+      this.records.towerUnlocked = true;
+      changed = true;
+    }
+    if (changed) Save.writeRecords(this.records);
   }
 
   // ---------- Mensajes ----------
@@ -1961,6 +1997,12 @@ stems.forEach(stem => {
       return;
     }
     const p = this.player;
+    // El jefe sube (salto, se cuelga del techo): si la papa está encima, se resbala de
+    // lado en vez de subir con él (antes se la llevaba fuera del escenario)
+    if (b.vy < -60 && overlaps(b, p) && p.y + p.h <= b.y + CONFIG.BOSSES.HEAD_ZONE + 4) {
+      this.slideOffBoss(b, p);
+      return;
+    }
     if (b.isStompedBy(p)) {
       if (b.canBeHit() && this.hurtTimer <= 0) {
         p.stomp();
@@ -1971,13 +2013,25 @@ stems.forEach(stem => {
         Sfx.play('bossHit');
       } else {
         // No se le puede pisar ahora: se sacude y tira a la papa (no se queda quieto)
-        b.shakeOff(p);
+        b.shakeOff(p, this.level);
         Sfx.play('stomp');
       }
     } else if (b.isHarmful() && overlaps(b.harmBox(), p)) {
       this.hurtByEnemy(b);
     }
     if (b.waveHits(p)) this.hurtByEnemy(null);
+  }
+
+  // Deja a la papa al costado del jefe (el lado libre más cercano), cayendo
+  slideOffBoss(b, p) {
+    const L = this.level;
+    const left = b.x - p.w - 1, right = b.x + b.w + 1;
+    const first = p.x + p.w / 2 < b.centerX() ? [left, right] : [right, left];
+    const x = first.find(function (nx) { return !L.rectHitsSolid(nx, p.y, p.w, p.h); });
+    if (x !== undefined) p.x = x;
+    p.vy = Math.max(p.vy, 0);
+    p.vx = (p.x < b.x ? -1 : 1) * 120;
+    p.wallJumpLock = 0.2;
   }
 
   updateArena() {
@@ -2466,7 +2520,8 @@ updateEchoes(dt) {
       return;
     }
     if (this.state === 'title') {
-      UI.drawTitle(ctx, this.time, this.titleItems(), this.titleIndex, this.plus);
+      UI.drawTitle(ctx, this.time, this.titleItems(), this.titleIndex, this.plus, this.towerUnlocked());
+      if (this.showCredits) UI.drawCredits(ctx, this.time);
       return;
     }
     if (this.state === 'ready') {

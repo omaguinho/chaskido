@@ -129,13 +129,14 @@ class ArenaBoss {
   }
 
   // La papa cayó encima cuando no se le puede pisar: se sacude y la tira de lado
-  shakeOff(p) {
+  shakeOff(p, level) {
     const dir = p.x + p.w / 2 < this.centerX() ? -1 : 1;
     p.vx = dir * 190;
     p.vy = -240;
     p.jumpCuttable = false;
     p.wallJumpLock = 0.2;
-    p.y = Math.min(p.y, this.y - p.h - 1);
+    const ny = Math.min(p.y, this.y - p.h - 1);
+    if (!level || !level.rectHitsSolid(p.x, ny, p.w, p.h)) p.y = ny;
     this.shaking = 0.35;
   }
 
@@ -148,7 +149,9 @@ class ArenaBoss {
   ceilingY(level) {
     const cx = this.centerX();
     for (let y = this.y - 1; y > 0; y -= 2) {
-      if (level.rectHitsSolid(cx - 4, y, 8, 1)) return y + 1;
+      // El borde de abajo exacto de ese bloque (si no, podía quedar 1 px dentro del
+      // techo y el choque lo empujaba hacia arriba, fuera del escenario)
+      if (level.rectHitsSolid(cx - 4, y, 8, 1)) return (Math.floor(y / CONFIG.TILE) + 1) * CONFIG.TILE;
     }
     return null;
   }

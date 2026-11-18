@@ -172,7 +172,7 @@ class PauseMenu {
       this.close();
       return;
     }
-    const ok = this.game.saveGame();
+    const ok = this.game.saveGame(null, true);
     this.notice = ok ? 'Partida guardada.' : 'No se pudo guardar (¿el navegador no deja guardar?).';
     this.noticeTime = 2.5;
     Sfx.play(ok ? 'save' : 'hurt');

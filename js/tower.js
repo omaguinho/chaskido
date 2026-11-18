@@ -21,7 +21,7 @@ const TOWER = {
 (function addTowerFloors() {
   const W = 27;
   function floor(plats) {
-    const rows = ['#'.repeat(W)];
+    const rows = ['#'.repeat(W), '#'.repeat(W)];   // techo doble: nada se escapa por arriba
     for (let y = 1; y < 12; y++) {
       const r = ('#' + '.'.repeat(W - 2) + '#').split('');
       r[6] = 'L';

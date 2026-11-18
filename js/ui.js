@@ -229,8 +229,7 @@ const UI = (function () {
     // a la derecha: tiempo, llave y las llaves de color conseguidas
     drawHud(ctx, game) {
       const P = game.progress;
-      ctx.fillStyle = 'rgba(46, 42, 71, 0.55)';
-      ctx.fillRect(0, 0, W, 14);
+      this.drawHudFrame(ctx);
       const max = P.maxHearts;
       for (let i = 0; i < max; i++) heart(ctx, 3 + i * 8, 4, i < game.hearts);
       let x = 6 + max * 8;
@@ -240,10 +239,24 @@ const UI = (function () {
       miniCube(ctx, x, 4);
       text(ctx, P.cubes + '/' + CONFIG.GAME.CUBES_PER_LIFE, x + 10, 3);
       x += 46;
-      if (game.mission === 'collect' || game.mission === 'escape') {
-        if (!icon(ctx, 'NOTE', x, 3)) Sprites.drawFrame(ctx, 'corchea', 0, x - 4, -1, false);
-        text(ctx, game.notes + '/' + game.instrumentos.total(), x + 10, 3, '#ffe066');
-        x += 42;
+      if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 'merging') {
+        // Un casillero por instrumento: apagado hasta atraparlo
+        game.instrumentos.list.forEach(function (c, i) {
+          const sx = x + i * 13;
+          const got = c.state === 'caught';
+          ctx.fillStyle = got ? 'rgba(255, 211, 77, 0.28)' : 'rgba(11, 6, 32, 0.5)';
+          ctx.fillRect(sx, 1, 12, 12);
+          ctx.fillStyle = got ? '#ffd34d' : '#5f5a70';
+          ctx.fillRect(sx, 1, 12, 1);
+          ctx.fillRect(sx, 12, 12, 1);
+          ctx.save();
+          ctx.globalAlpha = got ? 1 : 0.3;
+          ctx.translate(sx + 6, 12);
+          ctx.scale(0.55, 0.55);
+          Sprites.drawAnchored(ctx, 'sprite_' + c.tipo, 0, 0, 0, false);
+          ctx.restore();
+        });
+        x += game.instrumentos.list.length * 13 + 6;
       }
       if (game.bonus) {
         const B = game.bonus;
@@ -296,6 +309,24 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
     });
   }
 }
+    },
+
+    // Marco del HUD: franja oscura con un borde tejido (puntadas de colores y flecos)
+    drawHudFrame(ctx) {
+      const COLORS = ['#ff6b8a', '#ffd34d', '#2ee6ff', '#ffd34d'];
+      ctx.fillStyle = 'rgba(20, 11, 43, 0.78)';
+      ctx.fillRect(0, 0, W, 14);
+      ctx.fillStyle = 'rgba(255, 246, 224, 0.12)';
+      ctx.fillRect(0, 0, W, 1);
+      for (let x = 0, i = 0; x < W; x += 4, i++) {
+        ctx.fillStyle = COLORS[i % COLORS.length];
+        ctx.fillRect(x, 14, 3, 1);               // puntadas
+        if (i % 2 === 0) {                       // flecos en zigzag
+          ctx.fillStyle = 'rgba(20, 11, 43, 0.78)';
+          ctx.fillRect(x, 15, 3, 1);
+          ctx.fillRect(x + 1, 16, 1, 1);
+        }
+      }
     },
 
     drawTimer(ctx, seconds, scale) {
@@ -815,7 +846,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
     },
 
     // Menú: un panel oscuro y elegante a la derecha, con la explicación abajo
-    drawTitle(ctx, time, items, index, plus) {
+    drawTitle(ctx, time, items, index, plus, towerOpen) {
       this.drawLogo(ctx, time);
       const M = CONFIG.TITLE_MENU;
       function label(id) {
@@ -823,11 +854,14 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
         if (id === 'tower') return 'Coliseo de los jefes';
         if (id === 'plus') return 'Nueva partida +: ' + (plus ? 'Sí' : 'No');
         if (id === 'lang') return 'Idioma: ' + I18N.name();
+        if (id === 'credits') return 'Créditos';
         return 'Nueva · ' + CONFIG.DIFFICULTY[id].NAME;
       }
       function info(id) {
         if (id === 'continue') return 'Sigue desde donde guardaste';
-        if (id === 'tower') return 'Coliseo: ' + TOWER.FLOORS.length + ' jefes seguidos';
+        if (id === 'tower') return towerOpen ? 'Coliseo: ' + TOWER.FLOORS.length + ' jefes seguidos'
+                                             : 'Se abre al terminar la historia en Normal o Difícil';
+        if (id === 'credits') return 'Quién hizo Chaskido';
         if (id === 'lang') return 'Español · English · Português';
         const D = CONFIG.DIFFICULTY[id];
         if (!D) return 'Empiezas con el dash y el gancho (sin prólogo)';
@@ -850,9 +884,29 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
           ctx.fillRect(x - 9, y - 3, W - x + 2, M.STEP - 1);
           BossShow.drawNote(ctx, x - 4, y + 2 + Math.round(Math.sin(time * 6)), '#ffd34d', 1);
         }
-        text(ctx, label(id), x + 4, y, on ? '#ffd34d' : '#c9c2dc', 7);
+        const locked = id === 'tower' && !towerOpen;
+        text(ctx, label(id), x + 4, y, locked ? (on ? '#8a8399' : '#5f5a70') : (on ? '#ffd34d' : '#c9c2dc'), 7);
         if (on) shadowText(ctx, info(id), W / 2, H - 12, '#c9b8e3', 6, 'center');
       });
+    },
+
+    // Créditos (desde el menú de inicio)
+    drawCredits(ctx, time) {
+      ctx.fillStyle = '#140b2b';
+      ctx.fillRect(0, 0, W, H);
+      shadowText(ctx, 'Créditos', W / 2, 26, '#ffd34d', 12, 'center');
+      const lines = [
+        ['Juego hecho por', 'Vicente Flau'],
+        ['Música original', 'Vicente Flau'],
+        ['Con la asistencia de', 'Claude y DeepSeek']
+      ];
+      lines.forEach(function (l, i) {
+        const y = 56 + i * 30;
+        text(ctx, l[0], W / 2, y, '#9a93b0', 6, 'center');
+        text(ctx, l[1], W / 2, y + 10, '#fbf6ec', 8, 'center');
+      });
+      BossShow.drawNote(ctx, W / 2 - 3, 150 + Math.round(Math.sin(time * 4) * 2), '#ffd34d', 1);
+      text(ctx, 'Aprieta un botón para volver', W / 2, H - 12, '#6b6580', 6, 'center');
     },
 
     drawReady(ctx, time, hearts, difficulty, canStart, tower) {

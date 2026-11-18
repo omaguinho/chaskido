@@ -312,8 +312,16 @@ const BossShow = (function () {
     // Apodo
     if (t > 0.3 + name.length / 26 + 0.15 && intro.apodo) {
       ctx.font = gameFont(8);
+      const label = '« ' + intro.apodo + ' »';
+      const lw = Math.ceil(ctx.measureText(label).width);
+      // Placa oscura con borde de color: el apodo se lee sobre cualquier fondo
+      ctx.fillStyle = 'rgba(11, 6, 32, 0.9)';
+      ctx.fillRect(nx - 3, ny + 20, lw + 10, 13);
       ctx.fillStyle = cols[1];
-      ctx.fillText('« ' + intro.apodo + ' »', nx + 2, ny + 22);
+      ctx.fillRect(nx - 3, ny + 20, lw + 10, 1);
+      ctx.fillRect(nx - 3, ny + 32, lw + 10, 1);
+      ctx.fillRect(nx - 3, ny + 20, 2, 13);
+      ctx.fillText(label, nx + 3, ny + 22);
     }
     // Destello al aparecer
     if (t < 0.12) {

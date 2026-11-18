@@ -144,6 +144,16 @@ class Instrumento {
   ctx.beginPath();
   ctx.arc(cx, cy, auraRadius, 0, Math.PI * 2);
   ctx.fill();
+  // Ondas de sonido: dos anillos que salen al ritmo, como la nota del diapasón
+  const RING_TIME = 1.1;                 // segundos por onda
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 2; i++) {
+    const k = ((this.animTime / RING_TIME) + i / 2) % 1;
+    ctx.strokeStyle = 'rgba(255, 211, 77, ' + (0.55 * (1 - k)).toFixed(2) + ')';
+    ctx.beginPath();
+    ctx.arc(Math.round(cx), Math.round(cy), 6 + k * 22, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   // ------------------------------------
 
   const spriteName = 'sprite_' + this.tipo; 
