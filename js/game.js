@@ -178,9 +178,10 @@ class Game {
     if (this.mode !== 'story') return false;
     const P = this.progress;
     const back = this.salitaReturn;
-    if (!spot && !here && P.posta && LEVELS.some(function (l) { return l.id === P.posta.room; })) {
-      P.room = P.posta.room;
-      P.spot = { x: P.posta.x, y: P.posta.y };
+    const last = P.checkpoint || P.posta;     // la última banderita o posta
+    if (!spot && !here && last && LEVELS.some(function (l) { return l.id === last.room; })) {
+      P.room = last.room;
+      P.spot = { x: last.x, y: last.y };
     } else if (back) {
       // Dentro de una salita se guarda la sala de afuera, delante de su puerta
       const T = CONFIG.TILE;
@@ -663,7 +664,19 @@ class Game {
 
   // ---------- Fin de partida ----------
 
+  // Golpe a la papa: sonido, pantalla que tiembla, destello rojo y vibración del mando
+  feelHurt() {
+    Sfx.play('hurt');
+    this.screenShake = Math.max(this.screenShake || 0, 0.3);
+    this.hurtFlash = 0.25;
+    if (this.settings.rumble) Input.rumble(180, 0.7, 0.5);
+  }
+
   gameOver() {
+    // La papa cae: sonido de derrumbe y un temblor fuerte
+    Sfx.play('collapse');
+    this.screenShake = 0.6;
+    if (this.settings.rumble) Input.rumble(400, 1, 0.8);
     this.state = 'gameover';
     this.endTimer = 0;
     this.overIndex = 0;
@@ -764,9 +777,14 @@ class Game {
     this.message = { text: text, time: 1, hint: true };
   }
 
+  // Cada consejo (monedas, dados, ají...) sale como mucho CONFIG.GAME.TIP_MAX veces en
+  // toda la partida: con las primeras ya se entiende y después cansa
   showTip(id) {
     if (this.tipsShown[id]) return;
     this.tipsShown[id] = true;
+    const seen = this.progress.tipsSeen || (this.progress.tipsSeen = {});
+    if ((seen[id] || 0) >= (CONFIG.GAME.TIP_MAX || 3)) return;
+    seen[id] = (seen[id] || 0) + 1;
     this.tip = { text: TIPS[id], time: CONFIG.GAME.TIP_TIME };
   }
 
@@ -840,6 +858,7 @@ class Game {
     this.handleDebugKeys();
     if (this.message && !this.message.hint && Input.pressed('action') && !this.prompt) this.message = null;
     this.screenShake = Math.max(0, this.screenShake - dt);
+    this.hurtFlash = Math.max(0, (this.hurtFlash || 0) - dt);
     // Presentación del jefe: la portada detiene el mundo; los golpes lo frenan un instante
     BossShow.update(dt, this.boss);
     if (BossShow.updateIntro(dt)) return;
@@ -1197,7 +1216,7 @@ class Game {
     Backdrop.setMuted(false);
     Sfx.play('clear');
     Effects.chiliBurst(t.x + 8, t.y + 8);
-    const song = CATALOGO.nombreMusica(L.music, L.pitch);
+    const song = CATALOGO.nombreMusica(L.id);
     let msg = TEXT.afinada(song);
     if (L.hasGate) {
       msg += ' ' + (L.gateHint || '');
@@ -1451,6 +1470,7 @@ class Game {
     const T = CONFIG.TILE;
     const spot = { x: posta.x + (T - this.player.w) / 2, y: posta.y + T - this.player.h };
     this.progress.posta = { room: this.level.id, x: spot.x, y: spot.y };
+    this.progress.checkpoint = this.progress.posta;
     this.player.setSpawn(spot.x, spot.y);
     this.player.restPose = 1.2;
     Sfx.play('save');
@@ -1779,7 +1799,7 @@ stems.forEach(stem => {
     this.hurtTimer = CONFIG.GAME.HURT_TIME;
     this.updateCamera(1);
     this.lifePopup('-' + this.rules().DAMAGE, CONFIG.FX.LIFE_DOWN);
-    Sfx.play('hurt');
+    this.feelHurt();
   }
 
   heal(n) {
@@ -1800,7 +1820,7 @@ stems.forEach(stem => {
     p.knockback(dir);
     this.hurtTimer = CONFIG.GAME.HURT_TIME;
     this.lifePopup('-' + this.rules().DAMAGE, CONFIG.FX.LIFE_DOWN);
-    Sfx.play('hurt');
+    this.feelHurt();
   }
 
   lifePopup(text, color) {
@@ -2298,7 +2318,11 @@ stems.forEach(stem => {
     this.level.items.forEach(function (i) { if (i.type === 'save') i.active = false; });
     item.active = true;
     const T = CONFIG.TILE;
-    this.player.setSpawn(item.x + (T - this.player.w) / 2, item.y + T - this.player.h);
+    const spot = { x: item.x + (T - this.player.w) / 2, y: item.y + T - this.player.h };
+    this.player.setSpawn(spot.x, spot.y);
+    // Cada banderita es un punto de guardado: "Continuar" vuelve a la última que tocaste
+    this.progress.checkpoint = { room: this.level.id, x: spot.x, y: spot.y };
+    this.saveGame(spot);
     Sfx.play('save');
     this.showTip('save');
   }
@@ -2627,8 +2651,7 @@ updateEchoes(dt) {
     this.drawArenaLight(ctx);
     ctx.restore();
     if (this.mission === 'merging') UI.drawMergeAnimation(ctx, this);
-if (this.mission === 'escape') UI.drawFilter(ctx, this.time);
-if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
+    if (this.mission === 'escape') UI.drawFilter(ctx, this.time);
     // Luz: oscuridad, brillos y partículas del aire (en pantalla)
     Light.drawAmbientBack(ctx);
     Light.draw(ctx, this);
@@ -2637,6 +2660,10 @@ if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
       ctx.translate(-Math.round(this.camera.x), -Math.round(this.camera.y));
       UI.drawPrompt(ctx, this.prompt, this.time);
       ctx.restore();
+    }
+    if (this.hurtFlash > 0) {           // destello rojo al recibir un golpe
+      ctx.fillStyle = 'rgba(255, 60, 90, ' + (this.hurtFlash * 1.2).toFixed(2) + ')';
+      ctx.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
     }
     if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
     BossShow.drawBar(ctx, this.boss);

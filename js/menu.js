@@ -37,7 +37,7 @@ class PauseMenu {
   }
 
   static get OPTIONS() {
-    return ['resume', 'music', 'sfx', 'master', 'light', 'rumble', 'lang', 'quit'];
+    return ['resume', 'music', 'sfx', 'master', 'light', 'rumble', 'touch', 'lang', 'quit'];
   }
 
   // Alto de cada fila de Opciones
@@ -76,6 +76,11 @@ class PauseMenu {
       this.tab = 1;
     } else {
       Music.resume();
+      // Si escuchaste una canción en el menú, vuelve la música de la sala
+      if (this.game.previewSong) {
+        this.game.previewSong = null;
+        this.game.startRoomMusic();
+      }
     }
   }
 
@@ -147,6 +152,10 @@ class PauseMenu {
       if (step !== 0 || confirm) G.toggleRumble();
       return;
     }
+    if (item === 'touch') {                 // botones táctiles en pantalla
+      if (step !== 0 || confirm) { Touch.toggle(); Sfx.play('select'); }
+      return;
+    }
     if (item === 'light') {
       if (step !== 0 || confirm) G.changeLight(step || 1);
       return;
@@ -190,11 +199,27 @@ class PauseMenu {
     }
   }
 
+  // Canciones: arriba/abajo elige, Aceptar la escucha (los instrumentos de esa sala)
   updateSongs() {
-    const n = this.game.progress.songs.length;
-    const view = 7;
-    if (Input.pressed('down')) this.scroll = Math.min(Math.max(0, n - view), this.scroll + 1);
-    else if (Input.pressed('up')) this.scroll = Math.max(0, this.scroll - 1);
+    const songs = this.game.progress.songs;
+    const n = songs.length;
+    const view = 6;
+    if (!n) return;
+    this.songPick = Math.max(0, Math.min(n - 1, this.songPick || 0));
+    if (Input.pressed('down')) { this.songPick = Math.min(n - 1, this.songPick + 1); Sfx.play('move'); }
+    else if (Input.pressed('up')) { this.songPick = Math.max(0, this.songPick - 1); Sfx.play('move'); }
+    if (this.songPick < this.scroll) this.scroll = this.songPick;
+    if (this.songPick >= this.scroll + view) this.scroll = this.songPick - view + 1;
+    if (Input.pressed('confirm')) this.playSong(songs[this.songPick]);
+  }
+
+  // Suena la canción elegida (todas sus pistas juntas) con el menú abierto
+  playSong(id) {
+    if (!Music.hasStems(id)) return;
+    Sfx.play('select');
+    this.game.previewSong = id;
+    Music.resume();
+    Music.playStems(id, true);
   }
 
   // Toques en pantalla: pestañas arriba, filas en Guardar y Opciones, poderes en su grilla
@@ -219,7 +244,7 @@ class PauseMenu {
         const same = r === this.row;
         this.row = r;
         if (tab === 'guardar') this.useSaveRow(r);
-        else if (same || PauseMenu.OPTIONS[r] === 'resume' || PauseMenu.OPTIONS[r] === 'quit' || PauseMenu.OPTIONS[r] === 'rumble' || PauseMenu.OPTIONS[r] === 'lang') {
+        else if (same || PauseMenu.OPTIONS[r] === 'resume' || PauseMenu.OPTIONS[r] === 'quit' || PauseMenu.OPTIONS[r] === 'rumble' || PauseMenu.OPTIONS[r] === 'touch' || PauseMenu.OPTIONS[r] === 'lang') {
           this.useOption(PauseMenu.OPTIONS[r], 0, true);
         } else if (p.x > 150) {
           // Tocar la barra de volumen: a la izquierda baja, a la derecha sube
@@ -623,16 +648,24 @@ class PauseMenu {
       UI.text(ctx, 'y su canción queda aquí.', CONFIG.WIDTH / 2, 103, '#9a93b0', 6, 'center');
       return;
     }
-    songs.slice(this.scroll, this.scroll + 7).forEach(function (id, i) {
-      const L = LEVELS.find(function (l) { return l.id === id; });
-      const y = 42 + i * 16;
+    const pick = this.songPick || 0;
+    const playing = this.game.previewSong;
+    songs.slice(this.scroll, this.scroll + 6).forEach(function (id, i) {
+      const k = this.scroll + i;
+      const y = 40 + i * 18;
       const region = WORLD.regionInfo(WORLD.region(id));
+      if (k === pick) {
+        ctx.fillStyle = 'rgba(255, 211, 77, 0.16)';
+        ctx.fillRect(12, y - 1, CONFIG.WIDTH - 24, 17);
+      }
       ctx.fillStyle = region.color;
-      ctx.fillRect(14, y + 1, 3, 11);
-      UI.text(ctx, WORLD.fullName(id), 22, y, '#fbf6ec', 6);
-      const song = L ? CATALOGO.nombreMusica(L.music || 'main', L.pitch || 0) : '';
-      UI.text(ctx, song, 22, y + 7, '#9fd3e0', 5);
-    });
+      ctx.fillRect(14, y + 1, 3, 13);
+      const title = (playing === id ? '♪ ' : '') + CATALOGO.nombreMusica(id);
+      UI.text(ctx, title, 22, y, k === pick ? '#ffd34d' : '#fbf6ec', 6);
+      UI.text(ctx, WORLD.fullName(id), CONFIG.WIDTH - 16, y, '#9a93b0', 5, 'right');
+      UI.text(ctx, CATALOGO.instrumentosDe(id).join(' · '), 22, y + 8, '#9fd3e0', 5);
+    }, this);
+    UI.text(ctx, 'Aceptar: escuchar', 22, 150, '#9a93b0', 5);
     UI.text(ctx, songs.length + ' / 21 canciones', CONFIG.WIDTH - 14, 150, '#9a93b0', 5, 'right');
   }
 
@@ -669,7 +702,7 @@ class PauseMenu {
 
   drawOptions(ctx) {
     const G = this.game;
-    const LABELS = { resume: 'Seguir', music: 'Música', sfx: 'Efectos', master: 'General', light: 'Luces', rumble: 'Vibración', lang: 'Idioma', quit: 'Salir al inicio' };
+    const LABELS = { resume: 'Seguir', music: 'Música', sfx: 'Efectos', master: 'General', light: 'Luces', rumble: 'Vibración', touch: 'Táctil', lang: 'Idioma', quit: 'Salir al inicio' };
     const LIGHT = ['Apagadas', 'Simples', 'Completas'];
     const max = CONFIG.VOLUME.STEPS;
     const blink = Math.floor(this.time * 3) % 2 === 0;
@@ -684,7 +717,7 @@ class PauseMenu {
         UI.text(ctx, '< ' + I18N.name() + ' >', 150, y, color);
         return;
       }
-      const v = G.settings[id];
+      const v = id === 'touch' ? Touch.isOn() : G.settings[id];
       if (v === undefined) return;
       if (id === 'light') {
         UI.text(ctx, LIGHT[v], 150, y, color);

@@ -413,8 +413,26 @@ const Scenes = (function () {
     });
     this.hints = makeHints(data.hints);
     this.hudHidden = true;
+    // Vecina que habla (opcional): la segunda persona de la fiesta, con un globo "¡Háblame!"
+    this.talker = this.crowd[1] || this.crowd[0] || null;
+    this.talkIndex = 0;
     Backdrop.set('none');
   }
+
+  // Lo que cuenta la vecina (una frase por cada vez que le hablas)
+  const TALK_LINES = [
+    '¡Hola, papa! Esta noche toda la ciudad baila.',
+    'Si te pierdes, aprieta Pausa (Start o P): ahí están el mapa, tus poderes y las canciones.',
+    'En el mapa de la pausa ves qué salas ya afinaste y qué instrumentos te faltan.',
+    'Los tótems te dicen cuántos instrumentos faltan. Con la sala afinada, te llevan de viaje.',
+    'Dicen que un Eco del Silencio anda robando la música... ¡ojalá no venga hoy!'
+  ];
+
+  // ¿La papa está junto a la vecina?
+  Fiesta.prototype.nearTalker = function (game) {
+    const c = this.talker, p = game.player;
+    return !!c && !this.event && Math.abs(p.x + p.w / 2 - c.x) < 22 && Math.abs(p.y + p.h - c.feet) < 24;
+  };
 
   // Guirnaldas entre postes: banderitas y faroles colgando
   Fiesta.prototype.buildGarlands = function () {
@@ -455,6 +473,12 @@ const Scenes = (function () {
   this.lastBeat = phase;
   // La música no se apaga sola en esta sala
   updateHints(this.hints, dt, game.player);
+  // Hablar con la vecina: arriba (cruceta o flecha) cuando estás a su lado
+  if (this.nearTalker(game) && Input.pressed('up') && !game.modal) {
+    game.say(TALK_LINES[this.talkIndex % TALK_LINES.length], 6, true);
+    this.talkIndex++;
+    Sfx.play('select');
+  }
   
   if (!this.event) {
     // SI NO ESTAMOS EN LA MISIÓN, MANTENER LA MÚSICA AL 100%
@@ -704,9 +728,31 @@ const Scenes = (function () {
     }, this);
   };
 
+  // Globo llamativo sobre la vecina: "¡Háblame!" saltando; al lado, "▲ Hablar"
+  Fiesta.prototype.drawTalkBubble = function (ctx, game) {
+    const c = this.talker;
+    const near = this.nearTalker(game);
+    const label = near ? '▲ Hablar' : (this.talkIndex ? '▲ ...' : '¡Háblame!');
+    const bob = Math.round(Math.sin(this.t * 5) * 2);
+    ctx.font = gameFont(7);
+    const w = Math.ceil(ctx.measureText(tr(label)).width) + 8;
+    const x = Math.round(c.x - w / 2), y = Math.round(c.feet - 40 + bob);
+    ctx.fillStyle = near ? '#ffd34d' : '#fbf6ec';
+    ctx.fillRect(x, y, w, 11);
+    ctx.fillRect(Math.round(c.x) - 2, y + 11, 4, 3);               // la colita del globo
+    ctx.fillStyle = INK;
+    ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + 10, w, 1);
+    ctx.fillRect(x, y, 1, 11); ctx.fillRect(x + w - 1, y, 1, 11);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(tr(label), Math.round(c.x), y + 2);
+    ctx.textAlign = 'left';
+  };
+
   Fiesta.prototype.drawFront = function (ctx, game) {
     const e = this.event;
     if (!e) drawHints(ctx, this.hints, this.t);
+    if (!e && this.talker) this.drawTalkBubble(ctx, game);
     // Grietas en la plaza
     if (e && e.crack > 0 && this.data.collapse) {
       const C = this.data.collapse;

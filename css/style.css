@@ -802,3 +802,26 @@ html, body {
 }
 #fullscreen:focus { outline: none; }
 :fullscreen #fullscreen { opacity: 0.35; }
+
+/* ---------- Controles táctiles (js/touch.js) ---------- */
+#touch { position: fixed; inset: 0; z-index: 6; pointer-events: none; display: none; }
+#touch .tbtn {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(46, 42, 71, 0.45);
+  border: 2px solid rgba(255, 211, 77, 0.55);
+  color: #fbf6ec;
+  font: bold 18px/46px sans-serif;
+  text-align: center;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#touch .tbtn.on { background: rgba(255, 211, 77, 0.55); color: #2e2a47; }
+#touch .tbtn-top { top: 8px; right: 8px; width: 40px; height: 40px; line-height: 36px; font-size: 14px; border-radius: 10px; }
+
+/* Con los botones táctiles, el botón de pantalla completa va arriba a la izquierda */
+.touch-on #fullscreen { top: 8px; left: 8px; right: auto; bottom: auto; }

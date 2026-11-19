@@ -49,6 +49,7 @@ const CONFIG = {
     ENTRY_BOOST: 420,     // empujón hacia arriba al entrar a una sala desde abajo
     BANNER_TIME: 3.2,     // cartel con el nombre de la sala al entrar
     REWARD_AURA: 2.2,     // segundos del aura al ganar un poder
+    TIP_MAX: 3,             // veces que sale cada consejo en toda la partida
     TIP_TIME: 3.5,        // segundos que dura una explicación corta (abajo)
     // Con la llave, el contador se infla cada 10 segundos para llamar la atención
     TIMER_PULSE_EVERY: 10,
@@ -236,6 +237,20 @@ const CONFIG = {
       n22: { coro: 'coro_final.mp3', teclado: 'teclado_final.mp3', percusion: 'percusion_final.mp3', tema: 'tema_final.mp3' }
     };
   })(),
+
+  // Nombre de la canción de cada sala (lo que se ve al afinarla y en Canciones).
+  // Puedes cambiarlos: son solo el nombre, sin tono ni bpm.
+  SONG_TITLES: {
+    p2: 'La noche robada',
+    n2: 'Ocaso', n5: 'Acequias', n3: 'Molinos',
+    n1: 'Cañas', n4: 'Cañas', n6: 'El taller',
+    n7: 'Bosque', n8: 'Bosque', n9: 'Pantano',
+    n10: 'Sol dorado', n11: 'Sol dorado', n12: 'Sol dorado',
+    n13: 'Escarcha', n14: 'Escarcha', n15: 'Escarcha',
+    n16: 'Espejo', n17: 'Espejo', n18: 'Espejo',
+    n19: 'Niebla', n20: 'Niebla', n21: 'Niebla',
+    n22: 'El Gran Silencio'
+  },
 
   // true: con los 3 instrumentos se suma también el "tema" de la sala. false (ahora): solo
   // suenan los instrumentos (el tema ya los trae mezclados y se escuchaban duplicados)

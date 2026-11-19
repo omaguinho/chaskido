@@ -42,6 +42,7 @@
   // recuperarlo se vuelve a preparar
   canvas.addEventListener('contextrestored', resizeSoon);
   resize();
+  if (typeof Touch !== 'undefined') Touch.init();
 
   // Botón de pantalla completa (⛶): solo si el navegador lo permite
   (function fullscreenButton() {

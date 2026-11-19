@@ -53,6 +53,16 @@ const Music = (function () {
       const a = new Audio(src);
       a.loop = true;
       a.preload = 'auto';
+      // Respaldo del loop: algunos servidores (Acode) no dejan volver al comienzo y la
+      // pista sonaba una sola vez. Si termina, se vuelve a pedir desde el principio.
+      a.addEventListener('ended', function () {
+        if (current !== name || paused) return;
+        a.currentTime = 0;
+        a.play().catch(function () {
+          a.src = src + '?r=' + Date.now();
+          a.play().catch(function () {});
+        });
+      });
       const extra = (CONFIG.MUSIC.TRACK_PITCH || {})[name] || 0;
       a.extraRate = Math.pow(2, extra / 12);
       applyRate(a);

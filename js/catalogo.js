@@ -157,13 +157,20 @@ const CATALOGO = (function () {
       que: 'El mismo blues 3 semitonos más agudo y más rápido: suena con la llave, en los retos y en los jefes.' }
   ];
   const NOTAS_NOMBRE = ['Do', 'Do sostenido', 'Re', 'Mi bemol', 'Mi', 'Fa', 'Fa sostenido', 'Sol', 'La bemol', 'La', 'Si bemol', 'Si'];
-  // "Blues en Re mayor · 135 bpm" para una base y un pitch
-  function nombreMusica(id, pitch) {
-    const m = MUSICAS.find(function (x) { return x.id === id; }) || MUSICAS[0];
-    const p = Number(pitch) || 0;
-    const tono = ((m.tono + p) % 12 + 12) % 12;
-    const bpm = Math.round(m.bpm * Math.pow(2, p / 12));
-    return m.estilo + ' en ' + NOTAS_NOMBRE[tono] + ' ' + m.modo + ' · ' + bpm + ' bpm';
+  // Nombre de la canción de una sala (CONFIG.MUSIC.SONG_TITLES), sin tono ni bpm
+  function nombreMusica(levelId) {
+    const titles = CONFIG.MUSIC.SONG_TITLES || {};
+    if (titles[levelId]) return titles[levelId];
+    const L = LEVELS.find(function (l) { return l.id === levelId; });
+    return L ? L.name : '';
+  }
+
+  // Instrumentos que forman la canción de una sala ("Bajo · Percusión · Teclado")
+  function instrumentosDe(levelId) {
+    const files = (CONFIG.MUSIC.LEVEL_STEMS || {})[levelId] || {};
+    const names = CONFIG.MUSIC.STEM_NAMES || {};
+    return Object.keys(files).filter(function (t) { return t !== 'tema'; })
+      .map(function (t) { return names[t] || t; });
   }
 
   // ---------- Poderes (cada uno con su símbolo), en el orden en que se ganan ----------
@@ -632,7 +639,7 @@ const CATALOGO = (function () {
     VERSION: 5,
     PANTALLA: [20, 11],
     REGIONES: REGIONES, TEMAS: TEMAS, TIPOS: TIPOS, NIVELES: NIVELES,
-    MUSICAS: MUSICAS, nombreMusica: nombreMusica,
+    MUSICAS: MUSICAS, nombreMusica: nombreMusica, instrumentosDe: instrumentosDe,
     PODERES: PODERES, POLIEDROS: POLIEDROS, INSTRUMENTOS: INSTRUMENTOS, LLAVES: LLAVES,
     BONUS: BONUS, TIENDA: TIENDA, MERCADERES: MERCADERES,
     PIEZAS: PIEZAS, JEFES: JEFES, DECO: DECO,

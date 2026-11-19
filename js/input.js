@@ -46,6 +46,7 @@ const Input = (function () {
 
   const keys = {};
   const mouse = {};
+  const virtual = {};           // botones táctiles en pantalla (js/touch.js)
   const prevDown = {};
   const state = {};
   let axisX = 0;
@@ -158,6 +159,7 @@ const Input = (function () {
       if (!down && MOUSE[a]) {
         down = MOUSE[a].some(function (b) { return mouse[b]; });
       }
+      if (!down) down = !!virtual[a];
       if (!down) down = anyPadButton(PAD_BUTTONS[a]);
       if (!down) down = stickAsButton(a);
 
@@ -208,6 +210,11 @@ const Input = (function () {
   return {
     update: update,
     rumble: rumble,
+    // Botón táctil apretado o soltado (acción: 'left', 'jump', ...)
+    setVirtual: function (a, on) {
+      virtual[a] = !!on;
+      if (on) { pendingTap = true; device = 'touch'; }
+    },
     setRumble: function (on) { rumbleOn = !!on; },
     held: function (a) { return state[a].down; },
     pressed: function (a) { return state[a].pressed; },

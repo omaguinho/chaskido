@@ -174,9 +174,27 @@ class ArenaBoss {
   }
 
   setState(state, time) {
+    if (state !== this.state && this.attackStates && this.attackStates().indexOf(state) >= 0) this.attackSound(state);
     this.state = state;
     this.timer = time || 0;
     this.animTime = 0;
+  }
+
+  // Cada ataque suena (antes los jefes atacaban en silencio). Se elige por el nombre
+  // del estado: embestidas, saltos, avisos, giros; el resto, un golpe grave.
+  attackSound(state) {
+    const now = Date.now();
+    if (now - (this.lastAttackSound || 0) < 250) return;
+    this.lastAttackSound = now;
+    const S = [
+      [/charge|roll|rush|run|dash|slide|swoop|dive/i, 'dash'],
+      [/jump|leap|hop|climb|rise|up|fly/i, 'doubleJump'],
+      [/aim|warn|crouch|wind|prep|tele|rear|growl/i, 'alert'],
+      [/spin|blow|gust|storm|breath/i, 'wind'],
+      [/slam|drop|stomp|fall|pound/i, 'stompStart']
+    ];
+    const hit = S.find(function (r) { return r[0].test(state); });
+    Sfx.play(hit ? hit[1] : 'bossBurst');
   }
 
   startIdle(time) {
@@ -318,6 +336,12 @@ class ArenaBoss {
 
   addShot(s) {
     this.shots.push(Object.assign({ vx: 0, vy: 0, g: 0, life: 4 }, s));
+    // Disparos: un sonido corto (como mucho uno cada 0,2 s, para no saturar)
+    const now = Date.now();
+    if (s.harms !== false && now - (this.lastShotSound || 0) > 200) {
+      this.lastShotSound = now;
+      Sfx.play(s.kind === 'wave' ? 'bossLand' : s.kind === 'note' ? 'tuneLa' : 'appear');
+    }
   }
 
   // Dos ondas por el suelo, una a cada lado (aterrizajes fuertes)
