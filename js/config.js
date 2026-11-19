@@ -237,6 +237,10 @@ const CONFIG = {
     };
   })(),
 
+  // true: con los 3 instrumentos se suma también el "tema" de la sala. false (ahora): solo
+  // suenan los instrumentos (el tema ya los trae mezclados y se escuchaban duplicados)
+  TEMA_LAYER: false,
+
   // Salas sin instrumentos: qué pista suena y a qué velocidad (1 = normal)
   ROOM_MUSIC: {
     p1: { track: 'zona2' },

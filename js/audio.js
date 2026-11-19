@@ -43,9 +43,6 @@ const Music = (function () {
   function setRate(r) {
     rate = r || 1;
     Object.keys(players).forEach(function (key) { applyRate(players[key]); });
-    Object.keys(activeSources).forEach(function (name) {
-      if (activeSources[name]) activeSources[name].playbackRate.value = rate;
-    });
   }
 
   // --- REPRODUCTOR TRADICIONAL (HTML5) ---
@@ -195,6 +192,16 @@ const Music = (function () {
 
   function applyAllStems() { stemNames.forEach(applyStem); }
 
+  // Largo común de la vuelta: la pista más corta de la sala
+  function stemLoopLen() {
+    let len = Infinity;
+    stemNames.forEach(function (n) {
+      const b = stemBuffers[stemFiles[n]];
+      if (b) len = Math.min(len, b.duration);
+    });
+    return Number.isFinite(len) ? len : 1;
+  }
+
   // Arranca la pista en el punto exacto en que van las demás
   function startStem(name) {
     const buffer = stemBuffers[stemFiles[name]];
@@ -204,13 +211,17 @@ const Music = (function () {
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
     source.loop = true;
-    source.playbackRate.value = rate;
+    // Todas las pistas de la sala dan la vuelta en el mismo punto (la más corta): si un
+    // archivo trae unos milisegundos de más al final, ya no se desfasa en cada vuelta
+    const loopLen = stemLoopLen();
+    source.loopStart = 0;
+    source.loopEnd = loopLen;
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 0;
     source.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     const when = Math.max(now, stemStart);
-    const offset = ((when - stemStart) * rate) % buffer.duration;
+    const offset = (when - stemStart) % loopLen;
     source.start(when, offset);
     activeSources[name] = source;
     stemGains[name] = gainNode;
@@ -224,7 +235,9 @@ const Music = (function () {
     stemLevel = levelId || null;
     const levelFiles = CONFIG.MUSIC.LEVEL_STEMS || {};
     const files = (levelId && levelFiles[levelId]) ? levelFiles[levelId] : (CONFIG.MUSIC.STEMS || {});
-    stemNames = Object.keys(files);
+    // El tema solo se suma si CONFIG.MUSIC.TEMA_LAYER (si el tema ya trae los mismos
+    // instrumentos mezclados, sumarlo los duplica y suenan encimados)
+    stemNames = Object.keys(files).filter(function (n) { return n !== 'tema' || CONFIG.MUSIC.TEMA_LAYER; });
     stemFiles = {};
     collected = {};
     stemDistances = {};
@@ -244,17 +257,13 @@ const Music = (function () {
     initCtx();
     stemMode = mode;
     const level = stemLevel;
-    // Cada pista entra apenas llega (el tema primero), en su lugar del compás
-    const order = stemNames.slice().sort(function (x, y) { return (y === 'tema') - (x === 'tema'); });
-    order.reduce(function (chain, name) {
-      return chain.then(function () {
-        if (stemLevel !== level || stemMode === 'off' || !stemFiles[name]) return;   // ya cambió de sala
-        return loadStem(stemFiles[name]).then(function () {
-          if (stemLevel !== level || stemMode === 'off') return;
-          startStem(name);
-        });
-      });
-    }, Promise.resolve());
+    // Se espera a que lleguen todas y parten en el mismo instante (mismo compás)
+    loadAllStems(stemNames.map(function (n) { return stemFiles[n]; }).filter(Boolean)).then(function () {
+      if (stemLevel !== level || stemMode === 'off') return;
+      if (!Object.keys(activeSources).length) stemStart = audioCtx.currentTime + 0.1;
+      stemNames.forEach(startStem);
+      applyAllStems();
+    });
   }
 
   function setStemDistance(name, distance) {
