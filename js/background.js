@@ -45,26 +45,32 @@ const Backdrop = (function () {
   const gaveUp = {};    // capa -> veces que falló del todo (si no existe, se deja de pedir)
   // Cada tema se pide al entrar a una sala que lo usa (con reintentos: ver Loader
   // en js/util.js). Si llega cuando el tema ya está puesto, se aplica en ese momento.
+  let loading = 0;      // capas pedidas que todavía no llegan (la música espera: ver audio.js)
   function preload(key, srcs) {
     let i = 0;
+    loading++;
+    let done = false;
+    function finish() { if (!done) { done = true; loading--; } }
     function attempt() {
       if (typeof Loader === 'undefined') {   // util.js viejo: sin reintentos
         const img = new Image();
         img.onload = function () {
+          finish();
           found[key] = srcs[i];
           if (key.indexOf(theme + '_') === 0) applyImages();
         };
-        img.onerror = function () { i++; if (i < srcs.length) attempt(); };
+        img.onerror = function () { i++; if (i < srcs.length) attempt(); else finish(); };
         img.src = srcs[i];
         return;
       }
       Loader.image(srcs[i], function () {
+        finish();
         found[key] = srcs[i];
         if (key.indexOf(theme + '_') === 0) applyImages();
       }, function () {
         i++;
         if (i < srcs.length) attempt();
-        else gaveUp[key] = (gaveUp[key] || 0) + 1;
+        else { finish(); gaveUp[key] = (gaveUp[key] || 0) + 1; }
       }, 6, true);
     }
     attempt();
@@ -183,5 +189,5 @@ const Backdrop = (function () {
     turbines.style.transform = 'translateX(' + (-shift * scale) + 'px)';
   }
 
-  return { resize: resize, set: set, scroll: scroll, setMuted: setMuted };
+  return { resize: resize, set: set, scroll: scroll, setMuted: setMuted, loading: function () { return loading > 0; } };
 })();

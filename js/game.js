@@ -826,6 +826,7 @@ class Game {
       // (si sfx.js o audio.js son de una versión vieja, no hace nada)
       if (Sfx.wake) Sfx.wake();
       if (Music.wake) Music.wake();
+      if (Music.keepAlive) Music.keepAlive();   // la pista que se cortó o no llegó vuelve a sonar
     }
     this.time += dt;
     if (Input.keyPressed('KeyM')) Sfx.setMuted(Music.toggleMute());

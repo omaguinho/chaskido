@@ -172,12 +172,24 @@ const Music = (function () {
     return p;
   }
 
+  // Los fondos de la sala se piden antes que los instrumentos (son livianos y, si el
+  // servidor está ocupado con una pista grande, fallaban): se espera hasta 5 s
+  function backdropFirst() {
+    const until = performance.now() + 5000;
+    return new Promise(function (ok) {
+      (function check() {
+        if (typeof Backdrop === 'undefined' || !Backdrop.loading() || performance.now() > until) ok();
+        else setTimeout(check, 200);
+      })();
+    });
+  }
+
   // Las pistas se piden una tras otra (no las tres juntas): menos carga para el
   // servidor y menos memoria a la vez al decodificarlas
   function loadAllStems(files) {
     return files.reduce(function (chain, f) {
       return chain.then(function (list) {
-        return loadStem(f).then(function (b) { return list.concat([b]); });
+        return backdropFirst().then(function () { return loadStem(f); }).then(function (b) { return list.concat([b]); });
       });
     }, Promise.resolve([]));
   }
@@ -354,15 +366,35 @@ const Music = (function () {
     applyStem(name);
   }
 
+  // Primer toque o tecla: el navegador ya deja sonar. Si la música de ese momento
+  // quedó bloqueada (portada sin tocar nada), suena ahora. Antes aquí se pedían TODAS
+  // las pistas a la vez: el servidor de Acode se saturaba y fallaban los fondos y la
+  // música de la caída.
   function unlock() {
-    initCtx(); 
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    if (!unlocked) {
-      unlocked = true;
-      Object.keys(CONFIG.MUSIC.TRACKS || {}).forEach(function (name) {
-        player(name); 
-      });
+    initCtx();
+    if (audioCtx && audioCtx.state === 'suspended' && !muted && !paused) audioCtx.resume().catch(function () {});
+    unlocked = true;
+    keepAlive(true);
+  }
+
+  // Si la pista actual se detuvo sola (bloqueo, corte del servidor o error de carga),
+  // se vuelve a intentar: como mucho cada 2 s. El juego lo llama en cada paso.
+  let lastTry = 0;
+  function keepAlive(now) {
+    if (!current || paused || muted || !unlocked) return;
+    const a = players[current];
+    if (!a.paused && !a.error) return;
+    const t = performance.now();
+    if (!now && t - lastTry < 2000) return;
+    lastTry = t;
+    if (a.error) {                     // no llegó: se vuelve a pedir el archivo (hasta 5 veces)
+      a.retries = (a.retries || 0) + 1;
+      if (a.retries > 5) return;
+      a.src = CONFIG.MUSIC.PATH + CONFIG.MUSIC.TRACKS[current] + '?r=' + Math.floor(t);
+      a.load();
+      applyRate(a);
     }
+    a.play().catch(function () {});
   }
 
   window.addEventListener('pointerdown', unlock);
@@ -405,7 +437,7 @@ const Music = (function () {
   window.addEventListener('focus', wake);
 
   return {
-    wake: wake, play: play, stop: stop, pause: pause, resume: resume,
+    wake: wake, keepAlive: keepAlive, play: play, stop: stop, pause: pause, resume: resume,
     setVolume: setVolume, setNear: setNear, setRate: setRate, toggleMute: toggleMute, locked: locked,
     setStemLevel: setStemLevel, setStemDistance: setStemDistance, collectStem: collectStem,
     hasStems: hasStems, startSearch: startSearch,
