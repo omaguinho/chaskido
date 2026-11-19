@@ -231,7 +231,7 @@ const Music = (function () {
     initCtx();
     stemNames.forEach(function (name) {
       stemFiles[name] = stemFile(name, levelId);
-      collected[name] = name === 'tema';      // el tema (la base) suena desde el comienzo
+      collected[name] = false;   // en silencio: solo efectos (el Eco se robó la música)
       stemDistances[name] = Infinity;
     });
     // Se empiezan a descargar al entrar a la sala (así suenan apenas empieza la misión)
@@ -272,13 +272,22 @@ const Music = (function () {
       loadStem(stemFiles[name]).then(function () { startStem(name); });
     }
     applyStem(name);                 // queda sonando (ya no se apaga)
+    // Con todos los instrumentos vuelve también el tema: la canción completa
+    if (stemNames.indexOf('tema') >= 0 && allStemsCollected() && !collected.tema) {
+      collected.tema = true;
+      if (!activeSources.tema && stemMode !== 'off' && stemStart) {
+        loadStem(stemFiles.tema).then(function () { startStem('tema'); });
+      }
+      applyStem('tema');
+    }
     return true;
   }
 
   function isStemCollected(name) { return !!collected[name]; }
 
   function allStemsCollected() {
-    return stemNames.length > 0 && stemNames.every(function (name) { return collected[name]; });
+    const inst = stemNames.filter(function (n) { return n !== 'tema'; });
+    return inst.length > 0 && inst.every(function (name) { return collected[name]; });
   }
 
   // ¿Esta sala tiene pistas por instrumento?
@@ -316,7 +325,7 @@ const Music = (function () {
   function resetStems() {
     stopStems();
     stemNames.forEach(function (name) {
-      collected[name] = name === 'tema';
+      collected[name] = false;
       stemDistances[name] = Infinity;
     });
   }

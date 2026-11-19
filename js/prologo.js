@@ -437,8 +437,8 @@ const Scenes = (function () {
   };
 
   Fiesta.prototype.music = function (game) {
-    Music.setRate(game.level.rate);
-    Music.play('main');
+    Music.setRate(1);
+    Music.play('zona2');            // la fiesta: tema de la zona 2
     game.musicNear = 1;
     Music.setNear(1);
   };

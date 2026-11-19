@@ -428,7 +428,7 @@ class Game {
     Music.setRate(Music.hasStems(L.id) ? 1 : (R && R.rate ? R.rate : L.rate));
     if (this.mission === 'escape') Music.play('key');
     else if (Music.hasStems(L.id) && this.mission === 'done') Music.playStems(L.id, true);
-    else if (Music.hasStems(L.id) && this.mission === 'collect') {
+    else if (Music.hasStems(L.id)) {   // sin afinar: en silencio, suena lo que atrapas o tienes cerca
       // el tema suena y cada instrumento atrapado se suma
       Music.startSearch(L.id);
       this.instrumentos.list.forEach(function (c) { if (c.state === 'caught') Music.collectStem(c.tipo); });
