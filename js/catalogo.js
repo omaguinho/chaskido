@@ -199,7 +199,7 @@ const CATALOGO = (function () {
     { id: 'shrink',     nombre: 'Encogerse',       region: 6, color: '#F7C9A8', simbolo: 'Círculo pequeño dentro de un círculo punteado',
       como: 'Abajo dos veces: la papa se achica; otra vez para crecer.', abre: 'Túneles de un bloque.', gana: 'Pez Linterna Abisal (Fondo Abisal)', estado: 'nuevo' },
     { id: 'shell',      nombre: 'Caracol del eco', region: 7, color: '#F7E3A1', simbolo: 'Espiral',
-      como: 'Quieta, mantén Acción (E / Cuadrado): soplas el caracol.', abre: 'Plataformas y puertas escondidas en la niebla.', gana: 'Cóndor de Bronce (Mirador del Eco)', estado: 'nuevo' },
+      como: 'Quieta, mantén Acción (E / Cuadrado): soplas el caracol. Los enemigos cercanos quedan hipnotizados 2 segundos.', abre: 'Plataformas y puertas escondidas en la niebla.', gana: 'Cóndor de Bronce (Mirador del Eco)', estado: 'nuevo' },
     { id: 'tuner',      nombre: 'Diapasón',        region: 0, color: '#FFB37A', simbolo: 'Horquilla de dos puntas',
       como: 'F o Triángulo. Toque corto: suena La. Mantén: el anillo sube por las notas que sabes (La, Si, Do, Re, Mi, Fa, Sol) y suena al soltar. Con abajo al soltar, el bemol (notas blue). Hace resonar los muros de su nota.',
       abre: 'Los muros de cada nota. Viene con La; el Eco enseña Si, el Guardián del Tambor Do, el Cuy Re, el Gusano Mi, el Toro Fa y el Oso Sol. Las notas blue (Si♭, Mi♭, Sol♭) las enseñan los jefes de las salas secretas.', gana: 'Eco del Silencio (prólogo)', estado: 'hecho' }

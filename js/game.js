@@ -251,6 +251,7 @@ class Game {
     this.player.abilities = this.abilities;
     this.instrumentos = new Instrumentos(L);
     this.enemies = new Enemies(L);
+    this.vecinos = new Vecinos(L, rs);
     this.drops = new Drops();
     const b = L.bossSpawn;
     const type = L.boss ? L.boss.type : 'bombo';
@@ -923,6 +924,7 @@ class Game {
     this.playerEvents();
     this.instrumentos.update(dt, this.level, p, this.level.id);
     this.enemies.update(dt, this.level, p, this.camera);
+    this.vecinos.update(dt, this);
     this.enemies.takeShoves().forEach(function (e) { p.shove(e.dir); Sfx.play('stomp'); });
     this.dropCoins();
     this.drops.update(dt, this.level);
@@ -1875,6 +1877,14 @@ stems.forEach(stem => {
     const shown = this.level.blowShell(cx, cy, S.RADIUS);
     this.shellWaves.push({ x: cx, y: cy, t: 0 });
     Sfx.tune(196);
+    // La onda hipnotiza: los enemigos cercanos quedan quietos S.FREEZE segundos
+    const reach = S.RADIUS * T;
+    this.enemies.list.forEach(function (e) {
+      if (e.state === 'dead' || e.npc) return;
+      if (Math.hypot(e.x + e.w / 2 - cx, e.y + e.h / 2 - cy) > reach) return;
+      e.frozen = S.FREEZE;
+      Effects.play('poof', e.x + e.w / 2, e.y);
+    });
     if (!shown.length) return;
     shown.forEach(function (c, i) {
       if (i % 2 === 0) Effects.play('poof', c[0] * T + T / 2, c[1] * T + T / 2);
@@ -2632,6 +2642,7 @@ updateEchoes(dt) {
     this.instrumentos.draw(ctx);
     this.drops.draw(ctx, this.time);
     this.enemies.draw(ctx);
+    this.vecinos.draw(ctx, this);
     if (this.boss) this.boss.draw(ctx);
     BossShow.drawWorld(ctx);
 

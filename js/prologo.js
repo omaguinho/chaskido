@@ -1182,6 +1182,7 @@ function drawTitleWord(ctx, t, life, y, alphaMax) {
     create: create,
     drawTitleBackground: drawTitleBackground,
     drawButtonHint: drawButtonHint,
+    drawNpc: drawNpc,
     drawNightSky: drawNightSky,
     resetTitleSound: function() {
       for (let k in titleSounds) delete titleSounds[k];

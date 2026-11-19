@@ -180,6 +180,7 @@ const CONFIG = {
     CLEAR_TIME: 6,        // segundos que la niebla queda despejada
     COOLDOWN: 0.8,
     WAVE_TIME: 0.9,       // lo que dura el dibujo de la onda
+    FREEZE: 2,            // segundos que la onda deja quietos a los enemigos cercanos
     FOG_ALPHA: 0.78,      // qué tan tapada está la niebla (0 a 1)
     FOG_COLOR: '#c9bfe6'
   },
@@ -187,6 +188,34 @@ const CONFIG = {
   // Música: archivos en assets/music/
   LOAD_WAIT: 10,   // segundos máximos de "Cargando..." (después empieza igual)
   RETRY_AFTER: 3,  // segundos después de empezar: se piden otra vez los dibujos que no llegaron
+
+  // Vecinos que hablan (js/vecinos.js): uno por zona y uno difícil.
+  // room: sala · dx: bloques desde el inicio P · kind: baila, aplaude, tambor, flauta, cuerdas
+  // gift: regalo (una vez): { coins } o { heart } · after: lo que dice después del regalo
+  // hard: el vecino difícil (HP pisotones, PRICE monedas para pagarle)
+  VECINOS: [
+    { id: 'z1', room: 'n2', dx: 5, kind: 'flauta', color: '#9fd3e0',
+      lines: ['Aprieta Pausa y mira el mapa: las salas que ya pisaste se van dibujando, y abajo ves los instrumentos que rescataste.'] },
+    { id: 'z2', room: 'n1', dx: 5, kind: 'aplaude', color: '#f4b6c2',
+      lines: ['¡Venciste al Guardián del Tambor! Ahora vuelve a las Acequias Hondas: hay un muro amarillo que se abre con la nota Re.'] },
+    { id: 'z3', room: 'n7', dx: 5, kind: 'baila', color: '#8fbf9a',
+      lines: ['¿Te cansaste de una canción? En Pausa → Opciones puedes bajar la música o cada instrumento.'] },
+    { id: 'z4', room: 'n10', dx: 5, kind: 'tambor', color: '#e8c58e', gift: { coins: 59 },
+      lines: ['Toma, para el camino: 59 monedas. ¡Gástalas bien!'],
+      after: ['¿Ya gastaste mis monedas? ¡Que suene la música!'] },
+    { id: 'z5', room: 'n13', dx: 5, kind: 'cuerdas', color: '#c9b8e3',
+      lines: ['Con el planeo, vuelve al Puerto de los Molinos: en el muelle del oeste, el muro de Sol te deja cruzar el mar.'] },
+    { id: 'z6', room: 'n16', dx: 5, kind: 'baila', color: '#9fd3e0',
+      lines: ['La cascada de la Orilla de Juncos no se escala: se sube buceando. Arriba está la Ciudadela de Niebla.'] },
+    { id: 'z7', room: 'n19', dx: 5, kind: 'aplaude', color: '#f7e3a1',
+      lines: ['La puerta dorada del Bosque lleva al último jefe. Solo se abre si rescataste los instrumentos de todos los niveles.'] },
+    { id: 'dificil', room: 's3', dx: 6, kind: 'baila', color: '#ff6b8a', gift: { heart: true, coins: 300 },
+      lines: ['¿Quieres mi tesoro? Págame 800 monedas... o intenta pisarme tres veces.'],
+      after: ['Ya tienes mi tesoro. ¡Nadie me había alcanzado!'],
+      hard: { HP: 3, PRICE: 800, SPEED: 150, JUMP: 300, SEE: 70,
+              WIN: '¡Me alcanzaste! Toma mi tesoro: un corazón más y 300 monedas.',
+              PAID: 'Trato hecho. Toma mi tesoro: un corazón más y 300 monedas.' } }
+  ],
 
   MUSIC: {
   PATH: 'assets/music/',
@@ -241,15 +270,20 @@ const CONFIG = {
   // Nombre de la canción de cada sala (lo que se ve al afinarla y en Canciones).
   // Puedes cambiarlos: son solo el nombre, sin tono ni bpm.
   SONG_TITLES: {
-    p2: 'La noche robada',
-    n2: 'Ocaso', n5: 'Acequias', n3: 'Molinos',
-    n1: 'Cañas', n4: 'Cañas', n6: 'El taller',
-    n7: 'Bosque', n8: 'Bosque', n9: 'Pantano',
-    n10: 'Sol dorado', n11: 'Sol dorado', n12: 'Sol dorado',
-    n13: 'Escarcha', n14: 'Escarcha', n15: 'Escarcha',
-    n16: 'Espejo', n17: 'Espejo', n18: 'Espejo',
-    n19: 'Niebla', n20: 'Niebla', n21: 'Niebla',
+    p1: 'La fiesta del barrio', p2: 'La noche robada',
+    n2: 'Calles del Ocaso', n5: 'Agua de acequia', n3: 'Molinos del puerto',
+    n1: 'Cañas al viento', n4: 'Cañas al viento', n6: 'Taller del Silencio',
+    n7: 'Raíces del bosque', n8: 'Raíces del bosque', n9: 'Barro del pantano',
+    n10: 'Escalinata del Sol', n11: 'Escalinata del Sol', n12: 'Escalinata del Sol',
+    n13: 'Escarcha del metro sumergido', n14: 'Escarcha del metro sumergido', n15: 'Escarcha del metro sumergido',
+    n16: 'Reflejos del lago', n17: 'Reflejos del lago', n18: 'Reflejos del lago',
+    n19: 'Ecos de la ciudadela', n20: 'Ecos de la ciudadela', n21: 'Ecos de la ciudadela',
     n22: 'El Gran Silencio'
+  },
+  // Otras músicas (para el catálogo): portada, créditos, salas sin instrumentos, jefe y ají
+  OTHER_TITLES: {
+    portada: 'Niño interno', creditos: 'Momento único', otras: 'Ocaso escondido',
+    tambor: 'Tambor del puerto', aji: 'Ocaso picante'
   },
 
   // true: con los 3 instrumentos se suma también el "tema" de la sala. false (ahora): solo

@@ -1276,6 +1276,8 @@ class Enemies {
 
   update(dt, level, player, camera) {
     this.list.forEach(function (e) {
+      // Hipnotizado por el caracol: no se mueve ni dispara
+      if (e.frozen > 0) { e.frozen -= dt; return; }
       e.update(dt, level, player);
       if (e.wantsShot) {
         this.shots.fire(e, e.wantsShot);
@@ -1337,7 +1339,22 @@ class Enemies {
   }
 
   draw(ctx) {
-    this.list.forEach(function (e) { e.draw(ctx); });
+    this.list.forEach(function (e) {
+      e.draw(ctx);
+      if (e.frozen > 0 && e.state !== 'dead') {
+        // Hipnotizado: una espiral color arena que gira sobre su cabeza
+        const cx = e.x + e.w / 2, cy = e.y - 5, a = e.frozen * 8;
+        ctx.strokeStyle = CONFIG.SKINS.shell;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let k = 0; k < 14; k++) {
+          const r = 1 + k * 0.35, ang = a + k * 0.7;
+          const px = cx + Math.cos(ang) * r, py = cy + Math.sin(ang) * r * 0.6;
+          if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    });
     this.shots.draw(ctx);
   }
 }
