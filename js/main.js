@@ -43,6 +43,7 @@
   canvas.addEventListener('contextrestored', resizeSoon);
   resize();
   if (typeof Touch !== 'undefined') Touch.init();
+  if (typeof Revisar !== 'undefined' && Revisar.on()) Revisar.run();   // index.html?revisar
 
   // Botón de pantalla completa (⛶): solo si el navegador lo permite
   (function fullscreenButton() {

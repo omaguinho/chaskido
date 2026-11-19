@@ -164,7 +164,7 @@ const Music = (function () {
       .then(function (buffer) { stemBuffers[file] = toMono(buffer); return stemBuffers[file]; })
       .catch(function () {
         delete stemBuffers[file + '#p'];
-        if (n + 1 >= STEM_TRIES) { console.error('No se pudo cargar la pista:', file); return null; }
+        if (n + 1 >= STEM_TRIES) { setError('No llegó la música: ' + file); return null; }
         return new Promise(function (ok) { setTimeout(ok, 600 * (n + 1)); })
           .then(function () { return loadStem(file, n + 1); });
       });
@@ -389,7 +389,7 @@ const Music = (function () {
     lastTry = t;
     if (a.error) {                     // no llegó: se vuelve a pedir el archivo (hasta 5 veces)
       a.retries = (a.retries || 0) + 1;
-      if (a.retries > 5) return;
+      if (a.retries > 5) { setError('No llegó la música: ' + CONFIG.MUSIC.TRACKS[current]); return; }
       a.src = CONFIG.MUSIC.PATH + CONFIG.MUSIC.TRACKS[current] + '?r=' + Math.floor(t);
       a.load();
       applyRate(a);
