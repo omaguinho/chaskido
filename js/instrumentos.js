@@ -156,7 +156,7 @@ class Instrumento {
   }
   // ------------------------------------
 
-  const spriteName = 'sprite_' + this.tipo; 
+  const spriteName = (CONFIG.MUSIC.INSTRUMENT_SPRITE || {})[this.tipo] || ('sprite_' + this.tipo);
   const frame = Sprites.frameAt(spriteName, this.animTime);
   
   let ok = Sprites.drawAnchored(ctx, spriteName, frame, cx, bottom, flip);
@@ -191,7 +191,7 @@ class Instrumentos {
     const levelFiles = CONFIG.MUSIC.LEVEL_STEMS || {};
     const generalFiles = CONFIG.MUSIC.STEMS || {};
     const files = (level.id && levelFiles[level.id]) ? levelFiles[level.id] : generalFiles;
-    const tipos = Object.keys(files); 
+    const tipos = Object.keys(files).filter(function (t) { return t !== 'tema'; });   // el tema no se atrapa
 
     const max = Math.min(tipos.length, spawns.length);
     for (let i = 0; i < max; i++) {

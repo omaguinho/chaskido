@@ -180,7 +180,7 @@ class PauseMenu {
 
   // Poderes: arriba/abajo recorre poderes y llaves; izquierda/derecha cambia de pestaña
   updatePowers() {
-    const n = CATALOGO.PODERES.length + CATALOGO.LLAVES.length;
+    const n = CATALOGO.PODERES.length;          // ya no hay llaves
     if (Input.pressed('down')) {
       this.pick = (this.pick + 1) % n;
       Sfx.play('move');
@@ -370,16 +370,6 @@ class PauseMenu {
       if (rs.afinada) this.mark(ctx, PauseMenu.MARK.TOTEM, x + 3, y + 3, '#9fd3e0');
     }, this);
 
-    // Puertas de color: la llave junto a la sala que la tiene
-    Object.keys(WORLD.KEY_DOORS).forEach(function (key) {
-      const from = WORLD.room(WORLD.KEY_DOORS[key][0]);
-      if (!from || !this.roomShown(from)) return;
-      const k = WORLD.keyInfo(key);
-      const x = ox + from.x * UW + from.w * UW - 2;
-      const y = oy + from.y * UH + from.h * UH - 3;
-      ctx.fillStyle = P.keys[key] ? k.color : '#5b5478';
-      ctx.fillRect(x - 1, y - 1, 3, 3);
-    }, this);
 
     if (herePlace && blink) {
       this.mark(ctx, PauseMenu.MARK.PAPA, ox + (herePlace.x + herePlace.w / 2) * UW, oy + (herePlace.y + herePlace.h / 2) * UH, '#ffd34d');
@@ -504,7 +494,7 @@ class PauseMenu {
   }
 
   powerAt(px, py) {
-    const n = CATALOGO.PODERES.length + CATALOGO.LLAVES.length;
+    const n = CATALOGO.PODERES.length;
     for (let i = 0; i < n; i++) {
       const c = this.powerCell(i);
       if (Math.abs(px - c.x) < 14 && Math.abs(py - c.y) < 10) return i;
@@ -529,12 +519,15 @@ class PauseMenu {
       }
     }, this);
 
-    UI.text(ctx, 'Llaves', 14, 86, '#9a93b0', 5);
-    CATALOGO.LLAVES.forEach(function (k, i) {
-      const c = this.powerCell(nP + i);
-      if (nP + i === this.pick) this.cursor(ctx, c.x, c.y);
-      this.drawKey(ctx, c.x, c.y, k.color, !!P.keys[k.id]);
-    }, this);
+    // Instrumentos rescatados en todo el mundo (en vez de las llaves, que ya no existen)
+    let got = 0, all = 0;
+    Object.keys(CONFIG.MUSIC.LEVEL_STEMS).forEach(function (id) {
+      const n = Object.keys(CONFIG.MUSIC.LEVEL_STEMS[id]).filter(function (t) { return t !== 'tema'; }).length;
+      const rs = P.rooms[id];
+      all += n;
+      got += rs && rs.afinada ? n : ((rs && rs.caught) || []).filter(Boolean).length;
+    });
+    UI.text(ctx, 'Instrumentos rescatados: ' + got + ' / ' + all, 14, 86, '#ffd34d', 6);
 
     // Colección
     const y = 106;
@@ -558,7 +551,7 @@ class PauseMenu {
       }
       const lines = has ? [pw.como, 'Abre: ' + pw.abre] : ['Se gana: ' + (pw.gana || 'al empezar')];
       this.lines(ctx, lines, 16, 132, '#5b5478');
-    } else {
+    } else if (CATALOGO.LLAVES[this.pick - nP]) {
       const k = CATALOGO.LLAVES[this.pick - nP];
       const has = !!P.keys[k.id];
       UI.text(ctx, has ? k.nombre : k.nombre + '  (te falta)', 16, 121, has ? ink : '#6b6385', 7);

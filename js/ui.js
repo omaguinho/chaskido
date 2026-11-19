@@ -253,7 +253,7 @@ const UI = (function () {
           ctx.globalAlpha = got ? 1 : 0.3;
           ctx.translate(sx + 6, 12);
           ctx.scale(0.55, 0.55);
-          Sprites.drawAnchored(ctx, 'sprite_' + c.tipo, 0, 0, 0, false);
+          Sprites.drawAnchored(ctx, ((CONFIG.MUSIC.INSTRUMENT_SPRITE || {})[c.tipo] || 'sprite_' + c.tipo), 0, 0, 0, false);
           ctx.restore();
         });
         x += game.instrumentos.list.length * 13 + 6;
@@ -305,7 +305,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       ctx.fillRect(x, yPos, 20, 20);
       
       // ACÁ ESTÁ EL CAMBIO: Ya no usamos ctx.scale, solo lo dibujamos.
-      Sprites.drawAnchored(ctx, 'sprite_' + c.tipo, 0, x + 10, yPos + 18, false); 
+      Sprites.drawAnchored(ctx, ((CONFIG.MUSIC.INSTRUMENT_SPRITE || {})[c.tipo] || 'sprite_' + c.tipo), 0, x + 10, yPos + 18, false); 
     });
   }
 }
@@ -396,7 +396,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       const currentY = startY + (CONFIG.HEIGHT / 2 - startY) * progress;
       
       ctx.globalAlpha = 1 - progress;
-      Sprites.drawAnchored(ctx, 'sprite_' + c.tipo, 0, currentX, currentY, false, null, 0.8);
+      Sprites.drawAnchored(ctx, ((CONFIG.MUSIC.INSTRUMENT_SPRITE || {})[c.tipo] || 'sprite_' + c.tipo), 0, currentX, currentY, false, null, 0.8);
       ctx.globalAlpha = 1;
     });
   }
@@ -676,7 +676,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       text(ctx, M.nombre, W / 2, y + 8, INK, 8, 'center');
       Drops.drawCoin(ctx, x + w - 46, y + 8, game.time);
       text(ctx, String(game.progress.coins), x + w - 36, y + 8, '#a0784a', 8);
-      const rows = O.goods.map(function (g) { return { label: g.nombre, price: g.precio === 0 ? 'gratis' : String(g.precio) }; });
+      const rows = O.goods.map(function (g) { return { label: g.nombre, price: g.precio === 0 ? 'gratis' : String(g.precioActual || g.precio) }; });
       rows.push({ label: 'Salir', price: '' });
       rows.forEach(function (r, i) {
         const ry = y + 26 + i * 14;

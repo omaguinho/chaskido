@@ -128,16 +128,16 @@ const CONFIG = {
     ENEMY_HIT: 1.15,
     BOSS_HIT: 1.05,
     GROW: [
-      { prefix: 'papa_', scale: 1.35, anchor: 'bottom' },
-      { prefix: 'sprite_', scale: 1.5, anchor: 'center' },
-      { names: ['corchea', 'corchea_alerta', 'corchea_huir'], scale: 1.35, anchor: 'bottom' },
+      { prefix: 'papa_', scale: 1.0, anchor: 'bottom' },       // (v78: 25 % más chicos; los choques no cambian)
+      { prefix: ['sprite_', 'instrumento_'], scale: 1.15, anchor: 'center' },
+      { names: ['corchea', 'corchea_alerta', 'corchea_huir'], scale: 1.0, anchor: 'bottom' },
       { names: ['moneda', 'moneda_chica', 'fruta', 'fruto', 'maiz', 'aji', 'cubo', 'corazon_extra',
-                'llave', 'llave_color', 'nota_escala'], scale: 1.15, anchor: 'center' },
+                'llave', 'llave_color', 'nota_escala'], scale: 0.86, anchor: 'center' },
       // Enemigos que vuelan o cuelgan: crecen desde el medio
-      { prefix: ['paloma_', 'colibri_', 'libelula_', 'nube_granizo', 'murcielago_', 'mono_'], scale: 1.15, anchor: 'center' },
+      { prefix: ['paloma_', 'colibri_', 'libelula_', 'nube_granizo', 'murcielago_', 'mono_'], scale: 0.86, anchor: 'center' },
       // Enemigos que caminan: apoyados en el piso
       { prefix: ['escarabajo_', 'cuy_', 'disparador_', 'oruga_', 'barrendero_', 'rueda_', 'escorpion_', 'topo_',
-                 'armadillo_', 'brasa_', 'zorro_', 'bola_nieve', 'vizcacha_', 'rana_', 'pez_', 'garza_'], scale: 1.15, anchor: 'bottom' },
+                 'armadillo_', 'brasa_', 'zorro_', 'bola_nieve', 'vizcacha_', 'rana_', 'pez_', 'garza_'], scale: 0.86, anchor: 'bottom' },
       // Jefes
       { prefix: ['bombo_', 'charanguero_', 'huaca_', 'cuygig_', 'gusano_', 'toro_', 'oso_', 'ranagig_', 'condor_', 'eco_'],
         scale: 1.15, anchor: 'bottom' }
@@ -189,25 +189,95 @@ const CONFIG = {
 
   MUSIC: {
   PATH: 'assets/music/',
+  // Pistas enteras (suenan solas): portada, créditos, temas de zona, jefes y el ají
   TRACKS: {
-    main: 'blues_do_mayor.mp3',   
-    key: 'blues_do_mayor.mp3',    
-    final: 'blues_mi_menor.mp3'   
+    main: 'tema_zona_1_3voces.m4a',
+    key: 'tema_zona_1_4voces.m4a',
+    final: 'tema_final.mp3',
+    portada: 'nino_interno.mp3',
+    creditos: 'momentounico.mp3',
+    zona1: 'tema_zona_1_3voces.m4a',
+    zona1b: 'tema_zona_1_4voces.m4a',
+    zona2: 'tema_zona_2.mp3',
+    zona3: 'tema_zona_3.mp3',
+    pantano: 'pantano_tema.m4a',
+    zona4: 'tema_zona_4.mp3',
+    zona5: 'tema_zona_5.mp3',
+    zona6: 'tema_zona_6.mp3',
+    zona7: 'tema_zona_7.mp3',
+    n6: 'tema_n6.mp3'
   },
-  FALLBACK: { final: 'blues_do_mayor.mp3' },
+  FALLBACK: { final: 'tema_zona_1_3voces.m4a' },
 
-  // ESTO YA LO TENÍAS (Rutas de los archivos):
-  STEMS: {
-    bajo: 'instrument/bajo.m4a',
-    percusion: 'instrument/percusion.m4a',
-    teclado: 'instrument/teclado.m4a'
+  // Instrumentos de cada sala: nombre -> archivo. "tema" es la base: suena siempre
+  // (desde que entras); cada instrumento se suma al atraparlo. Las salas que no están
+  // aquí usan la pista de ROOM_MUSIC.
+  LEVEL_STEMS: (function () {
+    const z1 = { percusion: 'percusion_zona_1.m4a', teclado: 'teclado_zona_1.m4a', bajo: 'bajo_zona_1.m4a', tema: 'tema_zona_1_3voces.m4a' };
+    const z2 = { percusion: 'percusion_zona_2.mp3', sintetizador: 'sintetizador_zona_2.mp3', sintetizador2: 'sintetizador2_zona_2.mp3', tema: 'tema_zona_2.mp3' };
+    const z3 = { arpa: 'arpa_zona_3.mp3', mandolina: 'mandolin_zona_3.mp3', violin: 'violin_zona_3.mp3', tema: 'tema_zona_3.mp3' };
+    const z4 = { percusion: 'percusion_zona_4.mp3', citara: 'citarra_zona_4.mp3', bajo: 'bajo_zona_4.mp3', tema: 'tema_zona_4.mp3' };
+    const z5 = { bajo: 'bajo_zona_5.mp3', percusion: 'percusion_zona_5.mp3', arpa: 'arpa_zona_5.mp3', tema: 'tema_zona_5.mp3' };
+    const z6 = { percusion: 'percusion_zona_6.mp3', sintetizador: 'sintetizador_zona_6.mp3', vientosnubes: 'vientosnubes_zona_6.mp3', tema: 'tema_zona_6.mp3' };
+    const z7 = { percusion: 'percusion_zona_7.mp3', sintetizador: 'sintetizador_zona_7.mp3', teclado: 'teclado_zona_7.mp3', tema: 'tema_zona_7.mp3' };
+    return {
+      p2: { teclado: 'teclado_zona_1.m4a', bajo: 'bajo_zona_1.m4a', percusion: 'percusion_zona_1.m4a', tema: 'tema_zona_1_3voces.m4a' },
+      n2: z1,
+      n5: { percusion: 'percusion_n5.mp3', kalimba: 'kalimba_n5.mp3', violin: 'violin_n5.mp3', tema: 'tema_n5.mp3' },
+      n3: { teclado2: 'teclado2_zona_1.mp3', bajo: 'bajo_zona_1.m4a', percusion: 'percusion_zona_1.m4a', tema: 'tema_zona_1_4voces.m4a' },
+      n1: z2, n4: z2,
+      n6: { bajo: 'bajo_n6.mp3', percusion: 'percusion_n6.mp3', teclado: 'teclado_n6.mp3', tema: 'tema_n6.mp3' },
+      n7: z3, n8: z3,
+      n9: { sintetizador: 'sintetizador_pantano.m4a', bajo: 'bajo_pantano.m4a', percusion: 'percusion_pantano.m4a', tema: 'pantano_tema.m4a' },
+      n10: z4, n11: z4, n12: z4,
+      n13: z5, n14: z5, n15: z5,
+      n16: z6, n17: z6, n18: z6,
+      n19: z7, n20: z7, n21: z7,
+      n22: { coro: 'coro_final.mp3', teclado: 'teclado_final.mp3', percusion: 'percusion_final.mp3', tema: 'tema_final.mp3' }
+    };
+  })(),
+
+  // Salas sin instrumentos: qué pista suena y a qué velocidad (1 = normal)
+  ROOM_MUSIC: {
+    p1: { track: 'zona2' },
+    j1: { track: 'zona1', rate: 0.9 }, j2: { track: 'zona1', rate: 0.9 }, s3: { track: 'zona1', rate: 0.9 },
+    c1: { track: 'zona1', rate: 1.1 }, c2: { track: 'zona1', rate: 1.1 }, c3: { track: 'zona1', rate: 1.1 },
+    q1: { track: 'zona1' }, q2: { track: 'zona1' }, q5: { track: 'zona1' }, q6: { track: 'zona1' },
+    q8: { track: 'zona1' }, q20: { track: 'zona1' }
   },
 
-  // ESTO ES LO NUEVO QUE DEBES AGREGAR (Nombres para el menú):
+  // Música de cada jefe al cerrarse la arena (por sala)
+  BOSS_MUSIC: {
+    n3: { track: 'zona1b', rate: 1.15 },
+    n6: { track: 'n6' },
+    n9: { track: 'pantano' },
+    n12: { track: 'zona4' },
+    n15: { track: 'zona5' },
+    n18: { track: 'zona6' },
+    n21: { track: 'zona7' },
+    n22: { track: 'final' }
+  },
+
+  // Ají (pimienta): mientras dura suena el tema de la zona 1 a 200 BPM (120 x 1,67)
+  CHILI_MUSIC: { track: 'zona1', rate: 1.67 },
+
+  // Pistas por defecto (si una sala no tiene las suyas)
+  STEMS: {},
+
+  // Nombre de cada instrumento (mensajes y menú)
   STEM_NAMES: {
-    bajo: 'Bajo',
-    percusion: 'Percusión',
-    teclado: 'Teclado'
+    bajo: 'Bajo', percusion: 'Percusión', teclado: 'Teclado', teclado2: 'Teclado',
+    arpa: 'Arpa', citara: 'Cítara', kalimba: 'Kalimba', mandolina: 'Mandolina',
+    sintetizador: 'Sintetizador', sintetizador2: 'Sintetizador', violin: 'Violín',
+    vientosnubes: 'Vientos de nube', coro: 'Coro'
+  },
+
+  // Dibujo de cada instrumento (los que no tienen uno propio usan el de otro)
+  INSTRUMENT_SPRITE: {
+    bajo: 'sprite_bajo', percusion: 'sprite_percusion', teclado: 'sprite_teclado', teclado2: 'sprite_teclado',
+    arpa: 'instrumento_arpa', citara: 'instrumento_citara', mandolina: 'instrumento_citara',
+    kalimba: 'instrumento_kalimba', sintetizador: 'instrumento_sintetizador', sintetizador2: 'instrumento_sintetizador',
+    violin: 'instrumento_violin', vientosnubes: 'instrumento_vientosnubes', coro: 'instrumento_coro'
   },
 
   STEM_RATE: 24000,     // Hz de las pistas de instrumentos (menos = menos memoria en el celular)
@@ -274,6 +344,7 @@ const CONFIG = {
 
   // Ají: más velocidad y salto por un rato (sirve para pasar espinas)
   CHILI: {
+    PRICE_STEP: 40,        // el ají de la tienda sube 40 monedas con cada compra
     REGROW_SESSIONS: 10,  // partidas (veces que se abre la partida) hasta que un ají comido vuelve a crecer
     DURATION: 5,        // segundos que dura el efecto
     SPEED_MULT: 1.5,    // carrera x1,5

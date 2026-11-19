@@ -231,11 +231,11 @@ const Music = (function () {
     initCtx();
     stemNames.forEach(function (name) {
       stemFiles[name] = stemFile(name, levelId);
-      collected[name] = false;
+      collected[name] = name === 'tema';      // el tema (la base) suena desde el comienzo
       stemDistances[name] = Infinity;
     });
     // Se empiezan a descargar al entrar a la sala (así suenan apenas empieza la misión)
-    loadAllStems(stemNames.map(function (n) { return stemFiles[n]; }));
+    loadAllStems(stemNames.map(function (n) { return stemFiles[n]; }).filter(Boolean));
   }
 
   // Empieza a sonar (en silencio) todo junto; cuando las pistas terminan de cargar,
@@ -244,25 +244,29 @@ const Music = (function () {
     initCtx();
     stemMode = mode;
     const level = stemLevel;
-    loadAllStems(stemNames.map(function (n) { return stemFiles[n]; })).then(function () {
-      if (stemLevel !== level || stemMode === 'off') return;
-      if (!stemStart) stemStart = audioCtx.currentTime + 0.05;
-      stemNames.forEach(startStem);
-      applyAllStems();
-    });
+    // Cada pista entra apenas llega (el tema primero), en su lugar del compás
+    const order = stemNames.slice().sort(function (x, y) { return (y === 'tema') - (x === 'tema'); });
+    order.reduce(function (chain, name) {
+      return chain.then(function () {
+        if (stemLevel !== level || stemMode === 'off' || !stemFiles[name]) return;   // ya cambió de sala
+        return loadStem(stemFiles[name]).then(function () {
+          if (stemLevel !== level || stemMode === 'off') return;
+          startStem(name);
+        });
+      });
+    }, Promise.resolve());
   }
 
   function setStemDistance(name, distance) {
     if (stemNames.indexOf(name) === -1) return;
-    if (stemMode === 'off') beginStems('search');
-    stemDistances[name] = Math.max(0, distance);
+    stemDistances[name] = Math.max(0, distance);   // (no las arranca: eso lo hace startSearch)
     if (!collected[name]) applyStem(name);
   }
 
   function collectStem(name) {
     if (stemNames.indexOf(name) === -1 || collected[name]) return false;
     collected[name] = true;
-    if (stemMode === 'off') beginStems('search');
+    if (stemMode === 'off' && !current) beginStems('search');   // (si suena otra pista, no)
     // Si su pista no había llegado, se pide otra vez y entra en su lugar del compás
     if (!activeSources[name] && stemMode !== 'off' && stemStart) {
       loadStem(stemFiles[name]).then(function () { startStem(name); });
@@ -275,6 +279,19 @@ const Music = (function () {
 
   function allStemsCollected() {
     return stemNames.length > 0 && stemNames.every(function (name) { return collected[name]; });
+  }
+
+  // ¿Esta sala tiene pistas por instrumento?
+  function hasStems(levelId) {
+    const files = (CONFIG.MUSIC.LEVEL_STEMS || {})[levelId];
+    return !!files && Object.keys(files).length > 0;
+  }
+
+  // Entra a la sala: el tema suena y los instrumentos esperan (por cercanía)
+  function startSearch(levelId) {
+    setStemLevel(levelId);
+    stop();
+    if (stemMode === 'off') beginStems('search');
   }
 
   // Todas las pistas a volumen fijo (sala afinada o con todos los instrumentos)
@@ -299,7 +316,7 @@ const Music = (function () {
   function resetStems() {
     stopStems();
     stemNames.forEach(function (name) {
-      collected[name] = false;
+      collected[name] = name === 'tema';
       stemDistances[name] = Infinity;
     });
   }
@@ -363,6 +380,7 @@ const Music = (function () {
     wake: wake, play: play, stop: stop, pause: pause, resume: resume,
     setVolume: setVolume, setNear: setNear, setRate: setRate, toggleMute: toggleMute, locked: locked,
     setStemLevel: setStemLevel, setStemDistance: setStemDistance, collectStem: collectStem,
+    hasStems: hasStems, startSearch: startSearch,
     isStemCollected: isStemCollected, allStemsCollected: allStemsCollected, playStems: playStems,
     stopStems: stopStems, resetStems: resetStems, setStemBaseVolume: setStemBaseVolume,
     error: function () { return performance.now() < errorUntil ? error : ''; },

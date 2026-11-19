@@ -291,6 +291,18 @@ class Game {
     // Luz de la sala y escena del prólogo (la escena va al final: puede cambiar fondo y luz)
     Light.setRoom(L);
     this.scene = Scenes.create(data, this, arrive);
+    // La misión ya no se activa en el tótem: al entrar, los instrumentos están despiertos.
+    // Los que ya atrapaste siguen atrapados (roomState.caught) y su pista suena.
+    if (this.mission === 'idle' && this.mode === 'story' && (L.kind === 'principal' || L.id === 'n22') && this.totem()) {
+      this.startMission(this.totem(), true);
+      const caught = rs.caught || [];
+      this.instrumentos.list.forEach(function (c, i) {
+        if (!caught[i]) return;
+        c.state = 'caught';
+        Music.collectStem(c.tipo);
+      });
+      this.notes = caught.filter(Boolean).length;
+    }
   }
 
   // Salas con misión de tótem: las principales y las del prólogo
@@ -412,9 +424,16 @@ class Game {
       this.scene.music(this);
       return;
     }
-    Music.setRate(L.rate);
+    const R = (CONFIG.MUSIC.ROOM_MUSIC || {})[L.id];
+    Music.setRate(Music.hasStems(L.id) ? 1 : (R && R.rate ? R.rate : L.rate));
     if (this.mission === 'escape') Music.play('key');
-    else if (this.mission === 'done' && this.isMissionRoom(L) && !L.boss) Music.playStems(L.id, true);
+    else if (Music.hasStems(L.id) && this.mission === 'done') Music.playStems(L.id, true);
+    else if (Music.hasStems(L.id) && this.mission === 'collect') {
+      // el tema suena y cada instrumento atrapado se suma
+      Music.startSearch(L.id);
+      this.instrumentos.list.forEach(function (c) { if (c.state === 'caught') Music.collectStem(c.tipo); });
+    }
+    else if (R) Music.play(R.track);
     else Music.play(this.mission === 'done' || !this.isMissionRoom(L) ? L.music : 'main');
     this.musicNear = 0;
     Music.setNear(this.baseMusic());
@@ -435,9 +454,9 @@ class Game {
   Backdrop.set('none');
   Backdrop.setMuted(false);
 
-  // Música de la portada (blues en mi menor a 1/3 de velocidad)
-  Music.play('final'); 
-  Music.setRate(0.33); 
+ // Música de la portada: Niño interno
+  Music.play('portada');
+  Music.setRate(1);
   Music.setNear(1);
 
   // Reinicia el sonido de las letras si vuelves al inicio
@@ -528,6 +547,7 @@ class Game {
     if (this.showCredits) {
       if (Input.pressed('confirm') || Input.pressed('pause') || Input.tapPoint()) {
         this.showCredits = false;
+        Music.play('portada');
         Sfx.play('move');
       }
       return;
@@ -571,6 +591,7 @@ class Game {
     }
     if (item === 'credits') {
       this.showCredits = true;
+      Music.play('creditos');           // Momento único
       Sfx.play('select');
       return;
     }
@@ -837,6 +858,26 @@ class Game {
     if (this.scene) this.scene.update(dt, this);
   }
 
+  // Con el ají suena el tema de la zona 1 rápido (200 BPM); al terminar vuelve la de la sala
+  updateChiliMusic() {
+    const on = this.player.chiliTime > 0 && !(this.boss && this.level.arenaActive);
+    if (on && !this.chiliMusic) {
+      this.chiliMusic = true;
+      const C = CONFIG.MUSIC.CHILI_MUSIC;
+      Music.play(C.track);
+      Music.setRate(C.rate);
+    } else if (!on && this.chiliMusic) {
+      this.chiliMusic = false;
+      this.startRoomMusic();
+    }
+  }
+
+  // Precio actual de un producto: el ají sube CONFIG.CHILI.PRICE_STEP con cada compra
+  priceOf(good) {
+    if (good.id !== 'aji') return good.precio;
+    return good.precio + (this.progress.chiliBought || 0) * (CONFIG.CHILI.PRICE_STEP || 40);
+  }
+
   updateWorld(dt) {
     const p = this.player;
     // Mientras la cámara muestra la llave o el portón, el juego queda congelado
@@ -850,6 +891,7 @@ class Game {
     this.prompt = this.findPrompt();
     p.hookBlocked = !!this.prompt;
     p.update(dt, this.level);
+    this.updateChiliMusic();
     this.level.passOneWay = false;     // solo la papa atraviesa las plataformas de paso al bajar
     this.updateGeysers();
     this.keepInArena();
@@ -1038,21 +1080,27 @@ class Game {
     if (this.mission === 'idle') {
       if (prologue) this.startMission(t);
       else this.openTravel(t);
+    } else if (this.mission === 'collect' && !prologue) {
+      this.say(TEXT.totemBusy(this.instrumentos.remaining().length), 3);   // informa lo que falta
     } else if (this.mission === 'done' && !prologue) {
       this.openTravel(null);
     }
   }
 
-  startMission(t) {
+  // silent: al entrar a la sala (sin mensaje ni reloj; la música la pone startRoomMusic)
+  startMission(t, silent) {
     const n = this.instrumentos.total();
     this.mission = 'collect';
     this.notes = 0;
     this.missionClock = 0;
     this.instrumentos.wakeAll();
-// Activamos el sistema de audio de instrumentos
-    Music.stop(); 
-    Music.setStemLevel(this.level.id);
     t.state = 'despierto';
+    if (silent) {
+      if (n === 0) this.startEscape();
+      return;
+    }
+    // Activamos el sistema de audio de instrumentos
+    Music.startSearch(this.level.id);
     Sfx.play('door');
     const limit = this.rules().MISSION_TIME;
     if (limit > 0) {
@@ -1072,6 +1120,7 @@ class Game {
   
   this.notes += caughtList.length;
   Sfx.play('note');
+  this.roomState(this.level.id).caught = this.instrumentos.list.map(function (c) { return c.state === 'caught'; });
   this.musicBoost = CONFIG.ECHO.CATCH_BOOST;
 
   // Mostramos el mensaje y la "miniatura" por cada uno que comimos
@@ -1210,9 +1259,16 @@ class Game {
         i.hidden = true;
       }
     });
-    Music.stopStems();
-    Music.play('main');
+    this.roomState(this.level.id).caught = [];
     this.mergeTimer = 0;
+    if (t && this.mode === 'story' && this.level.kind === 'principal') {
+      this.startMission(t, true);
+      Music.resetStems();
+      Music.startSearch(this.level.id);
+    } else {
+      Music.stopStems();
+      Music.play('main');
+    }
   }
 
   timerRunning() {
@@ -1406,6 +1462,7 @@ class Game {
     const M = CATALOGO.MERCADERES.find(function (m) { return m.id === tipo; }) || CATALOGO.MERCADERES[0];
     const goods = M.vende.map(function (id) { return CATALOGO.TIENDA.find(function (t) { return t.id === id; }); })
       .filter(function (g) { return !!g; });
+    goods.forEach(function (g) { g.precioActual = this.priceOf(g); }, this);
     this.overlay = { kind: 'shop', vendor: vendor, merchant: M, goods: goods, index: 0, note: '' };
     Sfx.play('select');
   }
@@ -1413,8 +1470,9 @@ class Game {
   buy(good) {
     const P = this.progress;
     const O = this.overlay;
-    if (P.coins < good.precio) {
-      O.note = 'Te faltan ' + (good.precio - P.coins) + ' monedas.';
+    const price = this.priceOf(good);
+    if (P.coins < price) {
+      O.note = 'Te faltan ' + (price - P.coins) + ' monedas.';
       Sfx.play('hurt');
       return;
     }
@@ -1465,7 +1523,9 @@ class Game {
       P.hints.push(hint);
       O.note = 'La nota ' + hint.nota + ' está en ' + WORLD.fullName(hint.room) + '.';
     }
-    P.coins -= good.precio;
+    P.coins -= price;
+    if (good.id === 'aji') P.chiliBought = (P.chiliBought || 0) + 1;
+    good.precioActual = this.priceOf(good);
     Sfx.play('cube');
   }
 
@@ -2039,7 +2099,9 @@ stems.forEach(stem => {
     if (this.arenaPhase === 'idle' && L.insideArena(this.player)) {
       L.arenaActive = true;
       Sfx.play('walls');
-      Music.play(CONFIG.MUSIC.BOSS_TRACK);
+      const BM = (CONFIG.MUSIC.BOSS_MUSIC || {})[L.id];
+      Music.play(BM ? BM.track : CONFIG.MUSIC.BOSS_TRACK);
+      Music.setRate(BM && BM.rate ? BM.rate : 1);
       Music.setNear(1);
       if (this.enemies.hasArenaEnemies()) {
         this.arenaPhase = 'guards';
