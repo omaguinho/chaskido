@@ -1,4 +1,5 @@
 const CONFIG = {
+  GAME_VERSION: 'v87',   // se ve abajo a la derecha en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,

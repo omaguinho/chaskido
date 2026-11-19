@@ -848,6 +848,8 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
     // Menú: un panel oscuro y elegante a la derecha, con la explicación abajo
     drawTitle(ctx, time, items, index, plus, towerOpen) {
       this.drawLogo(ctx, time);
+      // Versión en la esquina: así se sabe qué copia está sirviendo el servidor
+      text(ctx, CONFIG.GAME_VERSION || '', CONFIG.WIDTH - 4, CONFIG.HEIGHT - 9, '#6b6580', 5, 'right');
       const M = CONFIG.TITLE_MENU;
       function label(id) {
         if (id === 'continue') return 'Continuar';
