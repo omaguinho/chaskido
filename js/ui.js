@@ -855,6 +855,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
         if (id === 'plus') return 'Nueva partida +: ' + (plus ? 'Sí' : 'No');
         if (id === 'lang') return 'Idioma: ' + I18N.name();
         if (id === 'credits') return 'Créditos';
+        if (id === 'speedrun') return 'Speedrun';
         return 'Nueva · ' + CONFIG.DIFFICULTY[id].NAME;
       }
       function info(id) {
@@ -862,6 +863,8 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
         if (id === 'tower') return towerOpen ? 'Coliseo: ' + TOWER.FLOORS.length + ' jefes seguidos'
                                              : 'Se abre al terminar la historia en Normal o Difícil';
         if (id === 'credits') return 'Quién hizo Chaskido';
+        if (id === 'speedrun') return towerOpen ? 'Elige una zona y rescata sus instrumentos contra el reloj'
+                                                : 'Se abre al terminar la historia en Normal o Difícil';
         if (id === 'lang') return 'Español · English · Português';
         const D = CONFIG.DIFFICULTY[id];
         if (!D) return 'Empiezas con el dash y el gancho (sin prólogo)';
@@ -884,7 +887,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
           ctx.fillRect(x - 9, y - 3, W - x + 2, M.STEP - 1);
           BossShow.drawNote(ctx, x - 4, y + 2 + Math.round(Math.sin(time * 6)), '#ffd34d', 1);
         }
-        const locked = id === 'tower' && !towerOpen;
+        const locked = (id === 'tower' || id === 'speedrun') && !towerOpen;
         text(ctx, label(id), x + 4, y, locked ? (on ? '#8a8399' : '#5f5a70') : (on ? '#ffd34d' : '#c9c2dc'), 7);
         if (on) shadowText(ctx, info(id), W / 2, H - 12, '#c9b8e3', 6, 'center');
       });

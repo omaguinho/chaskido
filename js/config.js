@@ -20,7 +20,7 @@ const CONFIG = {
     RIM_WIDTH: 1                            // grosor en px del juego
   },
   MAX_RENDER_SCALE: 4,    // el lienzo dibuja hasta 4x más fino (sprites a 4x)
-  TITLE_MENU: { TOP: 84, STEP: 10, LEFT: 176 },   // filas del menú de inicio (para tocarlas)
+  TITLE_MENU: { TOP: 76, STEP: 10, LEFT: 176 },   // filas del menú de inicio (para tocarlas)
   TITLE_PORTADA: false,   // true: la pantalla de inicio usa portada.png y logo.png en vez de la escena animada
   LANG_MENU: { TOP: 104, STEP: 16 },      // filas del menú de idioma (la primera vez)
   GAME_OVER_MENU: { TOP: 96, STEP: 16 },   // filas del menú de game over
@@ -188,6 +188,20 @@ const CONFIG = {
   // Música: archivos en assets/music/
   LOAD_WAIT: 10,   // segundos máximos de "Cargando..." (después empieza igual)
   RETRY_AFTER: 3,  // segundos después de empezar: se piden otra vez los dibujos que no llegaron
+
+  // Modo speedrun (js/speedrun.js): zonas que se eligen y sus salas
+  SPEEDRUN: {
+    MENU: { TOP: 38, STEP: 17 },
+    ZONES: [
+      { name: 'Ciudad Ocaso', rooms: ['n2', 'n5', 'n3'] },
+      { name: 'Barrio de Cañas', rooms: ['n1', 'n4', 'n6'] },
+      { name: 'Bosque Profundo', rooms: ['n7', 'n8', 'n9'] },
+      { name: 'Ciudad Dorada', rooms: ['n10', 'n11', 'n12'] },
+      { name: 'Cumbres de Escarcha', rooms: ['n13', 'n14', 'n15'] },
+      { name: 'Lago Espejo', rooms: ['n16', 'n17', 'n18'] },
+      { name: 'Ciudadela de Niebla', rooms: ['n19', 'n20', 'n21'] }
+    ]
+  },
 
   // Vecinos que hablan (js/vecinos.js): uno por zona y uno difícil.
   // room: sala · dx: bloques desde el inicio P · kind: baila, aplaude, tambor, flauta, cuerdas

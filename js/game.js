@@ -139,6 +139,11 @@ class Game {
     this.salitaReturn = null;
   }
 
+  // Historia o speedrun: se juegan igual (el speedrun no guarda la partida)
+  isStory() {
+    return this.mode === 'story' || this.mode === 'speedrun';
+  }
+
   // Estado guardado de una sala: objetos tomados, muros rotos, puertas, misión
   roomState(id) {
     const rooms = this.progress.rooms;
@@ -288,14 +293,14 @@ class Game {
     // Sin afinar, la sala se ve apagada; las de CONFIG.GAME.FULL_COLOR_ROOMS empiezan con color
     const fullColor = CONFIG.GAME.FULL_COLOR_ROOMS.indexOf(L.id) >= 0;
     Backdrop.setMuted(false);   // cada sala con su color original (antes se apagaba sin afinar)
-    this.banner = (L.kind === 'principal' || L.kind === 'secreto' || L.kind === 'reto') && this.mode === 'story'
+    this.banner = (L.kind === 'principal' || L.kind === 'secreto' || L.kind === 'reto') && this.isStory()
       ? { title: WORLD.label(L.id), name: L.name, time: CONFIG.GAME.BANNER_TIME } : null;
     // Luz de la sala y escena del prólogo (la escena va al final: puede cambiar fondo y luz)
     Light.setRoom(L);
     this.scene = Scenes.create(data, this, arrive);
     // La misión ya no se activa en el tótem: al entrar, los instrumentos están despiertos.
     // Los que ya atrapaste siguen atrapados (roomState.caught) y su pista suena.
-    if (this.mission === 'idle' && this.mode === 'story' && (L.kind === 'principal' || L.id === 'n22') && this.totem()) {
+    if (this.mission === 'idle' && this.isStory() && (L.kind === 'principal' || L.id === 'n22') && this.totem()) {
       this.startMission(this.totem(), true);
       const caught = rs.caught || [];
       this.instrumentos.list.forEach(function (c, i) {
@@ -533,6 +538,7 @@ class Game {
     CONFIG.DIFFICULTY.LIST.forEach(function (d) { items.push(d); });
     if (this.records.plusUnlocked) items.push('plus');
     items.push('tower');
+    items.push('speedrun');
     items.push('lang');
     items.push('credits');
     return items;
@@ -587,8 +593,12 @@ class Game {
       return;
     }
     if (!accept) return;
-    if (item === 'tower' && !this.towerUnlocked()) {
+    if ((item === 'tower' || item === 'speedrun') && !this.towerUnlocked()) {
       Sfx.play('tuneWrong');           // todavía cerrado (se ve en gris)
+      return;
+    }
+    if (item === 'speedrun') {
+      SpeedRun.openMenu(this);
       return;
     }
     if (item === 'credits') {
@@ -674,6 +684,11 @@ class Game {
   }
 
   gameOver() {
+    if (this.mode === 'speedrun') {           // en el speedrun se vuelve al menú de zonas
+      Sfx.play('collapse');
+      SpeedRun.fail(this);
+      return;
+    }
     // La papa cae: sonido de derrumbe y un temblor fuerte
     Sfx.play('collapse');
     this.screenShake = 0.6;
@@ -765,7 +780,7 @@ class Game {
   // Mensaje: dura menos que antes (CONFIG.GAME.MESSAGE_SPEED). Los importantes (important)
   // pausan el juego hasta apretar Acción (E / Cuadrado)
   say(str, seconds, important) {
-    if (important && this.mode === 'story') {
+    if (important && this.isStory()) {
       this.modal = { text: str, t: 0 };
       return;
     }
@@ -803,10 +818,11 @@ class Game {
     this.time += dt;
     if (Input.keyPressed('KeyM')) Sfx.setMuted(Music.toggleMute());
 
-    if (this.state === 'splash' || this.state === 'title' || this.state === 'lang' || this.state === 'ready') {
+    if (this.state === 'splash' || this.state === 'title' || this.state === 'lang' || this.state === 'ready' || this.state === 'speedmenu') {
       Echoes.silence();
       this.screenTime += dt;
-      if (this.state === 'splash') this.updateSplash();
+      if (this.state === 'speedmenu') SpeedRun.updateMenu(this);
+      else if (this.state === 'splash') this.updateSplash();
       else if (this.state === 'title') this.updateTitle();
       else if (this.state === 'lang') this.updateLang();
       else this.updateReady();
@@ -900,6 +916,7 @@ class Game {
 
   updateWorld(dt) {
     const p = this.player;
+    if (this.mode === 'speedrun') SpeedRun.tick(this, dt);   // el reloj corre igual
     // Mientras la cámara muestra la llave o el portón, el juego queda congelado
     if (this.camPan) {
       this.updateCamera(CONFIG.CAMERA_LERP);
@@ -1063,7 +1080,7 @@ class Game {
 
   promptText(it) {
     if (it.type === 'totem') {
-      if (this.mode !== 'story') return null;
+      if (!this.isStory()) return null;
       const prologue = this.level.kind === 'prologo';
       if (this.mission === 'idle') return prologue ? 'Comenzar misión' : 'Misión o viaje';
       if (this.mission === 'done') return prologue ? null : 'Viajar';
@@ -1234,7 +1251,7 @@ class Game {
   // Misión en curso (corcheas atrapadas, llave, tiempo) para devolverla al salir
   // de una tienda o un bonus. null si no hay misión en curso.
   missionSnapshot() {
-    if (this.mode !== 'story' || (this.mission !== 'collect' && this.mission !== 'escape')) return null;
+    if (!this.isStory() || (this.mission !== 'collect' && this.mission !== 'escape')) return null;
     const key = this.level.items.find(function (i) { return i.type === 'key'; });
     return {
       room: this.level.id, mission: this.mission, notes: this.notes, hasKey: this.hasKey,
@@ -1282,7 +1299,7 @@ class Game {
     });
     this.roomState(this.level.id).caught = [];
     this.mergeTimer = 0;
-    if (t && this.mode === 'story' && this.level.kind === 'principal') {
+    if (t && this.isStory() && this.level.kind === 'principal') {
       this.startMission(t, true);
       Music.resetStems();
       Music.startSearch(this.level.id);
@@ -2184,7 +2201,7 @@ stems.forEach(stem => {
     this.arenaPhase = 'boss';
     this.boss.startFight();
     // En la historia, cada jefe se presenta con su portada (el coliseo ya tiene la suya)
-    if (this.mode === 'story') BossShow.startIntro(this.boss, this.level.boss ? this.level.boss.type : 'bombo');
+    if (this.isStory()) BossShow.startIntro(this.boss, this.level.boss ? this.level.boss.type : 'bombo');
     else {
       BossShow.startBar(this.boss);
       this.say(TEXT.bossArena(this.boss.def.NAME), 2);
@@ -2619,6 +2636,10 @@ updateEchoes(dt) {
       if (this.showCredits) UI.drawCredits(ctx, this.time);
       return;
     }
+    if (this.state === 'speedmenu') {
+      SpeedRun.drawMenu(ctx, this);
+      return;
+    }
     if (this.state === 'ready') {
       UI.drawReady(ctx, this.time, this.hearts, this.rules().NAME, this.screenReady(), this.mode === 'tower');
       return;
@@ -2678,6 +2699,7 @@ updateEchoes(dt) {
     }
     if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
     BossShow.drawBar(ctx, this.boss);
+    if (this.mode === 'speedrun') SpeedRun.drawHud(ctx, this);
     if (this.banner && !this.menu.open) UI.drawBanner(ctx, this.banner);
     if (!this.menu.open && !(scene && scene.hudHidden)) this.drawTopTexts(ctx);
     if (this.overlay) UI.drawOverlay(ctx, this);
@@ -2760,7 +2782,7 @@ updateEchoes(dt) {
       Items.draw(ctx, item, this.time, opts);
     }, this);
     const t = this.totem();
-    if (t && this.mission === 'idle' && this.mode === 'story') UI.drawMissionSign(ctx, t, this.time);
+    if (t && this.mission === 'idle' && this.isStory()) UI.drawMissionSign(ctx, t, this.time);
   }
 
   drawEndScreen(ctx) {
