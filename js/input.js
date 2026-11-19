@@ -47,6 +47,7 @@ const Input = (function () {
   const keys = {};
   const mouse = {};
   const virtual = {};           // botones táctiles en pantalla (js/touch.js)
+  let virtualAxis = 0;          // palanca táctil: de -1 a 1
   const prevDown = {};
   const state = {};
   let axisX = 0;
@@ -67,13 +68,22 @@ const Input = (function () {
     state[a] = { down: false, pressed: false, released: false };
   });
 
+  // Algunos teclados de tablet no mandan e.code: se deduce de la letra (e.key)
+  function codeOf(e) {
+    if (e.code) return e.code;
+    const k = e.key || '';
+    if (k.length === 1 && /[a-z]/i.test(k)) return 'Key' + k.toUpperCase();
+    if (k === ' ') return 'Space';
+    return k;
+  }
   window.addEventListener('keydown', function (e) {
-    keys[e.code] = true;
-    if (!e.repeat) pendingKeys.push(e.code);
-    if (e.code === 'Space' || e.code.indexOf('Arrow') === 0) e.preventDefault();
+    const code = codeOf(e);
+    keys[code] = true;
+    if (!e.repeat) pendingKeys.push(code);
+    if (code === 'Space' || code.indexOf('Arrow') === 0) e.preventDefault();
   });
   window.addEventListener('keyup', function (e) {
-    keys[e.code] = false;
+    keys[codeOf(e)] = false;
   });
   window.addEventListener('mousedown', function (e) {
     mouse[e.button] = true;
@@ -172,7 +182,7 @@ const Input = (function () {
     // Stick analógico si se mueve; si no, teclado o cruceta
     const stick = applyDeadzone(rawStick(0));
     const digital = (state.right.down ? 1 : 0) - (state.left.down ? 1 : 0);
-    axisX = stick !== 0 ? stick : digital;
+    axisX = stick !== 0 ? stick : virtualAxis !== 0 ? virtualAxis : digital;
 
     stepKeys = pendingKeys;
     pendingKeys = [];
@@ -215,6 +225,8 @@ const Input = (function () {
       virtual[a] = !!on;
       if (on) { pendingTap = true; device = 'touch'; }
     },
+    // Palanca táctil: inclinación horizontal (-1 a 1)
+    setVirtualAxis: function (x) { virtualAxis = x; },
     setRumble: function (on) { rumbleOn = !!on; },
     held: function (a) { return state[a].down; },
     pressed: function (a) { return state[a].pressed; },

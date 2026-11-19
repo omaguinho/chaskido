@@ -162,6 +162,18 @@ class Game {
     return known;
   }
 
+  // Partidas guardadas con algo perdido: si ya se salió del prólogo (o se venció al
+  // Eco), el diapasón está; y las notas de los jefes vencidos se suman siempre
+  repairProgress() {
+    const P = this.progress;
+    const pastPrologue = (P.rooms.p2 && P.rooms.p2.boss) || Object.keys(P.rooms).some(function (id) {
+      const l = LEVELS.find(function (x) { return x.id === id; });
+      return l && l.region >= 1;
+    });
+    if (pastPrologue) P.abilities.tuner = true;
+    P.tunerNotes = Object.assign(this.notesFromBosses(), P.tunerNotes || {});
+  }
+
   // Partidas guardadas antes de la v16: las notas salen de los jefes ya vencidos
   notesFromBosses() {
     const notes = {};
@@ -212,7 +224,7 @@ class Game {
     this.mode = 'story';
     this.newRun();
     this.progress = Object.assign(this.newProgress(), data);
-    if (!data.tunerNotes) this.progress.tunerNotes = this.notesFromBosses();
+    this.repairProgress();
     this.progress.sessions = (data.sessions || 0) + 1;   // una partida más (para el ají)
     this.hearts = Math.max(1, data.hearts || this.progress.maxHearts);
     this.loadRoom(LEVELS.some(function (l) { return l.id === data.room; }) ? data.room : CONFIG.GAME.FIRST_ROOM,

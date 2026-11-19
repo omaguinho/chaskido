@@ -116,6 +116,8 @@
           game.update(CONFIG.STEP);
           acc -= CONFIG.STEP;
         }
+        // En menús la palanca se achica a la esquina (para poder tocar las opciones)
+        if (typeof Touch !== 'undefined') Touch.setFree(game.state === 'play' && !game.overlay && !game.menu.open);
         prepare();
         game.draw(ctx);
       } catch (err) {
