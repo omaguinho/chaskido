@@ -98,6 +98,22 @@ const Sfx = (function () {
     });
   }
 
+  // ---------- Aviso de los jefes ----------
+  // Cuarta aumentada (tritono) grave con eco: tres repeticiones que bajan de volumen y
+  // se apagan (filtro más cerrado). "pitch" cambia la altura: cada jefe tiene la suya.
+  function bossTritone(pitch, delay) {
+    const f = 98 * (pitch || 1);                  // Sol grave
+    const E = CONFIG.SFX.BOSS_ECHO;
+    for (let k = 0; k < E.REPEATS; k++) {
+      const d = (delay || 0) + k * E.GAP;
+      const v = E.VOL * Math.pow(E.DECAY, k);
+      const cut = 1400 * Math.pow(0.6, k);
+      tone({ freq: f, to: f * 0.97, dur: 0.32, vol: v, type: 'sawtooth', filter: cut, delay: d });
+      tone({ freq: f * Math.SQRT2, to: f * Math.SQRT2 * 0.97, dur: 0.32, vol: v * 0.8, type: 'sawtooth', filter: cut, delay: d + 0.03 });
+    }
+    noise({ dur: 0.18, vol: 0.18, freq: 500, to: 80, delay: delay || 0 });
+  }
+
   // ---------- Arpegio del cubo ----------
 
   // 1-5-7-3 de un acorde mayor 7 repetido rápido: se acerca (sube el volumen,
@@ -265,7 +281,7 @@ const Sfx = (function () {
     bossBurst: function () {
       noise({ dur: 1.2, vol: 0.45, freq: 2500, to: 60 });
       tone({ freq: 60, to: 25, dur: 1.4, vol: 0.6, type: 'sine' });
-      notes([C5, E5, G5, B5, C6, E5 * 2, G5 * 2, B5 * 2, C6 * 2], 0.06, { vol: 0.1, type: 'triangle', delay: 0.25, dur: 0.5 });
+      bossTritone(1, 0.25);
     },
     // El Silencio llega: un zumbido grave que se traga todo
     silencio: function () {
@@ -308,6 +324,11 @@ const Sfx = (function () {
       SOUNDS[name]();
     },
     setMuted: function (value) { muted = value; },
+    // Aviso de ataque de un jefe (tritono con eco, a la altura de ese jefe)
+    bossAttack: function (pitch) {
+      if (!ac || muted || ac.state !== 'running') return;
+      bossTritone(pitch, 0);
+    },
     // Diapasón: golpe de una nota (frecuencia en Hz) y el escalón suave del anillo al mantener
     tune: function (f) {
       if (!ac || muted || ac.state !== 'running') return;

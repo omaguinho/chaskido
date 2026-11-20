@@ -180,11 +180,19 @@ class ArenaBoss {
     this.animTime = 0;
   }
 
+  // Altura del aviso de este jefe: sale de su nombre (siempre la misma para cada jefe)
+  voice() {
+    const name = this.constructor.name;
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 997;
+    return CONFIG.SFX.BOSS_ECHO.PITCHES[h % CONFIG.SFX.BOSS_ECHO.PITCHES.length];
+  }
+
   // Cada ataque suena (antes los jefes atacaban en silencio). Se elige por el nombre
   // del estado: embestidas, saltos, avisos, giros; el resto, un golpe grave.
   attackSound(state) {
     const now = Date.now();
-    if (now - (this.lastAttackSound || 0) < 250) return;
+    if (now - (this.lastAttackSound || 0) < CONFIG.SFX.BOSS_ECHO.EVERY * 1000) return;
     this.lastAttackSound = now;
     const S = [
       [/charge|roll|rush|run|dash|slide|swoop|dive/i, 'dash'],
@@ -194,7 +202,8 @@ class ArenaBoss {
       [/slam|drop|stomp|fall|pound/i, 'stompStart']
     ];
     const hit = S.find(function (r) { return r[0].test(state); });
-    Sfx.play(hit ? hit[1] : 'bossBurst');
+    if (hit) Sfx.play(hit[1]);
+    else Sfx.bossAttack(this.voice());
   }
 
   startIdle(time) {

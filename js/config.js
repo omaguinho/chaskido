@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v87',   // se ve abajo a la derecha en la pantalla de inicio
+  GAME_VERSION: 'v87',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -191,8 +191,24 @@ const CONFIG = {
   RETRY_AFTER: 3,  // segundos después de empezar: se piden otra vez los dibujos que no llegaron
 
   // Modo speedrun (js/speedrun.js): zonas que se eligen y sus salas
+  // Saludos de los vecinos en su globo (uno al azar; al hablar sigue su frase)
+  SALUDOS: ['¡Psst!', '¡Oye, tú!', '¿Tienes un minuto?', '¡Te cuento algo!', '¿Qué tal, papa?', '¡Ven, ven!'],
+
+  // Récords mundiales (js/ranking.js). KEY: la clave del juego en LootLocker (no es
+  // secreta: está hecha para ir dentro del juego)
+  RANKING: {
+    API: 'https://api.lootlocker.io',
+    KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
+    VERSION: '0.87.0.0',
+    COUNT: 10,             // cuántos se muestran
+    REFRESH: 30,           // segundos antes de volver a pedir la lista
+    NAME_MAX: 8,
+    BOARDS: ['speedrun_z1', 'speedrun_z2', 'speedrun_z3', 'speedrun_z4', 'speedrun_z5', 'speedrun_z6', 'speedrun_z7'],
+    TOWER: 'coliseo'
+  },
+
   SPEEDRUN: {
-    MENU: { TOP: 38, STEP: 17 },
+    MENU: { TOP: 34, STEP: 15 },
     ZONES: [
       { name: 'Ciudad Ocaso', rooms: ['n2', 'n5', 'n3'] },
       { name: 'Barrio de Cañas', rooms: ['n1', 'n4', 'n6'] },
@@ -253,6 +269,19 @@ const CONFIG = {
     n6: 'tema_n6.mp3'
   },
   FALLBACK: { final: 'tema_zona_1_3voces.m4a' },
+
+  // Pulso de cada música para el loop exacto (4/4): BPM y cada cuántos compases se
+  // repite. Vale para el tema y para los instrumentos cuyo archivo lleva ese nombre.
+  // La pista vuelve al comienzo tras el número entero de bloques que más se acerca a
+  // lo que dura. Las que no están aquí vuelven donde termina su último sonido.
+  LOOPS: {
+    tema_final: { bpm: 120, bars: 16 },
+    tema_n6: { bpm: 100, bars: 8 },
+    zona_1: { bpm: 120, bars: 12 },      // 36 o 48 compases: múltiplo de 12
+    zona_2: { bpm: 128, bars: 16 },
+    zona_3: { bpm: 122, bars: 8 },
+    zona_5: { bpm: 120, bars: 12 }
+  },
 
   // Instrumentos de cada sala: nombre -> archivo. "tema" es la base: suena siempre
   // (desde que entras); cada instrumento se suma al atraparlo. Las salas que no están
@@ -363,6 +392,9 @@ const CONFIG = {
 },
   // Efectos de sonido (generados por código) y vibración del mando
   SFX: {
+    // Aviso de ataque de los jefes: tritono grave con eco (REPEATS veces, cada GAP s,
+    // bajando DECAY); como mucho uno cada EVERY s. PITCHES: alturas (cada jefe una)
+    BOSS_ECHO: { REPEATS: 3, GAP: 0.16, VOL: 0.16, DECAY: 0.5, EVERY: 0.6, PITCHES: [1, 0.89, 1.12, 0.84, 1.19, 0.94, 1.06] },
     // Cubo: arpegio 1-5-7-3 de Do mayor 7 (Do, Sol, Si, Mi), 3 veces en medio segundo
     CUBE_ARP: {
       NOTES: [523.25, 783.99, 987.77, 1318.51],

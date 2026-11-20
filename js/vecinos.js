@@ -1,5 +1,5 @@
 // Vecinos: la gente de la fiesta repartida por las zonas (CONFIG.VECINOS).
-// Cada uno está cerca del inicio de su sala, con un globo "¡Háblame!":
+// Cada uno está cerca del inicio de su sala, con un globo de saludo (uno al azar):
 //   · arriba (a su lado): dice su frase y, la primera vez, da su regalo (si tiene)
 //   · también se le puede pisar (el triángulo de arriba lo avisa): igual da su regalo
 // El vecino difícil (hard) es rápido y esquivo: hay que pisarlo HP veces, o pagarle.
@@ -12,9 +12,15 @@ class Vecinos {
       const spot = Vecinos.findFloor(level, level.spawn.x + v.dx * T, level.spawn.y + CONFIG.PLAYER.H);
       return {
         def: v, i: i, x: spot.x, feet: spot.feet, vx: 0, vy: 0,
-        hp: v.hard ? v.hard.HP : 1, inv: 0, down: false, line: 0, angry: false
+        hp: v.hard ? v.hard.HP : 1, inv: 0, down: false, line: 0, angry: false,
+        hello: Vecinos.saludo()
       };
     });
+  }
+
+  static saludo() {
+    const S = CONFIG.SALUDOS;
+    return S[Math.floor(Math.random() * S.length)];
   }
 
   // Busca el suelo bajo un punto (si es pared, prueba un poco al lado)
@@ -147,9 +153,9 @@ class Vecinos {
     }, this);
   }
 
-  // Globo "¡Háblame!" (amarillo cuando estás al lado: "▲ Hablar")
+  // Globo con el saludo (amarillo cuando estás al lado: "▲ Hablar")
   drawBubble(ctx, v, near) {
-    const label = tr(near ? '▲ Hablar' : (v.line ? '▲ ...' : '¡Háblame!'));
+    const label = tr(near ? '▲ Hablar' : (v.line ? '▲ ...' : v.hello));
     const bob = Math.round(Math.sin(this.t * 5) * 2);
     ctx.font = gameFont(7);
     const w = Math.ceil(ctx.measureText(label).width) + 8;

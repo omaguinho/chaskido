@@ -1,8 +1,6 @@
 // Música tradicional + sistema de instrumentos independientes.
 
 const Music = (function () {
-  const players = {};
-  
   let audioCtx = null;
   const stemBuffers = {};
   let activeSources = {};
@@ -31,46 +29,91 @@ const Music = (function () {
     errorUntil = text ? performance.now() + CONFIG.MUSIC.ERROR_SHOW * 1000 : 0;
   }
 
-  function applyRate(a) {
-    const r = rate * (a.extraRate || 1);
-    a.preservesPitch = false;
-    a.mozPreservesPitch = false;
-    a.webkitPreservesPitch = false;
-    a.defaultPlaybackRate = r;
-    a.playbackRate = r;
+  // --- PISTAS (WEB AUDIO) ---
+  // Cada pista se decodifica y suena con un loop exacto: vuelve al comienzo justo al
+  // terminar su último compás (sin el silencio que traen los archivos al final).
+  let musicGain = null;      // volumen general de la pista
+  let src = null;            // la pista que suena
+  let loading = false;
+  let retries = 0;
+  const trackCache = {};     // archivo -> { buf, pts } (solo las 3 últimas, por memoria)
+  let trackOrder = [];
+
+  function musicOut() {
+    initCtx();
+    if (!musicGain) {
+      musicGain = audioCtx.createGain();
+      musicGain.gain.value = muted ? 0 : volume * near;
+      musicGain.connect(audioCtx.destination);
+    }
+    return musicGain;
+  }
+
+  function applyGain() {
+    if (musicGain) musicGain.gain.setTargetAtTime(muted ? 0 : volume * near, audioCtx.currentTime, 0.05);
+  }
+
+  function trackRate(name) {
+    return rate * Math.pow(2, ((CONFIG.MUSIC.TRACK_PITCH || {})[name] || 0) / 12);
   }
 
   function setRate(r) {
     rate = r || 1;
-    Object.keys(players).forEach(function (key) { applyRate(players[key]); });
+    if (src && current) src.playbackRate.setValueAtTime(trackRate(current), audioCtx.currentTime);
   }
 
-  // --- REPRODUCTOR TRADICIONAL (HTML5) ---
-  function player(name) {
-    if (!players[name]) {
-      const file = CONFIG.MUSIC.TRACKS[name];
-      const src = CONFIG.MUSIC.PATH + file;
-      const a = new Audio(src);
-      a.loop = true;
-      a.preload = 'auto';
-      // Respaldo del loop: algunos servidores (Acode) no dejan volver al comienzo y la
-      // pista sonaba una sola vez. Si termina, se vuelve a pedir desde el principio.
-      a.addEventListener('ended', function () {
-        if (current !== name || paused) return;
-        a.currentTime = 0;
-        a.play().catch(function () {
-          a.src = src + '?r=' + Date.now();
-          a.play().catch(function () {});
-        });
-      });
-      const extra = (CONFIG.MUSIC.TRACK_PITCH || {})[name] || 0;
-      a.extraRate = Math.pow(2, extra / 12);
-      applyRate(a);
-      a.volume = volume * near;
-      a.muted = muted;
-      players[name] = a;
+  // Pulso de la pista (CONFIG.MUSIC.LOOPS): el primero cuyo nombre esté en el archivo
+  function loopInfo(file) {
+    const L = CONFIG.MUSIC.LOOPS || {};
+    const key = Object.keys(L).find(function (k) { return file.indexOf(k) >= 0; });
+    return key ? L[key] : null;
+  }
+
+  // Dónde parte y dónde da la vuelta un archivo:
+  //   · parte en el primer sonido (si está en los primeros 0,15 s: el relleno del archivo)
+  //   · con BPM y compases: vuelve tras el número entero de bloques que más se acerca
+  //     a lo que dura la música (así no cuenta la cola de silencio o de eco)
+  //   · sin datos: vuelve donde termina el último sonido
+  function loopPoints(buf, file) {
+    const d = buf.getChannelData(0), sr = buf.sampleRate, TH = 0.003;
+    let i0 = 0;
+    while (i0 < d.length && Math.abs(d[i0]) < TH) i0++;
+    let i1 = d.length - 1;
+    while (i1 > i0 && Math.abs(d[i1]) < TH) i1--;
+    const start = i0 / sr <= 0.15 ? i0 / sr : 0;
+    const content = i1 / sr - start;
+    let end = Math.min(buf.duration, i1 / sr + 0.02);
+    const L = loopInfo(file);
+    if (L && content > 0) {
+      const block = L.bars * (L.beats || 4) * 60 / L.bpm;
+      let n = Math.max(1, Math.round(content / block));
+      while (n > 1 && start + n * block > buf.duration) n--;
+      end = Math.min(buf.duration, start + n * block);
     }
-    return players[name];
+    return { start: start, end: Math.max(start + 0.5, end) };
+  }
+
+  function loadTrack(file) {
+    if (trackCache[file]) return Promise.resolve(trackCache[file]);
+    return fetchDecode(file).then(function (buf) {
+      if (!buf) return null;
+      trackCache[file] = { buf: buf, pts: loopPoints(buf, file) };
+      trackOrder = trackOrder.filter(function (f) { return f !== file; }).concat([file]);
+      while (trackOrder.length > 3) delete trackCache[trackOrder.shift()];
+      return trackCache[file];
+    });
+  }
+
+  function startTrack(name, entry) {
+    const s = audioCtx.createBufferSource();
+    s.buffer = entry.buf;
+    s.loop = true;
+    s.loopStart = entry.pts.start;
+    s.loopEnd = entry.pts.end;
+    s.playbackRate.value = trackRate(name);
+    s.connect(musicOut());
+    s.start(0, entry.pts.start);
+    src = s;
   }
 
   function play(name) {
@@ -79,28 +122,33 @@ const Music = (function () {
     if (current === name) return;
     stop();
     current = name;
-    const a = player(name);
-    a.muted = muted;
-    a.currentTime = 0;
-    applyRate(a);
-    a.play().catch(function () {});
+    loading = true;
+    musicOut();
+    const files = [CONFIG.MUSIC.TRACKS[name], (CONFIG.MUSIC.FALLBACK || {})[name]].filter(Boolean);
+    (function attempt(k) {
+      loadTrack(files[k]).then(function (entry) {
+        if (current !== name) return;
+        if (!entry && k + 1 < files.length) return attempt(k + 1);
+        loading = false;
+        if (entry) { retries = 0; startTrack(name, entry); }
+      });
+    })(0);
   }
 
   function stop() {
-    if (!current) return;
-    players[current].pause();
+    if (src) { try { src.stop(); } catch (e) {} src.disconnect(); }
+    src = null;
     current = null;
+    loading = false;
   }
 
   function pause() {
     paused = true;
-    if (current) players[current].pause();
     if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
   }
 
   function resume() {
     paused = false;
-    if (current) players[current].play().catch(function () {});
     if (audioCtx && !muted) audioCtx.resume().catch(function () {});
   }
 
@@ -147,13 +195,13 @@ const Music = (function () {
   // El servidor de Acode a veces corta un archivo grande: si una pista no llega o no se
   // puede leer, se vuelve a pedir (hasta STEM_TRIES veces). Antes quedaba muda para
   // siempre (por eso a veces no sonaba la percusión).
+  // Pide y decodifica un archivo (en mono); hasta 5 intentos
   const STEM_TRIES = 5;
-  function loadStem(file, n) {
+  function fetchDecode(file, n) {
     n = n || 0;
-    if (stemBuffers[file]) return Promise.resolve(stemBuffers[file]);
-    if (stemBuffers[file + '#p']) return stemBuffers[file + '#p'];
+    initCtx();
     const url = CONFIG.MUSIC.PATH + file + (n ? '?r=' + n : '');
-    const p = fetch(url)
+    return fetch(url)
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.arrayBuffer();
@@ -161,13 +209,23 @@ const Music = (function () {
       .then(function (data) {
         return new Promise(function (ok, fail) { audioCtx.decodeAudioData(data, ok, fail); });
       })
-      .then(function (buffer) { stemBuffers[file] = toMono(buffer); return stemBuffers[file]; })
+      .then(toMono)
       .catch(function () {
-        delete stemBuffers[file + '#p'];
         if (n + 1 >= STEM_TRIES) { setError('No llegó la música: ' + file); return null; }
         return new Promise(function (ok) { setTimeout(ok, 600 * (n + 1)); })
-          .then(function () { return loadStem(file, n + 1); });
+          .then(function () { return fetchDecode(file, n + 1); });
       });
+  }
+
+  // Instrumentos: se guardan (las mismas pistas vuelven a sonar en la sala)
+  function loadStem(file) {
+    if (stemBuffers[file]) return Promise.resolve(stemBuffers[file]);
+    if (stemBuffers[file + '#p']) return stemBuffers[file + '#p'];
+    const p = fetchDecode(file).then(function (b) {
+      delete stemBuffers[file + '#p'];
+      if (b) stemBuffers[file] = b;
+      return b;
+    });
     stemBuffers[file + '#p'] = p;
     return p;
   }
@@ -214,14 +272,23 @@ const Music = (function () {
 
   function applyAllStems() { stemNames.forEach(applyStem); }
 
-  // Largo común de la vuelta: la pista más corta de la sala
-  function stemLoopLen() {
-    let len = Infinity;
+  // Vuelta común de los instrumentos de la sala: todos parten y vuelven en el mismo
+  // punto (calculado con el pulso de la zona, ver loopPoints)
+  let stemLoop = null;
+  function stemLoopPts() {
+    if (stemLoop) return stemLoop;
+    let start = Infinity, end = 0, shortest = Infinity;
     stemNames.forEach(function (n) {
       const b = stemBuffers[stemFiles[n]];
-      if (b) len = Math.min(len, b.duration);
+      if (!b) return;
+      const p = loopPoints(b, stemFiles[n]);
+      start = Math.min(start, p.start);
+      end = Math.max(end, p.end);
+      shortest = Math.min(shortest, b.duration);
     });
-    return Number.isFinite(len) ? len : 1;
+    if (!Number.isFinite(start)) return { start: 0, end: 1 };
+    stemLoop = { start: start, end: Math.min(end, shortest) };
+    return stemLoop;
   }
 
   // Arranca la pista en el punto exacto en que van las demás
@@ -233,17 +300,17 @@ const Music = (function () {
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
     source.loop = true;
-    // Todas las pistas de la sala dan la vuelta en el mismo punto (la más corta): si un
-    // archivo trae unos milisegundos de más al final, ya no se desfasa en cada vuelta
-    const loopLen = stemLoopLen();
-    source.loopStart = 0;
-    source.loopEnd = loopLen;
+    // Todas las pistas de la sala dan la vuelta en el mismo punto
+    const pts = stemLoopPts();
+    const loopLen = pts.end - pts.start;
+    source.loopStart = pts.start;
+    source.loopEnd = pts.end;
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 0;
     source.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     const when = Math.max(now, stemStart);
-    const offset = (when - stemStart) % loopLen;
+    const offset = pts.start + (when - stemStart) % loopLen;
     source.start(when, offset);
     activeSources[name] = source;
     stemGains[name] = gainNode;
@@ -351,6 +418,7 @@ const Music = (function () {
     stemGains = {};
     stemMode = 'off';
     stemStart = 0;
+    stemLoop = null;
   }
 
   function resetStems() {
@@ -377,24 +445,18 @@ const Music = (function () {
     keepAlive(true);
   }
 
-  // Si la pista actual se detuvo sola (bloqueo, corte del servidor o error de carga),
-  // se vuelve a intentar: como mucho cada 2 s. El juego lo llama en cada paso.
+  // Si la pista no llegó (corte del servidor), se vuelve a pedir: cada 2 s, hasta 5
+  // veces. El juego lo llama en cada paso.
   let lastTry = 0;
   function keepAlive(now) {
-    if (!current || paused || muted || !unlocked) return;
-    const a = players[current];
-    if (!a.paused && !a.error) return;
+    if (!current || src || loading || paused || muted || !unlocked) return;
     const t = performance.now();
     if (!now && t - lastTry < 2000) return;
     lastTry = t;
-    if (a.error) {                     // no llegó: se vuelve a pedir el archivo (hasta 5 veces)
-      a.retries = (a.retries || 0) + 1;
-      if (a.retries > 5) { setError('No llegó la música: ' + CONFIG.MUSIC.TRACKS[current]); return; }
-      a.src = CONFIG.MUSIC.PATH + CONFIG.MUSIC.TRACKS[current] + '?r=' + Math.floor(t);
-      a.load();
-      applyRate(a);
-    }
-    a.play().catch(function () {});
+    if (++retries > 5) return;
+    const name = current;
+    current = null;
+    play(name);
   }
 
   window.addEventListener('pointerdown', unlock);
@@ -403,19 +465,18 @@ const Music = (function () {
 
   function setVolume(v) {
     volume = Math.max(0, Math.min(1, v));
-    Object.keys(players).forEach(function (key) { players[key].volume = volume * near; });
-    
+    applyGain();
     applyAllStems();
   }
 
   function setNear(v) {
     near = Math.max(0, Math.min(1, v));
-    if (current) players[current].volume = volume * near;
+    applyGain();
   }
 
   function toggleMute() {
     muted = !muted;
-    Object.keys(players).forEach(function (key) { players[key].muted = muted; });
+    applyGain();
     if (audioCtx) {
       if (muted) audioCtx.suspend();
       else audioCtx.resume();
@@ -423,8 +484,9 @@ const Music = (function () {
     return muted;
   }
 
+  // El navegador todavía no deja sonar (falta tocar la pantalla)
   function locked() {
-    return !!current && !paused && !muted && !error && players[current].paused;
+    return !!current && !paused && !muted && !!audioCtx && audioCtx.state !== 'running';
   }
 
   function wake() {

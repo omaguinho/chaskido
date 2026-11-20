@@ -849,7 +849,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
     drawTitle(ctx, time, items, index, plus, towerOpen) {
       this.drawLogo(ctx, time);
       // Versión en la esquina: así se sabe qué copia está sirviendo el servidor
-      text(ctx, CONFIG.GAME_VERSION || '', CONFIG.WIDTH - 4, CONFIG.HEIGHT - 9, '#6b6580', 5, 'right');
+      text(ctx, CONFIG.GAME_VERSION || '', 4, CONFIG.HEIGHT - 9, '#6b6580', 5);
       const M = CONFIG.TITLE_MENU;
       function label(id) {
         if (id === 'continue') return 'Continuar';

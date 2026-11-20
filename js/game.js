@@ -557,6 +557,20 @@ class Game {
   }
 
   // El coliseo se abre al terminar la historia en Normal o Difícil
+  // Truco para probar: en la portada, izquierda, derecha, arriba, abajo (dos veces)
+  // abre el Coliseo y el Speedrun sin terminar la historia
+  checkCheat() {
+    const dirs = ['left', 'right', 'up', 'down'];
+    const hit = dirs.find(function (d) { return Input.pressed(d); });
+    if (!hit) return;
+    const seq = (this.cheatSeq || []).concat([hit]).slice(-8);
+    this.cheatSeq = seq;
+    if (seq.join() !== dirs.concat(dirs).join() || this.records.towerUnlocked) return;
+    this.records.towerUnlocked = true;
+    Save.writeRecords(this.records);
+    Sfx.play('lifeUp');               // las opciones dejan de verse en gris
+  }
+
   towerUnlocked() {
     return !!this.records.towerUnlocked;
   }
@@ -572,6 +586,7 @@ class Game {
       }
       return;
     }
+    this.checkCheat();
     const items = this.titleItems();
     const n = items.length;
     const row = this.tappedRow(CONFIG.TITLE_MENU, n);
@@ -628,6 +643,8 @@ class Game {
     this.difficulty = item === 'tower' ? TOWER.DIFFICULTY : item;
     this.newRun();
     this.towerFloor = 0;
+    this.towerTime = 0;
+    this.towerDone = false;
     // En la historia el prólogo enseña los controles: se empieza al tiro
     if (this.mode === 'story') {
       this.startRun();
@@ -678,6 +695,7 @@ class Game {
     if (this.towerFloor + 1 < TOWER.FLOORS.length) {
       this.loadTowerFloor(this.towerFloor + 1);
     } else {
+      SpeedRun.towerWon(this);
       this.state = 'won';
       this.endTimer = 0;
       Music.stop();
@@ -930,6 +948,7 @@ class Game {
   updateWorld(dt) {
     const p = this.player;
     if (this.mode === 'speedrun') SpeedRun.tick(this, dt);   // el reloj corre igual
+    if (this.mode === 'tower') SpeedRun.towerTick(this, dt);
     // Mientras la cámara muestra la llave o el portón, el juego queda congelado
     if (this.camPan) {
       this.updateCamera(CONFIG.CAMERA_LERP);
@@ -2712,7 +2731,7 @@ updateEchoes(dt) {
     }
     if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
     BossShow.drawBar(ctx, this.boss);
-    if (this.mode === 'speedrun') SpeedRun.drawHud(ctx, this);
+    if (this.mode === 'speedrun' || this.mode === 'tower') SpeedRun.drawHud(ctx, this);
     if (this.banner && !this.menu.open) UI.drawBanner(ctx, this.banner);
     if (!this.menu.open && !(scene && scene.hudHidden)) this.drawTopTexts(ctx);
     if (this.overlay) UI.drawOverlay(ctx, this);
@@ -2802,7 +2821,8 @@ updateEchoes(dt) {
     const ready = this.endTimer > CONFIG.GAME.END_DELAY;
     if (this.state === 'won' && this.mode === 'tower') {
       UI.drawEnd(ctx, '¡Coliseo completado!',
-        ['Venciste a los ' + TOWER.FLOORS.length + ' jefes.', 'Corazones: ' + this.hearts],
+        ['Venciste a los ' + TOWER.FLOORS.length + ' jefes.',
+          (this.towerRecord ? '¡Récord! ' : 'Tiempo: ') + SpeedRun.clock(this.towerTime || 0)],
         '#ffd34d', ready, this.time, 'Toca para volver al inicio');
     } else if (this.state === 'won') {
       const E = ENDINGS[this.rules().ENDING];
