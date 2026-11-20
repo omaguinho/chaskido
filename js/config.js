@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v87',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v88',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -31,6 +31,7 @@ const CONFIG = {
   },   // filas del menú de dificultad (para tocarlas)
 
   GAME: {
+    MERGE_TIME: 2.5,      // segundos del mix (los instrumentos se juntan y la papa baila)
     MAX_HEARTS: 10,       // corazones máximos (3 al empezar + 7 retos)
     CUBES_PER_LIFE: 5,    // 5 cubos sonoros = 1 corazón recuperado
     BEATS_PER_SWITCH: 4,  // cada cuántos pulsos cambian las plataformas rítmicas
@@ -199,7 +200,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.87.0.0',
+    VERSION: '0.88.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -209,6 +210,9 @@ const CONFIG = {
 
   SPEEDRUN: {
     MENU: { TOP: 34, STEP: 15 },
+    // En el speedrun no hay pausas: el mix es instantáneo, la cámara no va a mostrar la
+    // llave y los mensajes importantes no detienen el juego
+    MERGE_TIME: 0,
     ZONES: [
       { name: 'Ciudad Ocaso', rooms: ['n2', 'n5', 'n3'] },
       { name: 'Barrio de Cañas', rooms: ['n1', 'n4', 'n6'] },
@@ -970,6 +974,8 @@ const CONFIG = {
     STREAK: { EVERY: 0.05, LIFE: 0.22, LENGTH: 8 },   // líneas detrás al correr
     HURT_POSE: 0.4,       // segundos con la pose de golpe (papa_dano)
     POWER_POSE: 1.2,      // segundos con la pose de ganar un poder (papa_poder)
+    // Baile del mix (js/player.js): paso hacia atrás lento y corto, saltito y giro en el aire
+    DANCE: { MOVE_TIME: 0.45, MOON_SPEED: 26, MOON_MAX: 18, HOP: 230, SPIN: 14 },
     ACCEL: 700,
     FRICTION: 800,
     GRAVITY: 900,

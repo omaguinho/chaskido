@@ -243,6 +243,7 @@ class Game {
   // arrive: null (inicio P), { spot }, { exit, from, offset, vx, vy } (por un paso),
   // { totem: true } (viaje) o { item: { x, y } } (volver a una puerta Q)
   loadRoom(id, arrive) {
+    if (this.player && this.player.dancing) this.player.stopDance();
     Music.stopStems();
     const data = this.levelData(id) || LEVELS[0];
     this.levelIndex = LEVELS.indexOf(data);
@@ -826,7 +827,7 @@ class Game {
   // Cada consejo (monedas, dados, ají...) sale como mucho CONFIG.GAME.TIP_MAX veces en
   // toda la partida: con las primeras ya se entiende y después cansa
   showTip(id) {
-    if (this.tipsShown[id]) return;
+    if (this.mode === 'speedrun' || this.tipsShown[id]) return;   // en el speedrun, sin consejos
     this.tipsShown[id] = true;
     const seen = this.progress.tipsSeen || (this.progress.tipsSeen = {});
     if ((seen[id] || 0) >= (CONFIG.GAME.TIP_MAX || 3)) return;
@@ -1005,7 +1006,8 @@ class Game {
     this.updateMissionTimer(dt);
     if (this.mission === 'merging') {
   this.mergeTimer += dt;
-  if (this.mergeTimer > 2.5) {
+  if (this.mergeTimer > this.mergeTime()) {
+    this.player.stopDance();
     this.mission = 'escape';
     
     if (!this.level.boss) {
@@ -1017,7 +1019,7 @@ class Game {
       this.startEscape();
     }
     
-    this.say('¡Pistas fusionadas!', 4, true);
+    this.say('¡Pistas fusionadas!', 4, this.mode !== 'speedrun');
   }
   return; 
 }
@@ -1200,11 +1202,8 @@ class Game {
     // 1. El mensaje rápido
     this.say(TEXT.caught(nombreBonito), 2.5, false); 
     
-    // 2. El texto flotante (cubo rojo por ahora)
-    // Cambia esto:
-// Effects.popup('['+nombreBonito+']', this.player.x + this.player.w/2, this.player.y - 10, '#ff0000');
-// Por esto:
-  Effects.popup('+ ' + nombreBonito, this.player.x + this.player.w/2, this.player.y - 10, '#ffd34d');
+    // 2. El texto flotante, en el idioma elegido
+    Effects.popup('+ ' + tr(nombreBonito), this.player.x + this.player.w / 2, this.player.y - 10, '#ffd34d');
   });
 
   // Si ya juntamos todos, empezamos la animación de fusión en lugar del escape directo
@@ -1212,8 +1211,15 @@ class Game {
     this.mission = 'merging';
     this.mergeTimer = 0;
     Sfx.play('ability'); // Sonido de fusión
+    // Durante el mix la papa baila (en el speedrun no hay mix: se sigue al tiro)
+    if (this.mergeTime() > 0) this.player.startDance();
   }
 }
+
+  // Lo que dura el mix (en el speedrun, nada)
+  mergeTime() {
+    return this.mode === 'speedrun' ? CONFIG.SPEEDRUN.MERGE_TIME : CONFIG.GAME.MERGE_TIME;
+  }
 
   // Con los 3 instrumentos aparece la llave y empieza la cuenta de la canción
   // Solo las salas con jefe tienen llave: la cámara va a mostrarla y vuelve. Tomarla
@@ -1237,11 +1243,11 @@ class Game {
     key.hidden = false;
     key.taken = false;
     Effects.play('poof', key.x + 8, key.y + 8);
-    this.panCamera(key.x + 8, key.y + 8);
+    if (this.mode !== 'speedrun') this.panCamera(key.x + 8, key.y + 8);   // en el speedrun no se detiene
   } else {
     this.hasKey = true;
   }
-  this.say(TEXT.escapeBoss, 4, true);
+  this.say(TEXT.escapeBoss, 4, this.mode !== 'speedrun');
 }
 
   // Con la llave en la mano, al tocar el tótem la sala se afina
@@ -1275,7 +1281,7 @@ class Game {
     }
     const record = this.saveRecord();
     if (record) msg += ' ' + record;
-    this.say(msg, 7, true);
+    this.say(msg, 7, this.mode !== 'speedrun');
     Music.playStems(L.id, true);     // la sala afinada suena con todos sus instrumentos
     this.saveGame();
   }
@@ -1315,6 +1321,7 @@ class Game {
 
   // Se acabó la canción: la misión vuelve a empezar (y se pierde un corazón)
   resetMission() {
+    this.player.stopDance();
     this.mission = 'idle';
     this.notes = 0;
     this.hasKey = false;
@@ -1834,7 +1841,7 @@ stems.forEach(stem => {
   isHurtByWorld() {
     const p = this.player;
     if (p.y > this.level.pxH + 32) return true;
-    if (p.invincible()) return false;
+    if (p.invincible() || p.dancing) return false;
     return this.hurtTimer <= 0 && this.level.rectHitsSpikes(p.x, p.y, p.w, p.h);
   }
 
@@ -1860,7 +1867,7 @@ stems.forEach(stem => {
   }
 
   hurtByEnemy(source) {
-    if (this.hurtTimer > 0 || this.player.invincible()) return;
+    if (this.hurtTimer > 0 || this.player.invincible() || this.player.dancing) return;
     const p = this.player;
     this.hearts = Math.max(0, this.hearts - this.rules().DAMAGE);
     if (this.hearts === 0) {

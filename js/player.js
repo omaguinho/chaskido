@@ -112,6 +112,10 @@ class Player {
   }
 
   update(dt, level) {
+    if (this.dancing) {
+      this.updateDance(dt, level);
+      return;
+    }
     if (this.frozen) {
       this.updateFrozen(dt, level);
       return;
@@ -200,6 +204,83 @@ class Player {
     this.trackAir();
     this.updateGhosts(dt);
     this.updateAnimation(dt);
+  }
+
+  // ---------- Baile del mix ----------
+  // Mientras se mezclan los instrumentos la papa no camina: baila.
+  //   · izquierda/derecha: paso hacia atrás (mira para un lado y se desliza al otro)
+  //   · arriba: pose de festejo · abajo: zapateo · salto: saltito; en el aire, gira
+  startDance() {
+    this.dancing = true;
+    this.danceX = this.x;           // el paso hacia atrás no se aleja de aquí
+    this.danceMove = null;
+    this.spin = 0;
+    this.dashTime = 0;
+    this.dashState = 'none';
+    this.hook = null;
+    this.stomping = false;
+  }
+
+  stopDance() {
+    this.dancing = false;
+    this.danceMove = null;
+    this.spin = 0;
+  }
+
+  updateDance(dt, level) {
+    const D = CONFIG.PLAYER.DANCE;
+    const wasOnGround = this.onGround;
+    level.passOneWay = false;
+    this.events = [];
+    this.prevBottom = this.y + this.h;
+    const m = this.danceMove;
+    if (m) {
+      m.t += dt;
+      if (m.t > D.MOVE_TIME && !(m.kind === 'moon' && Input.held(m.dir < 0 ? 'left' : 'right'))) this.danceMove = null;
+    }
+    if (Input.pressed('left') || Input.pressed('right')) {
+      const dir = Input.pressed('left') ? -1 : 1;
+      this.danceMove = { kind: 'moon', dir: dir, t: 0 };
+      this.facing = -dir;           // mira al revés de hacia donde se desliza
+    } else if (Input.pressed('up')) {
+      this.danceMove = { kind: 'pose', t: 0 };
+      this.powerPose = D.MOVE_TIME;
+    } else if (Input.pressed('down')) {
+      this.danceMove = { kind: 'zapateo', t: 0 };
+      this.kickDust('#d9c9a3', 4);
+    }
+    if (Input.pressed('jump') && this.onGround) {
+      this.vy = -D.HOP;
+      this.onGround = false;
+    }
+    // Paso hacia atrás: lento y sin alejarse mucho del lugar
+    const mv = this.danceMove;
+    let vx = 0;
+    if (mv && mv.kind === 'moon') {
+      const room = mv.dir < 0 ? this.x - (this.danceX - D.MOON_MAX) : (this.danceX + D.MOON_MAX) - this.x;
+      vx = room > 0 ? mv.dir * D.MOON_SPEED : 0;
+    }
+    this.vx = vx;
+    this.applyGravity(0, dt);
+    this.moveX(dt, level);
+    this.moveY(dt, level);
+    this.checkSurroundings(level);
+    if (this.onGround && !wasOnGround) this.land(level);
+    // En el aire gira; al caer vuelve derecha
+    this.spin = this.onGround ? 0 : this.spin + dt * D.SPIN;
+    this.trackAir();
+    this.updateGhosts(dt);
+    this.updateAnimation(dt);
+  }
+
+  danceAnimation() {
+    const has = function (name) { return Sprites.has(name); };
+    const m = this.danceMove;
+    if (!this.onGround) return 'papa_salto';
+    if (m && m.kind === 'moon') return 'papa_correr';
+    if (m && m.kind === 'zapateo') return has('papa_zapateo') ? 'papa_zapateo' : 'papa_caida';
+    if (this.powerPose > 0 && has('papa_poder')) return 'papa_poder';
+    return has('papa_hablar') ? 'papa_hablar' : 'papa_quieta';
   }
 
   // Lo arrastran la plataforma móvil (de lado o de arriba abajo) o la cinta sobre la que está
@@ -957,6 +1038,7 @@ class Player {
   chooseAnimation() {
     const P = CONFIG.PLAYER;
     const has = function (name) { return Sprites.has(name); };
+    if (this.dancing) return this.danceAnimation();
     if (this.powerPose > 0 && has('papa_poder')) return 'papa_poder';
     if (this.hurtPose > 0 && has('papa_dano')) return 'papa_dano';
     if (this.hook) return this.hook.mode === 'hang' && has('papa_colgada') ? 'papa_colgada' : 'papa_salto';
@@ -1011,6 +1093,12 @@ class Player {
     const footX = this.x + this.w / 2;
     const footY = this.y + this.h;
     ctx.save();
+    if (this.spin) {                // giro del baile, desde el centro del cuerpo
+      const cy = this.y + this.h / 2;
+      ctx.translate(footX, cy);
+      ctx.rotate(this.spin);
+      ctx.translate(-footX, -cy);
+    }
     ctx.translate(footX, footY);
     ctx.scale(1 + this.squash, 1 - this.squash);
     ctx.translate(-footX, -footY);

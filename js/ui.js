@@ -420,6 +420,10 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
     UI.shadowText(ctx, '¡MIX!', CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2 - 10, '#ffd34d', 16, 'center');
     ctx.globalAlpha = 1;
   }
+  // Mientras dura el mix: cómo bailar
+  if (game.player.dancing) {
+    UI.shadowText(ctx, '¡Baila!  ◀ ▶ ▲ ▼  y salta', CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2 + 40, '#fbf6ec', 7, 'center');
+  }
 },
 
     // Ventana de mensaje arriba (bajo el HUD). Los avisos cortos no muestran "cerrar"

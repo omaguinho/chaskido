@@ -31,7 +31,7 @@ const I18N = (function () {
     ['Aceptar: jugar   Pausa: volver', 'Confirm: play   Pause: back', 'Aceptar: jogar   Pausa: voltar'],
     ['Rescata los instrumentos de la zona lo más rápido posible', "Rescue the zone's instruments as fast as you can", 'Resgate os instrumentos da zona o mais rápido possível'],
     ['Aceptar: jugar   ♪: nombre ({0})   Pausa: volver', 'Confirm: play   ♪: name ({0})   Pause: back', 'Aceptar: jogar   ♪: nome ({0})   Pausa: voltar'],
-    ['🌎 Mundial', '🌎 World', '🌎 Mundial'], ['Cargando…', 'Loading…', 'Carregando…'],
+    ['🌎 Mundial', '🌎 World', '🌎 Mundial'], ['¡Baila!  ◀ ▶ ▲ ▼  y salta', 'Dance!  ◀ ▶ ▲ ▼  and jump', 'Dance!  ◀ ▶ ▲ ▼  e pule'], ['Cargando…', 'Loading…', 'Carregando…'],
     ['Sin conexión', 'Offline', 'Sem conexão'], ['¡Sé el primero!', 'Be the first!', 'Seja o primeiro!'],
     ['Tu nombre para los récords', 'Your name for the records', 'Seu nome para os recordes'],
     ['Arriba/abajo: letra   Izquierda/derecha: lugar   Aceptar: listo', 'Up/down: letter   Left/right: place   Confirm: done', 'Cima/baixo: letra   Esquerda/direita: lugar   Aceptar: pronto'],
