@@ -15,6 +15,29 @@
 // Ajustes de cada jefe en CONFIG.BOSSES.
 
 class ArenaBoss {
+  // Ajuste por dificultad para el jefe que se crea (ver Game.bossTuning)
+  static get tuning() { return ArenaBoss._tuning || {}; }
+  static set tuning(t) { ArenaBoss._tuning = t; }
+
+  // Aviso de ataque: un anillo blanco que se abre alrededor del jefe
+  drawWarn(ctx) {
+    if (!(this.warn > 0) || this.hidden) return;
+    const W = CONFIG.BOSS_WARN;
+    const k = 1 - this.warn / W.TIME;
+    const cx = this.x + this.w / 2, cy = this.y + this.h / 2;
+    ctx.save();
+    ctx.globalAlpha = (1 - k) * W.ALPHA;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.max(this.w, this.h) * (0.6 + k * 0.6), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = (1 - k) * W.ALPHA * 0.35;
+    ctx.fillRect(this.x, this.y, this.w, this.h);
+    ctx.restore();
+  }
+
   // def: datos de CONFIG.BOSSES.<tipo>
   constructor(tx, ty, def) {
     const T = CONFIG.TILE;
@@ -28,6 +51,9 @@ class ArenaBoss {
   }
 
   reset() {
+    // Dificultad (ArenaBoss.tuning, la pone el juego): en Fácil, como mucho HP_MAX golpes
+    const cap = ArenaBoss.tuning.HP_MAX;
+    if (cap && this.def.HP > cap) this.def = Object.assign({}, this.def, { HP: cap });
     this.x = this.spawnX;
     this.y = this.spawnY;
     this.prevY = this.y;
@@ -35,6 +61,7 @@ class ArenaBoss {
     this.vy = 0;
     this.dir = -1;
     this.hp = this.def.HP;
+    this.warn = 0;             // destello de aviso al empezar un ataque
     this.state = 'wait';
     this.timer = 0;
     this.animTime = 0;
@@ -174,7 +201,16 @@ class ArenaBoss {
   }
 
   setState(state, time) {
-    if (state !== this.state && this.attackStates && this.attackStates().indexOf(state) >= 0) this.attackSound(state);
+    if (state !== this.state && this.attackStates && this.attackStates().indexOf(state) >= 0) {
+      this.attackSound(state);
+      this.warn = CONFIG.BOSS_WARN.TIME;
+    }
+    // Descanso (cuando se le puede pisar): más largo en Fácil, justo en Difícil
+    if (time && this.restStates && this.restStates().indexOf(state) >= 0) {
+      const K = ArenaBoss.tuning;
+      time = time * (K.REST_SCALE || 1);
+      if (K.REST_MAX) time = Math.min(time, K.REST_MAX);
+    }
     this.state = state;
     this.timer = time || 0;
     this.animTime = 0;

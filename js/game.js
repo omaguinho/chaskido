@@ -109,6 +109,11 @@ class Game {
     this.openTitle();
   }
 
+  // Jefes según la dificultad (en el Coliseo, siempre como en Normal)
+  bossTuning() {
+    return this.mode === 'tower' ? {} : (CONFIG.BOSS_DIFFICULTY[this.difficulty] || {});
+  }
+
   rules() {
     return CONFIG.DIFFICULTY[this.difficulty];
   }
@@ -273,6 +278,7 @@ class Game {
     this.drops = new Drops();
     const b = L.bossSpawn;
     const type = L.boss ? L.boss.type : 'bombo';
+    ArenaBoss.tuning = this.bossTuning();
     this.boss = b && !rs.boss && BOSS_TYPES[type] ? new BOSS_TYPES[type](b.tx, b.ty) : null;
     this.silencioForm = 1;
     this.arenaPhase = this.boss ? 'idle' : 'done';
@@ -818,6 +824,12 @@ class Game {
     this.message = { text: str, time: (seconds || CONFIG.GAME.MESSAGE_TIME) * CONFIG.GAME.MESSAGE_SPEED };
   }
 
+  // Mensaje de misión (empezó, se acabó el tiempo...): no detiene el juego, pero dura
+  // al menos CONFIG.GAME.MISSION_MESSAGE segundos para alcanzar a leerlo
+  sayMission(str) {
+    this.message = { text: str, time: CONFIG.GAME.MISSION_MESSAGE };
+  }
+
   // Aviso corto (por ejemplo, frente a una puerta): no tapa un mensaje importante
   hint(text) {
     if (this.message && !this.message.hint) return;
@@ -845,7 +857,8 @@ class Game {
       // (si sfx.js o audio.js son de una versión vieja, no hace nada)
       if (Sfx.wake) Sfx.wake();
       if (Music.wake) Music.wake();
-      if (Music.keepAlive) Music.keepAlive();   // la pista que se cortó o no llegó vuelve a sonar
+      if (Music.keepAlive) Music.keepAlive();
+      this.slotBlink = Math.max(0, (this.slotBlink || 0) - dt);   // la pista que se cortó o no llegó vuelve a sonar
     }
     this.time += dt;
     if (Input.keyPressed('KeyM')) Sfx.setMuted(Music.toggleMute());
@@ -982,6 +995,7 @@ class Game {
     this.bossWind = 0;
     if (this.boss) {
       this.boss.update(dt, this.level, p);
+      this.boss.warn = Math.max(0, (this.boss.warn || 0) - dt);
       this.bossWind = this.boss.wind ? this.boss.wind() : 0;
     }
     this.hurtTimer = Math.max(0, (this.hurtTimer || 0) - dt);
@@ -1178,9 +1192,9 @@ class Game {
     if (limit > 0) {
       this.timeLeft = limit;
       this.lastTick = 0;
-      this.say(TEXT.missionTimed(n, formatTime(limit)), 4);
+      this.sayMission(TEXT.missionTimed(n, formatTime(limit)));
     } else {
-      this.say(TEXT.missionStart(n), 4);
+      this.sayMission(TEXT.missionStart(n));
     }
     if (n === 0) this.startEscape();
   }
@@ -1361,7 +1375,7 @@ class Game {
     this.tickClock();
     if (this.timeLeft > 0) return;
     this.resetMission();
-    this.say(TEXT.timeout, 5);
+    this.sayMission(TEXT.timeout);
     this.loseLife();
   }
 
@@ -1677,6 +1691,7 @@ class Game {
     // El Silencio pelea tres veces: al caer una forma, aparece la siguiente
     if (L.boss && L.boss.type === 'silencio' && this.mode === 'story' && (this.silencioForm || 1) < 3) {
       this.silencioForm = (this.silencioForm || 1) + 1;
+      ArenaBoss.tuning = this.bossTuning();
       this.boss = new Silencio(L.bossSpawn.tx, L.bossSpawn.ty, this.silencioForm);
       Sfx.play('bossWon');
       this.startBoss();
@@ -1782,28 +1797,18 @@ class Game {
     Save.writeSettings(this.settings);
     Sfx.play(item === 'sfx' ? 'maize' : 'move');
   }
-  // Tu función actual que ya tienes:
-changeVolume(item, step) {
-  const max = CONFIG.VOLUME.STEPS;
-  this.settings[item] = Math.max(0, Math.min(max, this.settings[item] + step));
-  this.applyVolume();
-  Save.writeSettings(this.settings);
-  Sfx.play(item === 'sfx' ? 'maize' : 'move');
-}
 
-// AÑADE LA NUEVA FUNCIÓN AQUÍ DEBAJO:
-changeStemVolume(stemName, step) {
-  const max = CONFIG.VOLUME.STEPS;
-  if (!this.settings.stemVolumes) this.settings.stemVolumes = {};
-  
-  let current = this.settings.stemVolumes[stemName];
-  if (current === undefined) current = max; // Por defecto al máximo
-  
-  this.settings.stemVolumes[stemName] = Math.max(0, Math.min(max, current + step));
-  this.applyVolume();
-  Save.writeSettings(this.settings);
-  Sfx.play('move');
-}
+  // Volumen de un instrumento (de 0 a CONFIG.VOLUME.STEPS; al principio, el máximo)
+  changeStemVolume(stemName, step) {
+    const max = CONFIG.VOLUME.STEPS;
+    const vols = this.settings.stemVolumes || (this.settings.stemVolumes = {});
+    const current = vols[stemName] === undefined ? max : vols[stemName];
+    vols[stemName] = Math.max(0, Math.min(max, current + step));
+    this.applyVolume();
+    Save.writeSettings(this.settings);
+    Sfx.play('move');
+  }
+
   toggleRumble() {
     this.settings.rumble = !this.settings.rumble;
     this.applyVolume();
@@ -2390,6 +2395,7 @@ stems.forEach(stem => {
     this.progress.checkpoint = { room: this.level.id, x: spot.x, y: spot.y };
     this.saveGame(spot);
     Sfx.play('save');
+    Effects.popup(tr('¡Guardado!'), spot.x + this.player.w / 2, spot.y - 8, '#7be0a0');
     this.showTip('save');
   }
 
@@ -2440,10 +2446,17 @@ stems.forEach(stem => {
     }, this);
   }
 
+  // Portón cerrado: al chocarlo parpadean los instrumentos que faltan y, la primera
+  // vez, aparece a su lado el guardián del portón (un vecino que explica qué hacer)
   checkGate() {
     if (!this.level.hasGate || this.level.gateOpen) return;
     const p = this.player;
-    if (this.level.rectHasTile(p.x - 2, p.y, p.w + 4, p.h, 'G')) this.hint(TEXT.gateClosed);
+    if (!this.level.rectHasTile(p.x - 2, p.y, p.w + 4, p.h, 'G')) return;
+    this.hint(TEXT.gateClosed);
+    this.slotBlink = 1.5;
+    if (this.mode === 'story' && this.vecinos.addGuard(this.level, p)) {
+      this.sayMission(CONFIG.GATE_GUARD.HELLO);
+    }
   }
 
   // ---------- Música por cercanía ----------
@@ -2703,7 +2716,10 @@ updateEchoes(dt) {
     this.drops.draw(ctx, this.time);
     this.enemies.draw(ctx);
     this.vecinos.draw(ctx, this);
-    if (this.boss) this.boss.draw(ctx);
+    if (this.boss) {
+      this.boss.draw(ctx);
+      this.boss.drawWarn(ctx);
+    }
     BossShow.drawWorld(ctx);
 
     const target = this.smokeTarget();

@@ -41,6 +41,9 @@ class PauseMenu {
   }
 
   // Alto de cada fila de Opciones
+  // Barra de volumen: dónde empieza y cuánto mide cada paso (px)
+  static get BAR() { return { LEFT: 150, STEP: 9 }; }
+
   static get OPTION_STEP() {
     return 14;
   }
@@ -241,15 +244,9 @@ class PauseMenu {
       const top = tab === 'opciones' ? 40 : 108;
       const r = Math.floor((p.y - top + 2) / (tab === 'opciones' ? PauseMenu.OPTION_STEP : 16));
       if (r >= 0 && r < this.rowCount(tab)) {
-        const same = r === this.row;
         this.row = r;
         if (tab === 'guardar') this.useSaveRow(r);
-        else if (same || PauseMenu.OPTIONS[r] === 'resume' || PauseMenu.OPTIONS[r] === 'quit' || PauseMenu.OPTIONS[r] === 'rumble' || PauseMenu.OPTIONS[r] === 'touch' || PauseMenu.OPTIONS[r] === 'lang') {
-          this.useOption(PauseMenu.OPTIONS[r], 0, true);
-        } else if (p.x > 150) {
-          // Tocar la barra de volumen: a la izquierda baja, a la derecha sube
-          this.useOption(PauseMenu.OPTIONS[r], p.x > 200 ? 1 : -1, false);
-        }
+        else this.tapOption(PauseMenu.OPTIONS[r], p.x);
         return true;
       }
     }
@@ -262,6 +259,24 @@ class PauseMenu {
       }
     }
     return false;
+  }
+
+  // Toque en una fila de Opciones. Volúmenes: tocar la barra pone ese valor; los
+  // botones − y + (a los lados) bajan o suben de a uno. Lo demás: tocar cambia/usa.
+  tapOption(id, x) {
+    const G = this.game;
+    const B = PauseMenu.BAR;
+    const v = G.settings[id];
+    if (typeof v === 'number' && id !== 'light') {
+      if (x < B.LEFT - 2) { if (x > B.LEFT - 14) this.useOption(id, -1, false); return; }
+      if (x >= B.LEFT + CONFIG.VOLUME.STEPS * B.STEP) { this.useOption(id, 1, false); return; }
+      const want = Math.max(0, Math.min(CONFIG.VOLUME.STEPS, Math.floor((x - B.LEFT) / B.STEP) + 1));
+      // El que ya está en ese valor y se vuelve a tocar el primero: queda en 0
+      const target = want === 1 && v === 1 ? 0 : want;
+      if (target !== v) this.useOption(id, target - v, false);
+      return;
+    }
+    this.useOption(id, 0, true);
   }
 
   tabsLeft(n) {
@@ -727,13 +742,17 @@ class PauseMenu {
         UI.text(ctx, v ? 'Sí' : 'No', 150, y, color);
         return;
       }
+      const B = PauseMenu.BAR;
+      UI.text(ctx, '−', B.LEFT - 8, y, color, 7, 'center');        // botones para el táctil
       for (let s = 0; s < max; s++) {
         ctx.fillStyle = s < v ? color : 'rgba(255, 255, 255, 0.15)';
-        ctx.fillRect(150 + s * 9, y + 1, 7, 6);
+        ctx.fillRect(B.LEFT + s * B.STEP, y + 1, B.STEP - 2, 6);
       }
-      UI.text(ctx, String(v), 246, y, color);
+      UI.text(ctx, '+', B.LEFT + max * B.STEP + 6, y, color, 7, 'center');
+      UI.text(ctx, String(v), B.LEFT + max * B.STEP + 16, y, color);
     }, this);
-    UI.text(ctx, 'M: silencio', CONFIG.WIDTH / 2, 149, '#6b6385', 5, 'center');
+    // "M: silencio" a la derecha, al lado de la última fila (no encima)
+    UI.text(ctx, 'M: silencio', CONFIG.WIDTH - 12, 40 + (PauseMenu.OPTIONS.length - 1) * PauseMenu.OPTION_STEP + 1, '#6b6385', 5, 'right');
     const problem = Music.lastError();
     if (problem) UI.text(ctx, problem, CONFIG.WIDTH / 2, 158, '#ff6b8a', 4.5, 'center');
   }

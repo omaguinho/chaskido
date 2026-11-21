@@ -244,7 +244,9 @@ const UI = (function () {
         game.instrumentos.list.forEach(function (c, i) {
           const sx = x + i * 13;
           const got = c.state === 'caught';
-          ctx.fillStyle = got ? 'rgba(255, 211, 77, 0.28)' : 'rgba(11, 6, 32, 0.5)';
+          // Frente al portón cerrado, los que faltan parpadean (son lo que lo abre)
+          const blink = !got && game.slotBlink > 0 && Math.floor(game.time * 6) % 2 === 0;
+          ctx.fillStyle = blink ? 'rgba(255, 77, 109, 0.6)' : got ? 'rgba(255, 211, 77, 0.28)' : 'rgba(11, 6, 32, 0.5)';
           ctx.fillRect(sx, 1, 12, 12);
           ctx.fillStyle = got ? '#ffd34d' : '#5f5a70';
           ctx.fillRect(sx, 1, 12, 1);

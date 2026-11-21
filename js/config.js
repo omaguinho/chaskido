@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v88',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v89',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -37,6 +37,7 @@ const CONFIG = {
     BEATS_PER_SWITCH: 4,  // cada cuántos pulsos cambian las plataformas rítmicas
     MESSAGE_TIME: 3,      // segundos que dura un mensaje
     MESSAGE_SPEED: 0.55,  // los mensajes de paso duran esto del tiempo pedido (más rápidos)
+    MISSION_MESSAGE: 5,   // segundos de los mensajes de misión (empezó, tiempo acabado)
     READY_DELAY: 0.4,     // portada, menú y GAME START: espera antes de aceptar
     HURT_TIME: 1,         // invulnerable tras perder una vida
     END_DELAY: 1,         // espera antes de aceptar toques en pantallas finales
@@ -70,6 +71,16 @@ const CONFIG = {
     normal: { NAME: 'Normal',  LIVES: 3, DAMAGE: 1, MISSION_TIME: 0,   ENDING: 'normal' },
     hard:   { NAME: 'Difícil', LIVES: 3, DAMAGE: 2, MISSION_TIME: 120, ENDING: 'true' }
   },
+  // Jefes según la dificultad. HP_MAX: golpes como máximo; REST_SCALE: cuánto más dura
+  // el descanso (cuando se le puede pisar); REST_MAX: descanso máximo en segundos
+  BOSS_DIFFICULTY: {
+    easy:   { HP_MAX: 4, REST_SCALE: 1.6 },
+    normal: { REST_SCALE: 1 },
+    hard:   { REST_SCALE: 1, REST_MAX: 1.0 }
+  },
+  // Aviso al empezar un ataque: anillo blanco que se abre (TIME s)
+  BOSS_WARN: { TIME: 0.45, ALPHA: 0.8 },
+
   // Nueva partida +: se desbloquea con el final de Difícil; empieza con estas habilidades
   NEW_GAME_PLUS_ABILITIES: ['dash', 'hook', 'tuner'],
 
@@ -192,6 +203,24 @@ const CONFIG = {
   RETRY_AFTER: 3,  // segundos después de empezar: se piden otra vez los dibujos que no llegaron
 
   // Modo speedrun (js/speedrun.js): zonas que se eligen y sus salas
+  // Guardián del portón: aparece junto al portón cerrado del jefe la primera vez que la
+  // papa lo choca (js/vecinos.js). DX: a cuántos bloques del portón. Las frases pueden
+  // ser funciones (reciben el juego) para decir cuántos instrumentos faltan.
+  GATE_GUARD: {
+    DX: 2, kind: 'tambor', color: '#e89a6b',
+    HELLO: '¡Oye, oye! Ese portón no se abre a empujones. Habla conmigo (▲).',
+    BUBBLE: '¡Oye, tú!',
+    lines: [
+      function (game) {
+        const left = game.instrumentos.list.filter(function (c) { return c.state !== 'caught'; }).length;
+        return 'Este portón se abre cuando la sala vuelve a sonar. Te faltan ' + left + ' instrumentos: mira sus casillas arriba.';
+      },
+      'Los instrumentos huyen si te ven. Acércate por detrás o córtales el paso.',
+      'Cuando los juntes todos, aparece la llave del jefe. Con ella se abre este portón.'
+    ],
+    after: ['¡Ya suena! El portón está abierto. Suerte con el jefe.']
+  },
+
   // Saludos de los vecinos en su globo (uno al azar; al hablar sigue su frase)
   SALUDOS: ['¡Psst!', '¡Oye, tú!', '¿Tienes un minuto?', '¡Te cuento algo!', '¿Qué tal, papa?', '¡Ven, ven!'],
 
@@ -200,7 +229,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.88.0.0',
+    VERSION: '0.89.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,

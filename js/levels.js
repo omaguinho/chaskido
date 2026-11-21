@@ -101,7 +101,7 @@ const LEVELS = [
     boss: { type: 'eco', gives: 'tuner' },
     dark: 0.86,
     ambient: "cave",
-    scene: {"kind":"bajo","hints":[[15,9,"run"],[38,9,"stomp"],[54,9,"down"],[86,21,"up"],[109,21,"tuner","tuner"],[110,26,"tuner","tuner"]]},
+    scene: {"kind":"bajo","hints":[[15,9,"run"],[43,9,"stomp"],[54,9,"down"],[86,21,"up"],[109,21,"tuner","tuner"],[110,26,"tuner","tuner"]]},
     gateHint: "¡Se afinó la primera sala! Se abrió el portón de la derecha.",
     exits: [{ x: 4, y: 0, w: 4, h: 1, goes: 'p1' }, { x: 108, y: 32, w: 4, h: 1, goes: 'p3' }],
     map: [
@@ -114,7 +114,7 @@ const LEVELS = [
       'B....................$..$..................................BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       'B..........................................................BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       'B..........................................................BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-      'B.....P.........S.....k.............e....B..n...c.BB.......BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      'B.....P.........S.....k..................B..n.e.c.BB.......BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       'BBBBBBBBBBBBBBBBBBBB..BB..BBBBBBBBBBBBBBBBBBBBBBBBBB_______BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       'BBBBBBBBBBBBBBBBBBBB^^^^^^BBBBBBBBBBBBBBBBBBBBBBBBB........BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB..................B',
       'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB........BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB..................B',

@@ -18,6 +18,23 @@ class Vecinos {
     });
   }
 
+  // Guardián del portón (CONFIG.GATE_GUARD): aparece la primera vez que la papa choca el
+  // portón cerrado, a su lado. Devuelve true si apareció recién.
+  addGuard(level, p) {
+    if (this.list.some(function (v) { return v.def.guard; })) return false;
+    const G = CONFIG.GATE_GUARD, T = CONFIG.TILE;
+    const side = level.rectHasTile(p.x + p.w, p.y, 4, p.h, 'G') ? -1 : 1;   // del lado de la papa
+    const spot = Vecinos.findFloor(level, p.x + p.w / 2 + side * G.DX * T, p.y + p.h);
+    const v = {
+      def: Object.assign({ id: 'guardia', guard: true }, G), i: this.list.length, x: spot.x, feet: spot.feet,
+      vx: 0, vy: 0, hp: 1, inv: 0, down: false, line: 0, angry: false, hello: G.BUBBLE
+    };
+    this.list.push(v);
+    Effects.play('poof', v.x, v.feet - 10);
+    Sfx.play('select');
+    return true;
+  }
+
   static saludo() {
     const S = CONFIG.SALUDOS;
     return S[Math.floor(Math.random() * S.length)];
@@ -71,7 +88,7 @@ class Vecinos {
       if (v.def.hard) this.moveHard(v, dt, game);
       // Pisotón: la papa cae sobre su cabeza
       const head = { x: v.x - 6, y: v.feet - 22, w: 12, h: 8 };
-      if (p.vy > 0 && v.inv <= 0 && overlaps(head, p) && p.y + p.h < v.feet - 10) {
+      if (!v.def.guard && p.vy > 0 && v.inv <= 0 && overlaps(head, p) && p.y + p.h < v.feet - 10) {
         p.stomp();
         Sfx.play('stomp');
         v.hp--;
@@ -99,8 +116,9 @@ class Vecinos {
           this.give(v, game);
           return;
         }
-        const lines = this.gave(v) && v.def.after ? v.def.after : v.def.lines;
-        game.say(lines[v.line % lines.length], 6, true);
+        const lines = (this.gave(v) || (v.def.guard && game.level.gateOpen)) && v.def.after ? v.def.after : v.def.lines;
+        const line = lines[v.line % lines.length];
+        game.say(typeof line === 'function' ? line(game) : line, 6, true);
         v.line++;
         Sfx.play('select');
         if (!H) this.give(v, game);
@@ -143,14 +161,18 @@ class Vecinos {
       if (v.down) return;
       if (v.inv > 0 && Math.floor(v.inv * 12) % 2 === 0) return;     // parpadea al recibir un golpe
       Scenes.drawNpc(ctx, v.x, v.feet, v.def.kind, v.def.color, this.t, (this.t * 2) % 1, Math.abs(v.vx) < 5, v.i + 3);
-      // Triángulo de pisotón (rojo, apunta hacia abajo)
-      const ty = Math.round(v.feet - 30 + Math.sin(this.t * 6) * 1.5);
-      ctx.fillStyle = '#ff4d6d';
-      ctx.beginPath();
-      ctx.moveTo(v.x - 3, ty); ctx.lineTo(v.x + 3, ty); ctx.lineTo(v.x, ty + 4);
-      ctx.fill();
+      // Triángulo de pisotón (rojo, apunta hacia abajo); el guardián no se pisa
+      if (!v.def.guard) this.drawStompMark(ctx, v);
       this.drawBubble(ctx, v, this.near(v, p));
     }, this);
+  }
+
+  drawStompMark(ctx, v) {
+    const ty = Math.round(v.feet - 30 + Math.sin(this.t * 6) * 1.5);
+    ctx.fillStyle = '#ff4d6d';
+    ctx.beginPath();
+    ctx.moveTo(v.x - 3, ty); ctx.lineTo(v.x + 3, ty); ctx.lineTo(v.x, ty + 4);
+    ctx.fill();
   }
 
   // Globo con el saludo (amarillo cuando estás al lado: "▲ Hablar")

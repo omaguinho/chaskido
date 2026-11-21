@@ -398,6 +398,11 @@ const Items = (function () {
 
   // Contacto con el jugador (con un pequeño margen)
   function overlaps(item, p) {
+    // La banderita se activa al pasar por su columna, aunque sea saltando por encima
+    if (item.type === 'save') {
+      return p.x < item.x + item.w + 2 && p.x + p.w > item.x - 2 &&
+             p.y < item.y + item.h && p.y + p.h > item.y - 3 * T;
+    }
     const m = 3;
     return p.x < item.x + item.w - m && p.x + p.w > item.x + m &&
            p.y < item.y + item.h - m && p.y + p.h > item.y + m;
