@@ -666,9 +666,16 @@ class Level {
 
   // ---------- Actualización ----------
 
+  // El portón que se abre: espera a que llegue la cámara y sube. También corre
+  // mientras la cámara lo muestra (el resto del mundo está quieto)
+  updateGate(dt) {
+    if (this.gateDelay > 0) this.gateDelay = Math.max(0, this.gateDelay - dt);
+    else if (this.gateAnim > 0) this.gateAnim = Math.max(0, this.gateAnim - dt);
+  }
+
   update(dt) {
     this.clock += dt;
-    if (this.gateAnim > 0) this.gateAnim = Math.max(0, this.gateAnim - dt);
+    this.updateGate(dt);
     this.updateRhythm();
     this.updateMovers();
     this.updateSinkers(dt);
@@ -1486,6 +1493,14 @@ class Level {
       ctx.restore();
       ctx.fillStyle = 'rgba(233, 196, 106, ' + (0.5 * (1 - k)) + ')';
       ctx.fillRect(px - 1, py + T - 3, T + 2, 3);
+      // Polvo que cae mientras sube
+      if (this.gateDelay <= 0 && k < 0.9) {
+        ctx.fillStyle = 'rgba(217, 201, 163, ' + (0.8 * (1 - k)) + ')';
+        for (let i = 0; i < 4; i++) {
+          const fx = px + ((i * 5 + Math.floor(this.clock * 40)) % T);
+          ctx.fillRect(fx, py + T - 2 + ((i * 3 + Math.floor(this.clock * 30)) % 6), 1, 1);
+        }
+      }
       return;
     }
     const open = this.gateOpen && !this.arenaActive;

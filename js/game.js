@@ -274,7 +274,8 @@ class Game {
     this.player.abilities = this.abilities;
     this.instrumentos = new Instrumentos(L);
     this.enemies = new Enemies(L);
-    this.vecinos = new Vecinos(L, rs);
+    this.vecinos = new Vecinos(L, rs, this.mode === 'story');
+    this.gateBumps = 0;
     this.drops = new Drops();
     const b = L.bossSpawn;
     const type = L.boss ? L.boss.type : 'bombo';
@@ -566,14 +567,14 @@ class Game {
   // El coliseo se abre al terminar la historia en Normal o Difícil
   // Truco para probar: en la portada, izquierda, derecha, arriba, abajo (dos veces)
   // abre el Coliseo y el Speedrun sin terminar la historia
-  // Y arriba, arriba, abajo, abajo abre el informe de juego (descargar / nuevo jugador)
+  // Y el informe de juego se abre con ↑ ↑ ↓ ↓ ← → ← → Dash ♪ (difícil a propósito)
   checkCheat() {
-    const dirs = ['left', 'right', 'up', 'down'];
-    const hit = dirs.find(function (d) { return Input.pressed(d); });
+    const keys = ['left', 'right', 'up', 'down', 'dash', 'tuner'];
+    const hit = keys.find(function (d) { return Input.pressed(d); });
     if (!hit) return;
-    const seq = (this.cheatSeq || []).concat([hit]).slice(-8);
+    const seq = (this.cheatSeq || []).concat([hit]).slice(-10);
     this.cheatSeq = seq;
-    if (seq.slice(-4).join() === 'up,up,down,down') {
+    if (seq.join() === CONFIG.CHEATS.REPORT.join()) {
       this.cheatSeq = [];
       this.state = 'registro';
       this.screenTime = 0;
@@ -581,7 +582,7 @@ class Game {
       Sfx.play('select');
       return;
     }
-    if (seq.join() !== dirs.concat(dirs).join() || this.records.towerUnlocked) return;
+    if (seq.slice(-8).join() !== CONFIG.CHEATS.UNLOCK.join() || this.records.towerUnlocked) return;
     this.records.towerUnlocked = true;
     Save.writeRecords(this.records);
     Sfx.play('lifeUp');               // las opciones dejan de verse en gris
@@ -999,6 +1000,9 @@ class Game {
     if (this.mode === 'tower') SpeedRun.towerTick(this, dt);
     // Mientras la cámara muestra la llave o el portón, el juego queda congelado
     if (this.camPan) {
+      // Con la cámara mostrando algo, el mundo espera; solo se mueve lo que se muestra
+      this.level.updateGate(dt);
+      this.updateKeyDrop(dt);
       this.updateCamera(CONFIG.CAMERA_LERP);
       return;
     }
@@ -1273,30 +1277,42 @@ class Game {
   // Solo las salas con jefe tienen llave: la cámara va a mostrarla y vuelve. Tomarla
   // afina la sala y abre el portón del jefe. En las demás, las 3 corcheas ya la afinan
   startEscape() {
-  // 1. SI NO HAY JEFE: Afinamos la sala directo y salimos (sin llave)
-  if (!this.level.boss) {
-    const t = this.totem();
-    if (t) this.afinarSala(t);
-    return;
+    // Sin jefe: la sala se afina al tiro (no hay llave)
+    if (!this.level.boss) {
+      const t = this.totem();
+      if (t) this.afinarSala(t);
+      return;
+    }
+    // Con jefe: aparece la llave. La cámara va a mostrarla y, cuando llega, la llave
+    // cae del cielo (en el speedrun la cámara no va: cae al tiro)
+    this.mission = 'escape';
+    if (this.rules().MISSION_TIME <= 0) this.timeLeft = this.level.time;
+    this.keyTime = 0;
+    this.lastTick = 0;
+    const key = this.level.items.find(function (i) { return i.type === 'key'; });
+    if (key) {
+      key.hidden = false;
+      key.taken = false;
+      const pan = this.mode !== 'speedrun';
+      key.drop = { t: pan ? -CONFIG.CAMERA_PAN.GO : 0, landed: false };
+      if (pan) this.panCamera(key.x + 8, key.y + 8);
+    } else {
+      this.hasKey = true;
+    }
+    this.say(TEXT.escapeBoss, 4, this.mode !== 'speedrun');
   }
 
-  // 2. SI HAY JEFE: Hacemos la lógica de la llave
-  this.mission = 'escape';
-  if (this.rules().MISSION_TIME <= 0) this.timeLeft = this.level.time;
-  this.keyTime = 0;
-  this.lastTick = 0;
-  
-  const key = this.level.items.find(function (i) { return i.type === 'key'; });
-  if (key) {
-    key.hidden = false;
-    key.taken = false;
-    Effects.play('poof', key.x + 8, key.y + 8);
-    if (this.mode !== 'speedrun') this.panCamera(key.x + 8, key.y + 8);   // en el speedrun no se detiene
-  } else {
-    this.hasKey = true;
+  // La llave cayendo: al tocar su lugar, polvo y sonido
+  updateKeyDrop(dt) {
+    const key = this.level.items.find(function (i) { return i.type === 'key' && i.drop && !i.drop.landed; });
+    if (!key) return;
+    key.drop.t += dt;
+    if (key.drop.t < CONFIG.KEY_DROP.FALL) return;
+    key.drop.landed = true;
+    Effects.play('poof', key.x + 8, key.y + 12);
+    Sfx.play('key');
+    this.screenShake = Math.max(this.screenShake || 0, 0.12);
   }
-  this.say(TEXT.escapeBoss, 4, this.mode !== 'speedrun');
-}
 
   // Con la llave en la mano, al tocar el tótem la sala se afina
   checkTotem() {
@@ -1653,6 +1669,8 @@ class Game {
     Registro.ev('compra', { id: good.id, precio: price });
     if (good.id === 'aji') P.chiliBought = (P.chiliBought || 0) + 1;
     good.precioActual = this.priceOf(good);
+    const V = CONFIG.LORE.VENDEDORES;
+    O.lore = V[Math.floor(Math.random() * V.length)];   // el vendedor cuenta algo
     Sfx.play('cube');
   }
 
@@ -2342,16 +2360,19 @@ stems.forEach(stem => {
         if (this.bonus) this.bonus.eaten++;
         Sfx.play('note');
         Effects.play('chispa', item.x + 8, item.y + 8);
-      } else if (t === 'key' && this.mission === 'escape') {
+      } else if (t === 'key' && this.mission === 'escape' && !(item.drop && !item.drop.landed)) {
         item.taken = true;
         this.hasKey = true;
         Sfx.play('key');
         // La llave del jefe abre su portón al tiro (no hay que volver al tótem)
         if (this.level.boss && this.totem()) {
           this.afinarSala(this.totem());
-          this.level.gateAnim = CONFIG.CAMERA_PAN.GATE_TIME;
           const g = this.gateCell();
-          if (g) this.panCamera(g.x, g.y);
+          // Los barrotes suben cuando la cámara ya está mirando el portón
+          const pan = g && this.mode !== 'speedrun';
+          this.level.gateAnim = CONFIG.CAMERA_PAN.GATE_TIME;
+          this.level.gateDelay = pan ? CONFIG.CAMERA_PAN.GO : 0;
+          if (pan) this.panCamera(g.x, g.y);
         }
       } else if (t === 'scaleNote') {
         item.taken = true;
@@ -2492,17 +2513,22 @@ stems.forEach(stem => {
     }, this);
   }
 
-  // Portón cerrado: al chocarlo parpadean los instrumentos que faltan y, la primera
-  // vez, aparece a su lado el guardián del portón (un vecino que explica qué hacer)
+  // Portón cerrado: al chocarlo parpadean los instrumentos que faltan; al tercer
+  // choque, el guardián del portón (vecino que espera al lado) habla solo
   checkGate() {
     if (!this.level.hasGate || this.level.gateOpen) return;
     const p = this.player;
-    if (!this.level.rectHasTile(p.x - 2, p.y, p.w + 4, p.h, 'G')) return;
+    const touching = this.level.rectHasTile(p.x - 2, p.y, p.w + 4, p.h, 'G');
+    if (touching && !this.gateTouch) {
+      this.gateBumps++;
+      if (this.gateBumps === CONFIG.GATE_GUARD.AUTO_AFTER && this.vecinos.guard()) {
+        this.say(CONFIG.GATE_GUARD.AUTO, 7, true);
+      }
+    }
+    this.gateTouch = touching;
+    if (!touching) return;
     this.hint(TEXT.gateClosed);
     this.slotBlink = 1.5;
-    if (this.mode === 'story' && this.vecinos.addGuard(this.level, p)) {
-      this.sayMission(CONFIG.GATE_GUARD.HELLO);
-    }
   }
 
   // ---------- Música por cercanía ----------
@@ -2557,6 +2583,7 @@ updateEchoes(dt) {
 
   updateKeyFx(dt) {
     const FX = CONFIG.KEY_FX;
+    this.updateKeyDrop(dt);
     if (this.mission === 'escape') this.keyTime += dt;
     if (this.keyFxOn()) {
       this.sparkTimer -= dt;

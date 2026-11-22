@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v90',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v91',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -164,7 +164,9 @@ const CONFIG = {
   DOOR_TO_WALL: { celeste: '5', verde: '6', naranja: '7', rosa: '8', lavanda: '9', azul: '.' },
 
   // ---------- Cámara que muestra la llave y el portón (salas con jefe) ----------
-  CAMERA_PAN: { GO: 0.9, HOLD: 0.8, BACK: 0.9, LERP: 0.08, GATE_TIME: 1.2 },
+  CAMERA_PAN: { GO: 0.9, HOLD: 1.3, BACK: 0.9, LERP: 0.08, GATE_TIME: 1.1 },
+  // La llave del jefe cae del cielo (HEIGHT px en FALL s) y después flota y gira
+  KEY_DROP: { HEIGHT: 140, FALL: 0.7, BOB: 3, BOB_SPEED: 3, SPIN: 3 },
 
   // ---------- Jefes: etapa furiosa (bajo 1/3 de la vida) ----------
   BOSS_FURY: { EXTRA: 0.25, COLOR: '#ff3a5c' },
@@ -208,17 +210,48 @@ const CONFIG = {
   // ser funciones (reciben el juego) para decir cuántos instrumentos faltan.
   GATE_GUARD: {
     DX: 2, kind: 'tambor', color: '#e89a6b',
-    HELLO: '¡Oye, oye! Ese portón no se abre a empujones. Habla conmigo (▲).',
     BUBBLE: '¡Oye, tú!',
+    AUTO_AFTER: 3,          // al tercer choque contra el portón, habla solo
+    AUTO: '¿Intentaste juntar todos los instrumentos? Puedes revisar el mapa (Pausa) para ver dónde están.',
     lines: [
       function (game) {
         const left = game.instrumentos.list.filter(function (c) { return c.state !== 'caught'; }).length;
         return 'Este portón se abre cuando la sala vuelve a sonar. Te faltan ' + left + ' instrumentos: mira sus casillas arriba.';
       },
+      '¿Intentaste juntar todos los instrumentos? Puedes revisar el mapa (Pausa) para ver dónde están.',
       'Los instrumentos huyen si te ven. Acércate por detrás o córtales el paso.',
       'Cuando los juntes todos, aparece la llave del jefe. Con ella se abre este portón.'
     ],
     after: ['¡Ya suena! El portón está abierto. Suerte con el jefe.']
+  },
+
+  // ---------- Lore: lo que cuenta el juego mientras se juega ----------
+  // La ciudad de las papas vive de la música; el Silencio se la llevó y los animales,
+  // sin música, se volvieron hostiles (aura oscura). La papa es un chasqui: el mensajero
+  // que lleva la música de vuelta, sala por sala.
+  LORE: {
+    // La Fiesta (p1): frases del narrador al pasar por cada bloque x (no detienen)
+    FIESTA: [
+      { x: 8, text: 'En la ciudad de las papas nadie camina: todos bailan.' },
+      { x: 22, text: 'Aquí la música lo es todo: con ella crecen las papas y se encienden los faroles.' },
+      { x: 36, text: 'Una vez al año, en la gran fiesta, toda la ciudad toca junta.' },
+      { x: 55, text: 'Dicen que una papa sin música se arruga... ¡por eso nunca dejamos de bailar!' },
+      { x: 70, text: '¡A la plaza! Ahí toca la orquesta del barrio.' }
+    ],
+    // Pista de baile al comienzo de la fiesta (bloques x): E o Cuadrado para bailar
+    DANCE_FLOOR: { FROM: 4, TO: 9, ROW: 17 },
+    // Al despertar en la cueva (p2), después de la caída
+    CUEVA: 'La música se fue...',
+    // Escombros que siguen cayendo al llegar a la cueva
+    ROCKS: { TIME: 2.4, EVERY: 0.09 },
+    // Vendedores: una de estas frases al vender
+    VENDEDORES: [
+      'Antes cobraba en canciones. Ahora, sin música, solo me quedan monedas.',
+      'Desde que llegó el Silencio, mis clientes ni silban. ¡Gracias por comprar!',
+      'Llévalo, chasqui. Si traes la música de vuelta, la próxima te sale más barata.',
+      'Mi abuelo vendía cuerdas de charango. Dicen que el Silencio las cortó todas.',
+      'Cuando la sala vuelva a sonar, vuelvo a abrir la tienda con fiesta.'
+    ]
   },
 
   // Saludos de los vecinos en su globo (uno al azar; al hablar sigue su frase)
@@ -229,12 +262,18 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.90.0.0',
+    VERSION: '0.91.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
     BOARDS: ['speedrun_z1', 'speedrun_z2', 'speedrun_z3', 'speedrun_z4', 'speedrun_z5', 'speedrun_z6', 'speedrun_z7'],
     TOWER: 'coliseo'
+  },
+
+  // Trucos de la portada: abrir Coliseo y Speedrun; abrir el informe de juego
+  CHEATS: {
+    UNLOCK: ['left', 'right', 'up', 'down', 'left', 'right', 'up', 'down'],
+    REPORT: ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'dash', 'tuner']
   },
 
   // Informe de juego (js/registro.js). URL: la de la aplicación web de la planilla
@@ -276,20 +315,46 @@ const CONFIG = {
   // hard: el vecino difícil (HP pisotones, PRICE monedas para pagarle)
   VECINOS: [
     { id: 'z1', room: 'n2', dx: 5, kind: 'flauta', color: '#9fd3e0',
-      lines: ['Aprieta Pausa y mira el mapa: las salas que ya pisaste se van dibujando, y abajo ves los instrumentos que rescataste.'] },
+      lines: ['Aprieta Pausa y mira el mapa: las salas que ya pisaste se van dibujando, y abajo ves los instrumentos que rescataste.',
+              '¿Viste la fiesta? Estábamos todos bailando cuando la plaza se quedó muda. El Silencio llegó sin hacer ruido.',
+              'Los instrumentos se asustaron y escaparon por la ciudad. ¡Tú eres chasqui: tráelos de vuelta!'] },
     { id: 'z2', room: 'n1', dx: 5, kind: 'aplaude', color: '#f4b6c2',
-      lines: ['¡Venciste al Guardián del Tambor! Ahora vuelve a las Acequias Hondas: hay un muro amarillo que se abre con la nota Re.'] },
+      lines: ['¡Venciste al Guardián del Tambor! Ahora vuelve a las Acequias Hondas: hay un muro amarillo que se abre con la nota Re.',
+              'Antes teníamos música y los animales no nos atacaban: bailaban con nosotros en la plaza.',
+              'Sin música, a los animales les salió un aura oscura. No son malos: están tristes y asustados.'] },
     { id: 'z3', room: 'n7', dx: 5, kind: 'baila', color: '#8fbf9a',
-      lines: ['¿Te cansaste de una canción? En Pausa → Opciones puedes bajar la música o cada instrumento.'] },
+      lines: ['¿Te cansaste de una canción? En Pausa → Opciones puedes bajar la música o cada instrumento.',
+              'Este bosque cantaba solo: los pájaros, el viento, las hojas. Ahora solo se oyen mis pasos.',
+              'Las raíces todavía recuerdan las canciones. Si escuchas bien, se nota un vals muy bajito.'] },
     { id: 'z4', room: 'n10', dx: 5, kind: 'tambor', color: '#e8c58e', gift: { coins: 59 },
-      lines: ['Toma, para el camino: 59 monedas. ¡Gástalas bien!'],
+      lines: ['Toma, para el camino: 59 monedas. ¡Gástalas bien!',
+              'En el templo dorado, el toro guardaba el ritmo de la ciudad. El Silencio lo volvió furioso.'],
       after: ['¿Ya gastaste mis monedas? ¡Que suene la música!'] },
     { id: 'z5', room: 'n13', dx: 5, kind: 'cuerdas', color: '#c9b8e3',
-      lines: ['Con el planeo, vuelve al Puerto de los Molinos: en el muelle del oeste, el muro de Sol te deja cruzar el mar.'] },
+      lines: ['Con el planeo, vuelve al Puerto de los Molinos: en el muelle del oeste, el muro de Sol te deja cruzar el mar.',
+              'Cuando el Silencio pasó por aquí, la música se congeló. Dicen que los ecos quedaron atrapados en el hielo.'] },
     { id: 'z6', room: 'n16', dx: 5, kind: 'baila', color: '#9fd3e0',
-      lines: ['La cascada de la Orilla de Juncos no se escala: se sube buceando. Arriba está la Ciudadela de Niebla.'] },
+      lines: ['La cascada de la Orilla de Juncos no se escala: se sube buceando. Arriba está la Ciudadela de Niebla.',
+              'Mira el lago: refleja la ciudad como era antes, con faroles y fiesta. Por eso duele mirarlo.'] },
     { id: 'z7', room: 'n19', dx: 5, kind: 'aplaude', color: '#f7e3a1',
-      lines: ['La puerta dorada del Bosque lleva al último jefe. Solo se abre si rescataste los instrumentos de todos los niveles.'] },
+      lines: ['La puerta dorada del Bosque lleva al último jefe. Solo se abre si rescataste los instrumentos de todos los niveles.',
+              'El Silencio no odia la música: le tiene miedo. Dicen que nació antes que todas las canciones.',
+              'En la música, primero está el silencio. De ahí nace el ritmo, y del ritmo, la melodía.'] },
+    // Llegan cuando la sala vuelve a sonar (sala afinada): vienen solo por la música
+    { id: 't1', room: 'n2', dx: 9, kind: 'aplaude', color: '#ffd34d', tuned: true,
+      lines: ['¡Escuché el bajo desde mi casa y vine corriendo! ¿Bailamos?'] },
+    { id: 't2', room: 'n1', dx: 9, kind: 'baila', color: '#9fd3e0', tuned: true,
+      lines: ['Volvió la música y mi perro dejó de gruñir. ¡Gracias, chasqui!'] },
+    { id: 't3', room: 'n7', dx: 9, kind: 'flauta', color: '#c9b8e3', tuned: true,
+      lines: ['Traje mi quena: ahora que el bosque suena otra vez, quiero tocar con él.'] },
+    { id: 't4', room: 'n10', dx: 9, kind: 'cuerdas', color: '#f4b6c2', tuned: true,
+      lines: ['Subí toda la escalinata siguiendo la música. ¡Valió la pena!'] },
+    { id: 't5', room: 'n13', dx: 9, kind: 'tambor', color: '#8fbf9a', tuned: true,
+      lines: ['El hielo se derrite cuando suena el tambor. Lo sentí en los pies.'] },
+    { id: 't6', room: 'n16', dx: 9, kind: 'aplaude', color: '#f7e3a1', tuned: true,
+      lines: ['Ahora el lago refleja lo que hay de verdad: una ciudad que vuelve a bailar.'] },
+    { id: 't7', room: 'n19', dx: 9, kind: 'baila', color: '#ff9a6b', tuned: true,
+      lines: ['Ya casi. Cuando la ciudad entera suene, el Silencio no va a tener dónde esconderse.'] },
     { id: 'dificil', room: 's3', dx: 6, kind: 'baila', color: '#ff6b8a', gift: { heart: true, coins: 300 },
       lines: ['¿Quieres mi tesoro? Págame 800 monedas... o intenta pisarme tres veces.'],
       after: ['Ya tienes mi tesoro. ¡Nadie me había alcanzado!'],
@@ -326,7 +391,7 @@ const CONFIG = {
   // lo que dura. Las que no están aquí vuelven donde termina su último sonido.
   LOOPS: {
     tema_final: { bpm: 120, bars: 16 },
-    tema_n6: { bpm: 100, bars: 8 },
+    _n5: { bpm: 100, bars: 8 },          // Acequias Hondas (n5): tema e instrumentos
     zona_1: { bpm: 120, bars: 12 },      // 36 o 48 compases: múltiplo de 12
     zona_2: { bpm: 128, bars: 16 },
     zona_3: { bpm: 122, bars: 8 },
@@ -340,6 +405,7 @@ const CONFIG = {
     const z1 = { percusion: 'percusion_zona_1.m4a', teclado: 'teclado_zona_1.m4a', bajo: 'bajo_zona_1.m4a', tema: 'tema_zona_1_3voces.m4a' };
     const z2 = { percusion: 'percusion_zona_2.mp3', sintetizador: 'sintetizador_zona_2.mp3', sintetizador2: 'sintetizador2_zona_2.mp3', tema: 'tema_zona_2.mp3' };
     const z3 = { arpa: 'arpa_zona_3.mp3', mandolina: 'mandolin_zona_3.mp3', violin: 'violin_zona_3.mp3', tema: 'tema_zona_3.mp3' };
+    const pantano = { sintetizador: 'sintetizador_pantano.m4a', bajo: 'bajo_pantano.m4a', percusion: 'percusion_pantano.m4a', tema: 'pantano_tema.m4a' };
     const z4 = { percusion: 'percusion_zona_4.mp3', citara: 'citarra_zona_4.mp3', bajo: 'bajo_zona_4.mp3', tema: 'tema_zona_4.mp3' };
     const z5 = { bajo: 'bajo_zona_5.mp3', percusion: 'percusion_zona_5.mp3', arpa: 'arpa_zona_5.mp3', tema: 'tema_zona_5.mp3' };
     const z6 = { percusion: 'percusion_zona_6.mp3', sintetizador: 'sintetizador_zona_6.mp3', vientosnubes: 'vientosnubes_zona_6.mp3', tema: 'tema_zona_6.mp3' };
@@ -351,8 +417,9 @@ const CONFIG = {
       n3: { teclado2: 'teclado2_zona_1.mp3', bajo: 'bajo_zona_1.m4a', percusion: 'percusion_zona_1.m4a', tema: 'tema_zona_1_4voces.m4a' },
       n1: z2, n4: z2,
       n6: { bajo: 'bajo_n6.mp3', percusion: 'percusion_n6.mp3', teclado: 'teclado_n6.mp3', tema: 'tema_n6.mp3' },
-      n7: z3, n8: z3,
-      n9: { sintetizador: 'sintetizador_pantano.m4a', bajo: 'bajo_pantano.m4a', percusion: 'percusion_pantano.m4a', tema: 'pantano_tema.m4a' },
+      // Zona 3: el bosque suena con la música del pantano y el pantano con el vals del bosque
+      n7: pantano, n8: pantano,
+      n9: z3,
       n10: z4, n11: z4, n12: z4,
       n13: z5, n14: z5, n15: z5,
       n16: z6, n17: z6, n18: z6,
@@ -367,7 +434,7 @@ const CONFIG = {
     p1: 'La fiesta del barrio', p2: 'La noche robada',
     n2: 'Calles del Ocaso', n5: 'Agua de acequia', n3: 'Molinos del puerto',
     n1: 'Cañas al viento', n4: 'Cañas al viento', n6: 'Taller del Silencio',
-    n7: 'Raíces del bosque', n8: 'Raíces del bosque', n9: 'Barro del pantano',
+    n7: 'Barro del pantano', n8: 'Barro del pantano', n9: 'Raíces del bosque',
     n10: 'Escalinata del Sol', n11: 'Escalinata del Sol', n12: 'Escalinata del Sol',
     n13: 'Escarcha del metro sumergido', n14: 'Escarcha del metro sumergido', n15: 'Escarcha del metro sumergido',
     n16: 'Reflejos del lago', n17: 'Reflejos del lago', n18: 'Reflejos del lago',
@@ -395,9 +462,9 @@ const CONFIG = {
 
   // Música de cada jefe al cerrarse la arena (por sala)
   BOSS_MUSIC: {
-    n3: { track: 'zona1b', rate: 1.15 },
+    n3: { track: 'zona1' },                 // primer jefe: el tema de la zona 1 a 3 voces
     n6: { track: 'n6' },
-    n9: { track: 'pantano' },
+    n9: { track: 'zona3' },                 // jefe del pantano: el vals del bosque
     n12: { track: 'zona4' },
     n15: { track: 'zona5' },
     n18: { track: 'zona6' },

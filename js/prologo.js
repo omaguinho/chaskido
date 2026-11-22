@@ -480,6 +480,8 @@ const Scenes = (function () {
     Sfx.play('select');
   }
   
+  if (!this.event) this.updateLore(game);
+
   if (!this.event) {
     // SI NO ESTAMOS EN LA MISIÓN, MANTENER LA MÚSICA AL 100%
     if (game.mission !== 'collect') {
@@ -545,6 +547,7 @@ const Scenes = (function () {
   };
 
   Fiesta.prototype.startSilence = function (game) {
+    if (game.player.dancing) game.player.stopDance();
     this.event = { t: 0, crack: 0, collapsed: false };
     Sfx.play('silencio');
     game.player.vx = 0;
@@ -607,8 +610,8 @@ const Scenes = (function () {
     for (let ty = C[2]; ty <= C[3]; ty++) {
       for (let tx = C[0]; tx <= C[1]; tx++) {
         game.level.setTile(tx, ty, '.');
-        for (let i = 0; i < 2; i++) {
-          this.debris.push({ x: tx * T + rand(tx * 9 + ty + i) * T, y: ty * T + 4, vx: (rand(tx + ty * 5 + i) - 0.5) * 80,
+        for (let i = 0; i < 4; i++) {
+          this.debris.push({ x: tx * T + rand(tx * 9 + ty + i) * T, y: ty * T + 4, vx: (rand(tx + ty * 5 + i) - 0.5) * 110,
                              vy: -60 - rand(tx * 3 + i) * 80, t: 0, s: 3 + Math.floor(rand(tx + i) * 4) });
         }
       }
@@ -616,11 +619,54 @@ const Scenes = (function () {
     this.crowd.forEach(function (c) {
       if (c.x >= C[0] * T && c.x <= (C[1] + 1) * T && c.feet <= (C[2] + 1) * T) c.vy = -40 - rand(c.seed) * 60;
     });
+    // Polvo en todo el borde del hoyo
+    for (let tx = C[0]; tx <= C[1]; tx += 2) Effects.play('polvo', tx * T + 8, C[2] * T - 4, tx % 4 === 0);
     Sfx.play('collapse');
     const R = CONFIG.SFX.RUMBLE.BOSS_ROAR;
     Input.rumble(R.TIME, R.STRONG, R.WEAK);
     game.player.vy = 40;
     game.screenShake = 0.8;
+  };
+
+  // Lore de la fiesta: el narrador cuenta algo al pasar por ciertos lugares, y en la
+  // pista de baile del comienzo se baila con E o Cuadrado (el mismo baile del mix)
+  Fiesta.prototype.updateLore = function (game) {
+    const LO = CONFIG.LORE, p = game.player;
+    const tx = (p.x + p.w / 2) / T;
+    this.told = this.told || {};
+    LO.FIESTA.forEach(function (f, i) {
+      if (!this.told[i] && tx >= f.x) {
+        this.told[i] = true;
+        game.sayMission(f.text);
+      }
+    }, this);
+    const D = LO.DANCE_FLOOR;
+    this.onFloor = p.onGround && tx >= D.FROM && tx < D.TO + 1;
+    if (p.dancing && game.mission !== 'merging') {
+      if (Input.pressed('action') || !this.onFloor && p.onGround) p.stopDance();
+    } else if (this.onFloor && Input.pressed('action') && !game.modal) {
+      p.startDance();
+      Sfx.play('select');
+    }
+  };
+
+  // La pista de baile: baldosas de colores que se encienden con el ritmo
+  Fiesta.prototype.drawDanceFloor = function (ctx, game) {
+    const D = CONFIG.LORE.DANCE_FLOOR;
+    const y = (D.ROW + 1) * T;
+    const beat = Math.floor(game.level.beatPhase() * 2 + this.t * 2);
+    for (let x = D.FROM; x <= D.TO; x++) {
+      ctx.globalAlpha = (x + beat) % 2 === 0 ? 0.55 : 0.25;
+      ctx.fillStyle = FLAG_COLORS[(x + beat) % FLAG_COLORS.length];
+      ctx.fillRect(x * T + 1, y, T - 2, 3);
+    }
+    ctx.globalAlpha = 1;
+    const p = game.player;
+    if (this.onFloor && !p.dancing && !this.event) {
+      const label = tr('E: bailar');
+      const cx = p.x + p.w / 2;
+      UI.shadowText(ctx, label, cx, p.y - 22, '#ffd34d', 6, 'center');
+    }
   };
 
   Fiesta.prototype.drawSky = function (ctx, game) {
@@ -752,6 +798,7 @@ const Scenes = (function () {
 
   Fiesta.prototype.drawFront = function (ctx, game) {
     const e = this.event;
+    if (!e) this.drawDanceFloor(ctx, game);
     if (!e) drawHints(ctx, this.hints, this.t);
     if (!e && this.talker) this.drawTalkBubble(ctx, game);
     // Grietas en la plaza
@@ -844,11 +891,47 @@ const Scenes = (function () {
       this.wake += dt;
       const goal = game.level.dark;
       Light.setDark(1 - (1 - goal) * smooth((this.wake - 0.6) / 1.6));
+      if (this.wake >= 2.2 && !this.told) {         // ya despierta: el narrador
+        this.told = true;
+        game.sayMission(CONFIG.LORE.CUEVA);
+      }
     }
+    this.updateRocks(dt, game);
     updateHints(this.hints, dt, game.player);
   };
 
+  // Escombros de la plaza que siguen cayendo un rato alrededor de la papa
+  Bajo.prototype.updateRocks = function (dt, game) {
+    const R = CONFIG.LORE.ROCKS;
+    this.rocks = this.rocks || [];
+    if (this.wake >= 0 && this.wake < R.TIME) {
+      this.rockClock = (this.rockClock || 0) + dt;
+      while (this.rockClock > R.EVERY) {
+        this.rockClock -= R.EVERY;
+        const p = game.player, n = this.rocks.length + Math.floor(this.t * 100);
+        this.rocks.push({ x: p.x + (rand(n) - 0.5) * 220, y: game.camera.y - 10, vy: 40 + rand(n + 1) * 80,
+                          s: 2 + Math.floor(rand(n + 2) * 3), seed: n });
+      }
+    }
+    const L = game.level;
+    this.rocks.forEach(function (r) {
+      r.vy += 500 * dt;
+      r.y += r.vy * dt;
+      if (!r.hit && L.rectHitsSolid(r.x, r.y, r.s, r.s)) {
+        r.hit = true;
+        if (r.seed % 3 === 0) Effects.play('polvo', r.x, r.y - 6, r.seed % 2 === 0);
+      }
+    });
+    this.rocks = this.rocks.filter(function (r) { return !r.hit && r.y < game.camera.y + H + 20; });
+  };
+
   Bajo.prototype.drawFront = function (ctx) {
+    (this.rocks || []).forEach(function (r) {
+      ctx.fillStyle = r.seed % 2 ? '#6b5a4a' : '#8a7560';
+      ctx.fillRect(Math.round(r.x), Math.round(r.y), r.s, r.s);
+      ctx.fillStyle = INK;
+      ctx.fillRect(Math.round(r.x), Math.round(r.y) + r.s - 1, r.s, 1);
+    });
     drawHints(ctx, this.hints, this.t);
   };
 

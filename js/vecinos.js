@@ -4,11 +4,17 @@
 //   · también se le puede pisar (el triángulo de arriba lo avisa): igual da su regalo
 // El vecino difícil (hard) es rápido y esquivo: hay que pisarlo HP veces, o pagarle.
 class Vecinos {
-  constructor(level, roomState) {
+  // story: en la historia (el guardián del portón y los vecinos que llegan con la
+  // música solo están ahí; no en el speedrun ni en el coliseo)
+  constructor(level, roomState, story) {
     const T = CONFIG.TILE;
     this.rs = roomState;
     this.t = 0;
-    this.list = (CONFIG.VECINOS || []).filter(function (v) { return v.room === level.id; }).map(function (v, i) {
+    this.list = (CONFIG.VECINOS || []).filter(function (v) {
+      if (v.room !== level.id) return false;
+      if (v.tuned) return story && !!roomState.afinada;     // llegan cuando la sala vuelve a sonar
+      return true;
+    }).map(function (v, i) {
       const spot = Vecinos.findFloor(level, level.spawn.x + v.dx * T, level.spawn.y + CONFIG.PLAYER.H);
       return {
         def: v, i: i, x: spot.x, feet: spot.feet, vx: 0, vy: 0,
@@ -16,23 +22,32 @@ class Vecinos {
         hello: Vecinos.saludo()
       };
     });
+    if (story && level.hasGate && level.boss && !level.gateOpen) this.addGuard(level);
   }
 
-  // Guardián del portón (CONFIG.GATE_GUARD): aparece la primera vez que la papa choca el
-  // portón cerrado, a su lado. Devuelve true si apareció recién.
-  addGuard(level, p) {
-    if (this.list.some(function (v) { return v.def.guard; })) return false;
-    const G = CONFIG.GATE_GUARD, T = CONFIG.TILE;
-    const side = level.rectHasTile(p.x + p.w, p.y, 4, p.h, 'G') ? -1 : 1;   // del lado de la papa
-    const spot = Vecinos.findFloor(level, p.x + p.w / 2 + side * G.DX * T, p.y + p.h);
-    const v = {
+  // Guardián del portón (CONFIG.GATE_GUARD): espera junto al portón del jefe, del lado
+  // por donde llega la papa. Si la papa choca el portón 3 veces, le habla solo.
+  addGuard(level) {
+    const T = CONFIG.TILE, G = CONFIG.GATE_GUARD;
+    let gate = null;
+    for (let ty = level.rowCount - 1; ty >= 0 && !gate; ty--) {
+      const tx = level.rows[ty].indexOf('G');
+      if (tx >= 0) gate = { x: tx * T + T / 2, y: (ty + 1) * T };
+    }
+    if (!gate) return;
+    // Del lado de afuera de la arena del jefe (si no hay arena, del lado de la llegada)
+    const A = level.arena;
+    const side = A ? (A.left + A.right) / 2 < gate.x ? 1 : -1 : level.spawn.x < gate.x ? -1 : 1;
+    const spot = Vecinos.findFloor(level, gate.x + side * G.DX * T, gate.y);
+    if (A && spot.x > A.left && spot.x < A.right && spot.feet > A.top && spot.feet <= A.bottom + T) return;   // no dentro de la arena
+    this.list.push({
       def: Object.assign({ id: 'guardia', guard: true }, G), i: this.list.length, x: spot.x, feet: spot.feet,
       vx: 0, vy: 0, hp: 1, inv: 0, down: false, line: 0, angry: false, hello: G.BUBBLE
-    };
-    this.list.push(v);
-    Effects.play('poof', v.x, v.feet - 10);
-    Sfx.play('select');
-    return true;
+    });
+  }
+
+  guard() {
+    return this.list.find(function (v) { return v.def.guard; }) || null;
   }
 
   static saludo() {

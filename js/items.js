@@ -42,13 +42,29 @@ const Items = (function () {
     outline(ctx, x, y, 10, 10);
   }
 
+  // La llave del jefe: cae del cielo (item.drop, ver Game.startEscape) y después queda
+  // flotando y girando sobre sí misma
   function drawKey(ctx, item, time) {
-    const dy = bob(time, 4, 2, 0);
-    if (sprite(ctx, 'llave', item, time, dy)) return;
-    ctx.fillStyle = '#e9c46a';
-    ctx.fillRect(item.x + 3, item.y + 5 + dy, 5, 5);
-    ctx.fillRect(item.x + 8, item.y + 7 + dy, 6, 2);
-    ctx.fillRect(item.x + 12, item.y + 9 + dy, 2, 2);
+    const K = CONFIG.KEY_DROP;
+    const d = item.drop;
+    if (d && d.t < 0) return;                                 // todavía no cae
+    let dy = bob(time, K.BOB_SPEED, K.BOB, 0);
+    if (d && d.t < K.FALL) {
+      const k = d.t / K.FALL;
+      dy = -K.HEIGHT * (1 - k * k);                           // cae acelerando
+    }
+    const spin = Math.cos(time * K.SPIN);
+    ctx.save();
+    ctx.translate(item.x + 8, 0);
+    ctx.scale(Math.max(0.15, Math.abs(spin)) * (spin < 0 ? -1 : 1), 1);
+    ctx.translate(-(item.x + 8), 0);
+    if (!sprite(ctx, 'llave', item, time, dy)) {
+      ctx.fillStyle = '#e9c46a';
+      ctx.fillRect(item.x + 3, item.y + 5 + dy, 5, 5);
+      ctx.fillRect(item.x + 8, item.y + 7 + dy, 6, 2);
+      ctx.fillRect(item.x + 12, item.y + 9 + dy, 2, 2);
+    }
+    ctx.restore();
   }
 
   function drawCoin(ctx, item, time) {

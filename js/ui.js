@@ -699,6 +699,12 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       wrap(ctx, note, w - 20, 5).forEach(function (line, i) {
         text(ctx, line, x + 10, y + h - 22 + i * lineStep(5), '#5e8c6a', 5);
       });
+      // Lo que cuenta el vendedor al venderte algo (lore)
+      if (O.lore) {
+        wrap(ctx, '«' + tr(O.lore) + '»', w, 5).forEach(function (line, i) {
+          shadowText(ctx, line, W / 2, Math.max(2, y - 16) + i * lineStep(5), '#fbf6ec', 5, 'center');
+        });
+      }
     },
 
     // Viajar desde un tótem a cualquier sala (la lista se corre si no entra entera).
