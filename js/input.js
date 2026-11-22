@@ -17,7 +17,11 @@ const Input = (function () {
     down:   ['ArrowDown', 'KeyS'],
     item:   ['KeyQ'],
     tuner:  ['KeyF'],
-    confirm: ['Space', 'Enter', 'KeyE']
+    confirm: ['Space', 'Enter', 'KeyE'],
+    // Zampoña: se mantiene R (R1) y cada nota es una tecla del 1 al 7
+    zampona: ['KeyR'],
+    z_do: ['Digit1'], z_re: ['Digit2'], z_mi: ['Digit3'], z_fa: ['Digit4'],
+    z_sol: ['Digit5'], z_la: ['Digit6'], z_si: ['Digit7']
   };
   // Mando estándar: 0 X/A, 1 círculo/B, 2 cuadrado/X, 5 R1/RB, 7 R2/RT,
   // 9 Options/Start, 12 a 15 cruceta arriba, abajo, izquierda y derecha
@@ -33,7 +37,10 @@ const Input = (function () {
     down:   [13],
     item:   [4],
     tuner:  [3],
-    confirm: [0, 2]
+    confirm: [0, 2],
+    // Con R1 apretado: X Do, círculo Re, cuadrado Mi, triángulo Fa, L1 Sol, L2 La, R2 Si
+    zampona: [5],
+    z_do: [0], z_re: [1], z_mi: [2], z_fa: [3], z_sol: [4], z_la: [6], z_si: [7]
   };
   // Mouse: 0 clic izquierdo, 2 clic derecho
   const MOUSE = {
@@ -229,6 +236,10 @@ const Input = (function () {
     setVirtualAxis: function (x) { virtualAxis = x; },
     setRumble: function (on) { rumbleOn = !!on; },
     held: function (a) { return state[a].down; },
+    // Apaga acciones en este paso (la zampoña usa los mismos botones para sus notas)
+    mute: function (list) {
+      list.forEach(function (a) { state[a].down = false; state[a].pressed = false; state[a].released = false; });
+    },
     pressed: function (a) { return state[a].pressed; },
     released: function (a) { return state[a].released; },
     axisX: function () { return axisX; },

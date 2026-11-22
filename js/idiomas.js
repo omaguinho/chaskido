@@ -805,7 +805,11 @@ const I18N = (function () {
     ['Libéralos a todos con la quena. Cuando estén todos libres, vuelve: te doy mi zampoña.', 'Free them all with the quena. When they are all free, come back: I will give you my panpipe.', 'Liberte todos com a quena. Quando estiverem todos livres, volte: te dou minha zampoña.'],
     ['Si pisas a uno, no se pierde: vuelve a aparecer y todavía lo puedes liberar.', 'If you stomp one, it is not lost: it comes back and you can still free it.', 'Se pisar em um, ele não se perde: volta a aparecer e você ainda pode libertá-lo.'],
     ['Las siete cañas de la zampoña son las siete notas del diapasón. Tócalas y el aire te sostiene.', 'The seven pipes of the panpipe are the seven notes of the tuning fork. Play them and the air holds you up.', 'Os sete tubos da zampoña são as sete notas do diapasão. Toque-os e o ar te sustenta.'],
-    ['Ya no busco nada, chasqui. Ahora solo toco.', "I am not looking for anything now, chasqui. I just play.", 'Já não procuro nada, chasqui. Agora só toco.']
+    ['Ya no busco nada, chasqui. Ahora solo toco.', "I am not looking for anything now, chasqui. I just play.", 'Já não procuro nada, chasqui. Agora só toco.'],
+    // ---------- v95: zampoña, pulso y carteles ----------
+    ['Zona 2', 'Zone 2', 'Zona 2'],
+    ['Por aquí, a la izquierda: el Puerto de los Molinos.', 'This way, to the left: the Windmill Harbor.', 'Por aqui, à esquerda: o Porto dos Moinhos.'],
+    ['Zona 2 por aquí. El muro rojo se abre con la nota Do del diapasón.', 'Zone 2 this way. The red wall opens with the tuning fork note C.', 'Zona 2 por aqui. O muro vermelho abre com a nota Dó do diapasão.']
   ];
 
   // ---------- Moldes: frases con partes que cambian ({0}, {1}...) ----------

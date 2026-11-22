@@ -197,6 +197,8 @@ const Sfx = (function () {
     },
     save: function () { notes([G5, C6, G5 * 2], 0.08, { vol: 0.1, type: 'triangle' }); },
     tick: function () { tone({ freq: 1800, dur: 0.05, vol: 0.1, type: 'square' }); },
+    // En el pulso (indicador de pulso): dos golpecitos brillantes
+    beatOk: function () { notes([C6 * 2, G5 * 2], 0.04, { vol: 0.07, type: 'triangle' }); },
     // Diapasón: La 440 (corto) y Si 493,9 (largo), como una horquilla de metal
     // Diapasón de verdad: un golpecito metálico y una nota pura que dura y se apaga
     // lenta, con un batido suave (dos senos casi iguales) y el armónico alto del metal
@@ -333,6 +335,13 @@ const Sfx = (function () {
     tune: function (f) {
       if (!ac || muted || ac.state !== 'running') return;
       fork(f, f < 480 ? 2.2 : 1.8);
+    },
+    // Zampoña: un soplido (ruido suave) y la nota de caña, con un poco de vibrato natural
+    pipe: function (f) {
+      if (!ac || muted || ac.state !== 'running') return;
+      noise({ dur: 0.12, vol: 0.05, freq: f * 3, type: 'bandpass' });
+      tone({ freq: f, dur: 0.5, vol: 0.09, type: 'sine', attack: 0.04 });
+      tone({ freq: f * 2, dur: 0.3, vol: 0.02, type: 'triangle', attack: 0.04 });
     },
     tunerStep: function (f) {
       if (!ac || muted || ac.state !== 'running') return;

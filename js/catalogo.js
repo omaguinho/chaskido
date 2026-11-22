@@ -205,7 +205,7 @@ const CATALOGO = (function () {
     { id: 'quena',      nombre: 'Llamado de la quena', region: 1, color: '#9FE3C8', simbolo: 'Quena de caña',
       como: 'Cerca de un animal, toca Acción (E / Cuadrado): la quena lo libera. Pasa al fondo, pasea y baila como antes, sin atacar.', abre: 'El Códex y la misión del Rasgueador: liberar a todos los animales.', gana: 'El Rasgueador (Sala del Rasgueador, arriba de Calles del Ocaso)', estado: 'nuevo' },
     { id: 'zampona',    nombre: 'Zampoña',         region: 7, color: '#F2A7C9', simbolo: 'Siete cañas en escalera',
-      como: 'R1 y los botones: tocas las 7 notas del diapasón; cada nota deja un escalón de su color que dura un compás.', abre: 'Las zonas secretas en altura.', gana: 'El Rasgueador (cuando liberas a todos los animales)', estado: 'nuevo' },
+      como: 'R1 y los botones: tocas las 7 notas del diapasón; cada nota deja un escalón de su color que dura un compás.', abre: 'Las zonas secretas en altura.', gana: 'El Rasgueador (cuando liberas a todos los animales)', estado: 'hecho' },
     { id: 'tuner',      nombre: 'Diapasón',        region: 0, color: '#FFB37A', simbolo: 'Horquilla de dos puntas',
       como: 'F o Triángulo. Toque corto: suena La. Mantén: el anillo sube por las notas que sabes (La, Si, Do, Re, Mi, Fa, Sol) y suena al soltar. Con abajo al soltar, el bemol (notas blue). Hace resonar los muros de su nota.',
       abre: 'Los muros de cada nota. Viene con La; el Eco enseña Si, el Guardián del Tambor Do, el Cuy Re, el Gusano Mi, el Toro Fa y el Oso Sol. Las notas blue (Si♭, Mi♭, Sol♭) las enseñan los jefes de las salas secretas.', gana: 'Eco del Silencio (prólogo)', estado: 'hecho' }

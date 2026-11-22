@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v94',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v95',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -119,7 +119,7 @@ const CONFIG = {
       text: 'Ganaste el caracol del eco: quieta, mantén E o Cuadrado y soplas.' },
     { id: 'quena',      name: 'Quena', key: 'KeyH',  say: 'el llamado de la quena',
       text: 'Ganaste el llamado de la quena: cerca de un animal, toca E o Cuadrado y queda libre. Ahora entiendes a los animales: mira el Códex en la pausa.' },
-    { id: 'zampona',    name: 'Zampoña', key: 'KeyZ',  say: 'la zampoña',
+    { id: 'zampona',    name: 'Zampoña', key: 'KeyJ',  say: 'la zampoña',
       text: 'Ganaste la zampoña: con R1 y los botones tocas las 7 notas del diapasón; cada nota deja un escalón de su color que dura un compás.' }
   ],
 
@@ -214,7 +214,7 @@ const CONFIG = {
   // papa lo choca (js/vecinos.js). DX: a cuántos bloques del portón. Las frases pueden
   // ser funciones (reciben el juego) para decir cuántos instrumentos faltan.
   GATE_GUARD: {
-    DX: 2, kind: 'tambor', color: '#e89a6b',
+    DX: 6, kind: 'tambor', color: '#e89a6b',
     BUBBLE: '¡Oye, tú!',
     AUTO_AFTER: 3,          // al tercer choque contra el portón, habla solo
     AUTO: '¿Intentaste juntar todos los instrumentos? Puedes revisar el mapa (Pausa) para ver dónde están.',
@@ -271,6 +271,27 @@ const CONFIG = {
     RADIUS: 3, COOLDOWN: 1.5,
     FREED: { ALPHA: 0.6, WALK: 18, FLOAT: ['fish', 'hail', 'bat', 'swoop', 'dart', 'zigzag'],
              SWAY: 14, SWAY_SPEED: 0.7, BOB: 3, BOB_SPEED: 2 }
+  },
+
+  // Zampoña (js/zampona.js): con R1 (o R) apretado, cada botón toca una nota y deja un
+  // escalón de su color. La nota k (0 = Do ... 6 = Si) aparece k+1 bloques adelante y
+  // k+1 bloques más arriba que los pies: Do, Re, Mi... arman una escalera. Cada escalón
+  // dura BARS compases (al pulso de la música) y parpadea los últimos BLINK segundos.
+  ZAMPONA: {
+    NOTES: ['do', 're', 'mi', 'fa', 'sol', 'la', 'si'],
+    FREQ: { do: 523.25, re: 587.33, mi: 659.25, fa: 698.46, sol: 783.99, la: 880, si: 987.77 },
+    BARS: 1, BEATS_PER_BAR: 4, STEP_H: 6, BLINK: 0.5,
+    PAD_LABELS: ['✕', '○', '□', '△', 'L1', 'L2', 'R2'],
+    KEY_LABELS: ['1', '2', '3', '4', '5', '6', '7']
+  },
+
+  // Indicador de pulso (js/pulso.js): rombo arriba al centro con una línea celeste que
+  // hace "clic" en cada tiempo. Si tocas el diapasón o la zampoña justo en un tiempo
+  // (TOLERANCE segundos antes o después), se enciende el cuadrado verde y suena.
+  PULSO: {
+    TOLERANCE: 0.1, SIZE: 9, Y: 16,
+    LINE: '#8fe3ff', OK: '#6bd17a', OK_TIME: 0.35, CLICK_TIME: 0.12,
+    FRAME: ['#e0465a', '#ffd34d', '#3ec8c8', '#fbf6ec']   // colores del marco tejido
   },
 
   // El Rasgueador y su charango (assets/music/charango.mp3, lo pones tú):
@@ -343,7 +364,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.94.0.0',
+    VERSION: '0.95.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,

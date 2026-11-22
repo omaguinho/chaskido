@@ -94,6 +94,7 @@ class Level {
     this.switchPhase = 0;
     this.items = [];
     this.movers = [];
+    this.steps = [];          // escalones de la zampoña (js/zampona.js)
     this.crumbles = {};
     this.brokenCells = [];
     this.tuneShake = {};       // muros del diapasón que tiemblan (nota equivocada): 'x,y' -> segundos
@@ -822,6 +823,12 @@ class Level {
       if (!hits(m)) return;
       if (y + h - m.y > CONFIG.HAZARDS.LIFT_SNAP) return;
       if (this.passOneWay && m.oneWay) return;
+      boxes.push(m);
+    }, this);
+    // Escalones de la zampoña: igual que las plataformas que se mueven (solo desde arriba)
+    this.steps.forEach(function (m) {
+      if (!hits(m) || y + h - m.y > CONFIG.HAZARDS.LIFT_SNAP) return;
+      if (this.passOneWay) return;
       boxes.push(m);
     }, this);
     return boxes;

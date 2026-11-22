@@ -114,6 +114,27 @@ const Music = (function () {
     s.connect(musicOut());
     s.start(0, entry.pts.start);
     src = s;
+    trackT0 = audioCtx.currentTime;
+    trackFile = CONFIG.MUSIC.TRACKS[name] || '';
+  }
+
+  // Pulso de lo que suena: { bpm, beats } (beats = tiempos desde que partió, con
+  // decimales). null si no suena nada con BPM conocido (CONFIG.MUSIC.LOOPS).
+  let trackT0 = 0, trackFile = '';
+  function beat() {
+    if (!audioCtx || audioCtx.state !== 'running') return null;
+    const now = audioCtx.currentTime;
+    if (stemMode !== 'off' && stemStart && now >= stemStart) {
+      const f = stemFiles[stemNames[0]];
+      const L = f && loopInfo(f);
+      if (L) return { bpm: L.bpm, beats: (now - stemStart) * L.bpm / 60 };
+    }
+    if (src && current) {
+      const L = loopInfo(trackFile);
+      const r = trackRate(current);
+      if (L) return { bpm: L.bpm * r, beats: (now - trackT0) * L.bpm * r / 60 };
+    }
+    return null;
   }
 
   function play(name) {
@@ -532,7 +553,7 @@ const Music = (function () {
 
   return {
     wake: wake, keepAlive: keepAlive, play: play, stop: stop, pause: pause, resume: resume,
-    ambient: ambient, setVolume: setVolume, setNear: setNear, setRate: setRate, toggleMute: toggleMute, locked: locked,
+    ambient: ambient, beat: beat, setVolume: setVolume, setNear: setNear, setRate: setRate, toggleMute: toggleMute, locked: locked,
     setStemLevel: setStemLevel, setStemDistance: setStemDistance, collectStem: collectStem,
     hasStems: hasStems, startSearch: startSearch,
     isStemCollected: isStemCollected, allStemsCollected: allStemsCollected, playStems: playStems,

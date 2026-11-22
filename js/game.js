@@ -101,6 +101,7 @@ class Game {
     this.titleIndex = 0;
     this.menu = new PauseMenu(this);
     this.tuner = new Tuner();
+    this.zampona = new Zampona();
     this.scene = null;            // escena del prólogo (js/prologo.js)
     this.screenShake = 0;         // temblor de las escenas (segundos)
     this.newRun();
@@ -1013,6 +1014,8 @@ class Game {
     p.push = this.bossWind + p.current * CONFIG.WATER.CURRENT;
     this.prompt = this.findPrompt();
     p.hookBlocked = !!this.prompt;
+    Pulso.update(dt, this);
+    this.zampona.update(dt, this);     // con R1: los botones son notas (antes de mover a la papa)
     p.update(dt, this.level);
     this.updateChiliMusic();
     this.level.passOneWay = false;     // solo la papa atraviesa las plataformas de paso al bajar
@@ -1020,7 +1023,10 @@ class Game {
     this.keepInArena();
     this.level.pressSinkers(p);
     const tone = this.tuner.update(dt, p, this.level, this.knownNotes());
-    if (tone) this.onTone(tone);
+    if (tone) {
+      Pulso.check();
+      this.onTone(tone);
+    }
     this.updateShell(dt);
     if (p.onGround && p.material(this.level) === CONFIG.MATERIALS.barro) this.showTip('mud');
     this.level.touchCrumbles(p);
@@ -2709,6 +2715,7 @@ updateEchoes(dt) {
   // 0 panel de prueba; 1 a 6 e I: poderes; 9: sala siguiente; 8: afinar la sala;
   // O: todas las llaves de color; 7: áreas de sonido
   handleDebugKeys() {
+    if (this.zampona.active) return;    // con R apretado, los números son notas
     if (Input.keyPressed('Digit0')) this.debug = !this.debug;
     if (Input.keyPressed('Digit7')) this.showAreas = !this.showAreas;
     if (!this.debug) return;
@@ -2865,6 +2872,7 @@ updateEchoes(dt) {
     }
     UI.drawExitSigns(ctx, this);
     this.drawItems(ctx);
+    this.zampona.draw(ctx, this);
     this.instrumentos.draw(ctx);
     this.drops.draw(ctx, this.time);
     this.enemies.draw(ctx);
@@ -2905,7 +2913,10 @@ updateEchoes(dt) {
       ctx.fillStyle = 'rgba(255, 60, 90, ' + (this.hurtFlash * 1.2).toFixed(2) + ')';
       ctx.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
     }
-    if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
+    if (!(scene && scene.hudHidden)) {
+      UI.drawHud(ctx, this);
+      Pulso.draw(ctx, this);
+    }
     BossShow.drawBar(ctx, this.boss);
     if (this.mode === 'speedrun' || this.mode === 'tower') SpeedRun.drawHud(ctx, this);
     Codex.drawToast(ctx);

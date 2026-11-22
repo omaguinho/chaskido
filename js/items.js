@@ -312,6 +312,7 @@ const Items = (function () {
   }
 
   function drawSign(ctx, item) {
+    if (item.props.flecha) return drawArrowSign(ctx, item);
     if (Sprites.drawFrame(ctx, 'cartel', 0, item.x, item.y, false)) return;
     ctx.fillStyle = '#a0784a';
     ctx.fillRect(item.x + 7, item.y + 8, 2, 8);
@@ -322,7 +323,34 @@ const Items = (function () {
     ctx.fillRect(item.x + 3, item.y + 5, 10, 1);
   }
 
-  // Piedra del poder: el símbolo brilla si ya lo tienes
+  // Cartel de madera con flecha (props.flecha 'izq' o 'der' y props.rotulo): el letrero
+  // tiene punta hacia donde se va y el nombre escrito encima
+  function drawArrowSign(ctx, item) {
+    const dir = item.props.flecha === 'izq' ? -1 : 1;
+    const label = tr(item.props.rotulo || '');
+    ctx.font = gameFont(5);
+    const w = Math.max(16, Math.ceil(ctx.measureText(label).width) + 8), h = 9;
+    const cx = item.x + T / 2, x = Math.round(cx - w / 2), y = item.y - 4;
+    ctx.fillStyle = '#7a5a3a';                      // poste
+    ctx.fillRect(cx - 1, y + h, 2, item.y + T - y - h);
+    ctx.fillStyle = '#c99a62';                      // tabla con punta
+    ctx.beginPath();
+    if (dir > 0) {
+      ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w + 5, y + h / 2); ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h);
+    } else {
+      ctx.moveTo(x + w, y); ctx.lineTo(x, y); ctx.lineTo(x - 5, y + h / 2); ctx.lineTo(x, y + h); ctx.lineTo(x + w, y + h);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#2e2a47';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#a0784a';                      // vetas de la madera
+    ctx.fillRect(x + 2, y + h - 2, w - 4, 1);
+    UI.text(ctx, label, Math.round(cx), y + 1, '#2e2a47', 5, 'center');
+  }
+
+    // Piedra del poder: el símbolo brilla si ya lo tienes
   function drawPowerStone(ctx, item, has) {
     const power = item.props.poder || 'doubleJump';
     const i = WORLD.powerIndex(power);
