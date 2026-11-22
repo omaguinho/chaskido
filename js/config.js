@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v91',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v92',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -213,7 +213,20 @@ const CONFIG = {
     BUBBLE: '¡Oye, tú!',
     AUTO_AFTER: 3,          // al tercer choque contra el portón, habla solo
     AUTO: '¿Intentaste juntar todos los instrumentos? Puedes revisar el mapa (Pausa) para ver dónde están.',
+    // Lo primero que dice: una pista (no tan literal) de quién espera al otro lado
+    TEASE: {
+      n3: 'Ese de ahí dentro no es una papa... retumba como si tuviera el pecho hueco.',
+      n6: 'Algo grande y peludo corre en círculos ahí dentro. No para nunca.',
+      n9: 'El barro tiembla al otro lado. Algo cava sin descanso.',
+      n12: 'Ahí dentro algo dorado bufa y raspa el piso. Yo no entraría de frente.',
+      n15: 'Del otro lado hace un frío que muerde. Y algo grande ronca.',
+      n18: 'Algo croa en el fondo. Tan fuerte que el agua se arruga.',
+      n21: 'Allá arriba brillan alas de bronce. Cuidado con el viento.'
+    },
     lines: [
+      function (game) {
+        return CONFIG.GATE_GUARD.TEASE[game.level.id] || 'Ese de ahí dentro no es una papa...';
+      },
       function (game) {
         const left = game.instrumentos.list.filter(function (c) { return c.state !== 'caught'; }).length;
         return 'Este portón se abre cuando la sala vuelve a sonar. Te faltan ' + left + ' instrumentos: mira sus casillas arriba.';
@@ -230,8 +243,6 @@ const CONFIG = {
   // sin música, se volvieron hostiles (aura oscura). La papa es un chasqui: el mensajero
   // que lleva la música de vuelta, sala por sala.
   LORE: {
-    // Pista de baile al comienzo de la fiesta (bloques x): E o Cuadrado para bailar
-    DANCE_FLOOR: { FROM: 4, TO: 9, ROW: 17 },
     // El narrador habla una sola vez: al despertar en la cueva (p2), cuando la música
     // ya se fue. El resto del lore lo cuentan los vecinos.
     CUEVA: 'La música se fue...',
@@ -255,7 +266,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.91.0.0',
+    VERSION: '0.92.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -266,7 +277,7 @@ const CONFIG = {
   // Trucos de la portada: abrir Coliseo y Speedrun; abrir el informe de juego
   CHEATS: {
     UNLOCK: ['left', 'right', 'up', 'down', 'left', 'right', 'up', 'down'],
-    REPORT: ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'dash', 'tuner']
+    REPORT: ['up', 'down', 'left', 'right', 'up', 'down', 'left', 'right', 'up', 'down', 'left', 'right', 'up', 'down', 'left', 'right']
   },
 
   // Informe de juego (js/registro.js). URL: la de la aplicación web de la planilla

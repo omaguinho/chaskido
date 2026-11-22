@@ -708,7 +708,6 @@ const I18N = (function () {
     ['Comprar', 'Buy', 'Comprar'],
     ['P R Ó L O G O', 'P R O L O G U E', 'P R Ó L O G O'],
     // ---------- v91: lore ----------
-    ['E: bailar', 'E: dance', 'E: dançar'],
     ['¿Intentaste juntar todos los instrumentos? Puedes revisar el mapa (Pausa) para ver dónde están.', 'Did you try to gather all the instruments? Check the map (Pause) to see where they are.', 'Você tentou juntar todos os instrumentos? Dá para olhar o mapa (Pausa) para ver onde estão.'],
     ['La música se fue...', 'The music is gone...', 'A música foi embora...'],
     ['Antes cobraba en canciones. Ahora, sin música, solo me quedan monedas.', 'I used to charge in songs. Now, without music, all I have left is coins.', 'Eu cobrava em canções. Agora, sem música, só me sobram moedas.'],
@@ -733,7 +732,16 @@ const I18N = (function () {
     ['Subí toda la escalinata siguiendo la música. ¡Valió la pena!', 'I climbed all the stairs following the music. It was worth it!', 'Subi a escadaria inteira seguindo a música. Valeu a pena!'],
     ['El hielo se derrite cuando suena el tambor. Lo sentí en los pies.', 'The ice melts when the drum plays. I felt it in my feet.', 'O gelo derrete quando o tambor toca. Senti nos pés.'],
     ['Ahora el lago refleja lo que hay de verdad: una ciudad que vuelve a bailar.', 'Now the lake reflects what is really there: a city dancing again.', 'Agora o lago reflete o que existe de verdade: uma cidade que volta a dançar.'],
-    ['Ya casi. Cuando la ciudad entera suene, el Silencio no va a tener dónde esconderse.', 'Almost there. When the whole city plays, the Silence will have nowhere to hide.', 'Quase lá. Quando a cidade inteira tocar, o Silêncio não vai ter onde se esconder.']
+    ['Ya casi. Cuando la ciudad entera suene, el Silencio no va a tener dónde esconderse.', 'Almost there. When the whole city plays, the Silence will have nowhere to hide.', 'Quase lá. Quando a cidade inteira tocar, o Silêncio não vai ter onde se esconder.'],
+    // ---------- v92: el guardián del portón ----------
+    ['Ese de ahí dentro no es una papa...', "Whoever's in there is no potato...", 'Esse aí dentro não é uma batata...'],
+    ['Ese de ahí dentro no es una papa... retumba como si tuviera el pecho hueco.', "Whoever's in there is no potato... it booms like it has a hollow chest.", 'Esse aí dentro não é uma batata... retumba como se tivesse o peito oco.'],
+    ['Algo grande y peludo corre en círculos ahí dentro. No para nunca.', 'Something big and furry runs in circles in there. It never stops.', 'Tem algo grande e peludo correndo em círculos lá dentro. Não para nunca.'],
+    ['El barro tiembla al otro lado. Algo cava sin descanso.', 'The mud trembles on the other side. Something keeps digging.', 'A lama treme do outro lado. Alguma coisa cava sem parar.'],
+    ['Ahí dentro algo dorado bufa y raspa el piso. Yo no entraría de frente.', "Something golden snorts and scrapes the floor in there. I wouldn't go in head-on.", 'Lá dentro algo dourado bufa e raspa o chão. Eu não entraria de frente.'],
+    ['Del otro lado hace un frío que muerde. Y algo grande ronca.', "It's biting cold on the other side. And something big is snoring.", 'Do outro lado faz um frio que morde. E algo grande ronca.'],
+    ['Algo croa en el fondo. Tan fuerte que el agua se arruga.', 'Something croaks down below. So loud the water wrinkles.', 'Algo coaxa lá no fundo. Tão forte que a água enruga.'],
+    ['Allá arriba brillan alas de bronce. Cuidado con el viento.', 'Bronze wings shine up there. Watch out for the wind.', 'Lá em cima brilham asas de bronze. Cuidado com o vento.']
   ];
 
   // ---------- Moldes: frases con partes que cambian ({0}, {1}...) ----------
@@ -766,9 +774,6 @@ const I18N = (function () {
     ['Sello de poder: se abre con {0}.', 'Power seal: it opens with {0}.', 'Selo de poder: abre com {0}.'],
     ['Piedra del poder: {0}. Ya lo tienes.', 'Power stone: {0}. You already have it.', 'Pedra do poder: {0}. Você já tem.'],
     ['Piedra del poder: {0}. Todavía no lo tienes.', 'Power stone: {0}. You don\'t have it yet.', 'Pedra do poder: {0}. Você ainda não tem.'],
-    ['Dejaste la misión de {0}. Vuelve a su tótem para empezarla otra vez.',
-     'You left the mission in {0}. Go back to its totem to start it again.',
-     'Você deixou a missão de {0}. Volte ao totem dela para começar de novo.'],
     ['Ese muro suena en {0}. Todavía no aprendiste esa nota: vuelve cuando la tengas.',
      'That wall sounds in {0}. You haven\'t learned that note yet: come back when you have it.',
      'Esse muro soa em {0}. Você ainda não aprendeu essa nota: volte quando a tiver.'],

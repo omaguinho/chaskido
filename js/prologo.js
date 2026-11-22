@@ -480,8 +480,6 @@ const Scenes = (function () {
     Sfx.play('select');
   }
   
-  if (!this.event) this.updateDanceFloor(game);
-
   if (!this.event) {
     // SI NO ESTAMOS EN LA MISIÓN, MANTENER LA MÚSICA AL 100%
     if (game.mission !== 'collect') {
@@ -547,7 +545,6 @@ const Scenes = (function () {
   };
 
   Fiesta.prototype.startSilence = function (game) {
-    if (game.player.dancing) game.player.stopDance();
     this.event = { t: 0, crack: 0, collapsed: false };
     Sfx.play('silencio');
     game.player.vx = 0;
@@ -626,39 +623,6 @@ const Scenes = (function () {
     Input.rumble(R.TIME, R.STRONG, R.WEAK);
     game.player.vy = 40;
     game.screenShake = 0.8;
-  };
-
-  // Pista de baile del comienzo: se baila con E o Cuadrado (el mismo baile del mix)
-  Fiesta.prototype.updateDanceFloor = function (game) {
-    const p = game.player;
-    const tx = (p.x + p.w / 2) / T;
-    const D = CONFIG.LORE.DANCE_FLOOR;
-    this.onFloor = p.onGround && tx >= D.FROM && tx < D.TO + 1;
-    if (p.dancing && game.mission !== 'merging') {
-      if (Input.pressed('action') || !this.onFloor && p.onGround) p.stopDance();
-    } else if (this.onFloor && Input.pressed('action') && !game.modal) {
-      p.startDance();
-      Sfx.play('select');
-    }
-  };
-
-  // La pista de baile: baldosas de colores que se encienden con el ritmo
-  Fiesta.prototype.drawDanceFloor = function (ctx, game) {
-    const D = CONFIG.LORE.DANCE_FLOOR;
-    const y = (D.ROW + 1) * T;
-    const beat = Math.floor(game.level.beatPhase() * 2 + this.t * 2);
-    for (let x = D.FROM; x <= D.TO; x++) {
-      ctx.globalAlpha = (x + beat) % 2 === 0 ? 0.55 : 0.25;
-      ctx.fillStyle = FLAG_COLORS[(x + beat) % FLAG_COLORS.length];
-      ctx.fillRect(x * T + 1, y, T - 2, 3);
-    }
-    ctx.globalAlpha = 1;
-    const p = game.player;
-    if (this.onFloor && !p.dancing && !this.event) {
-      const label = tr('E: bailar');
-      const cx = p.x + p.w / 2;
-      UI.shadowText(ctx, label, cx, p.y - 22, '#ffd34d', 6, 'center');
-    }
   };
 
   Fiesta.prototype.drawSky = function (ctx, game) {
@@ -790,7 +754,6 @@ const Scenes = (function () {
 
   Fiesta.prototype.drawFront = function (ctx, game) {
     const e = this.event;
-    if (!e) this.drawDanceFloor(ctx, game);
     if (!e) drawHints(ctx, this.hints, this.t);
     if (!e && this.talker) this.drawTalkBubble(ctx, game);
     // Grietas en la plaza

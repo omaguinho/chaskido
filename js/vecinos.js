@@ -177,10 +177,13 @@ class Vecinos {
 
   draw(ctx, game) {
     const p = game.player;
+    // Bailan si la sala suena (afinada, o una sala con su música de siempre); si no,
+    // quietos: así se nota qué salas todavía no tienen música
+    const music = !!this.rs.afinada || !game.isMissionRoom(game.level);
     this.list.forEach(function (v) {
       if (v.down) return;
       if (v.inv > 0 && Math.floor(v.inv * 12) % 2 === 0) return;     // parpadea al recibir un golpe
-      Scenes.drawNpc(ctx, v.x, v.feet, v.def.kind, v.def.color, this.t, (this.t * 2) % 1, Math.abs(v.vx) < 5, v.i + 3);
+      Scenes.drawNpc(ctx, v.x, v.feet, v.def.kind, v.def.color, this.t, (this.t * 2) % 1, !music && Math.abs(v.vx) < 5, v.i + 3);
       // Triángulo de pisotón (rojo, apunta hacia abajo); el guardián no se pisa
       if (!v.def.guard) this.drawStompMark(ctx, v);
       this.drawBubble(ctx, v, this.near(v, p));

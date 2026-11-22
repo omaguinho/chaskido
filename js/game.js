@@ -33,7 +33,6 @@ const TEXT = {
   sealNeeds: function (p) { return 'Sello de poder: se abre con ' + p + '.'; },
   stone: function (p, has) { return 'Piedra del poder: ' + p + (has ? '. Ya lo tienes.' : '. Todavía no lo tienes.'); },
   notBuilt: 'Este paso lleva a una sala que todavía está en obras.',
-  missionLeft: function (room) { return 'Dejaste la misión de ' + room + '. Vuelve a su tótem para empezarla otra vez.'; },
   missionKept: 'La misión sigue: tus instrumentos te esperan.',
   // wall: la nota del muro; known: si ya se aprendió
   tuneWrong: function (wall, known) {
@@ -567,12 +566,12 @@ class Game {
   // El coliseo se abre al terminar la historia en Normal o Difícil
   // Truco para probar: en la portada, izquierda, derecha, arriba, abajo (dos veces)
   // abre el Coliseo y el Speedrun sin terminar la historia
-  // Y el informe de juego se abre con ↑ ↑ ↓ ↓ ← → ← → Dash ♪ (difícil a propósito)
+  // Y el informe de juego se abre con ↑ ↓ ← → cuatro veces (difícil a propósito)
   checkCheat() {
-    const keys = ['left', 'right', 'up', 'down', 'dash', 'tuner'];
+    const keys = ['left', 'right', 'up', 'down'];
     const hit = keys.find(function (d) { return Input.pressed(d); });
     if (!hit) return;
-    const seq = (this.cheatSeq || []).concat([hit]).slice(-10);
+    const seq = (this.cheatSeq || []).concat([hit]).slice(-CONFIG.CHEATS.REPORT.length);
     this.cheatSeq = seq;
     if (seq.join() === CONFIG.CHEATS.REPORT.join()) {
       this.cheatSeq = [];
@@ -1111,8 +1110,8 @@ class Game {
     }
     const horizontal = e.side === 'left' || e.side === 'right';
     const offset = horizontal ? p.y + p.h - e.rect.y : p.x - e.rect.x;
-    const left = this.missionSnapshot() && e.goes !== this.level.id ? WORLD.label(this.level.id) : null;
-    this.fade = { t: 0, phase: 'out', to: e.goes, left: left,
+    this.missionSnapshot();         // los instrumentos atrapados quedan guardados
+    this.fade = { t: 0, phase: 'out', to: e.goes,
                   arrive: { exit: e, from: this.level.id, offset: offset, vx: p.vx, vy: p.vy } };
     return true;
   }
@@ -1132,7 +1131,6 @@ class Game {
     if (F.phase === 'out' && F.t >= CONFIG.GAME.FADE_TIME) {
       if (F.to) this.loadRoom(F.to, F.arrive);
       else if (F.load) F.load();
-      if (F.left) this.say(TEXT.missionLeft(F.left), 5);
       this.startRoomMusic();
       F.phase = 'in';
       F.t = 0;
