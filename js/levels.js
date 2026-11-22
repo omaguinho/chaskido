@@ -2906,7 +2906,7 @@ const LEVELS = [
     pitch: -3,   // Blues en La mayor · 101 bpm
     bpm: 120,
     secret: true,
-    boss: { type: 'charanguero', gives: 'quena' },
+    boss: { type: 'charanguero' },   // no da poder: queda como vecino y da una pista
     exits: [{ x: 8, y: 20, w: 4, h: 2, goes: 'n2' }],
     props: {
       '13,19': { texto: 'Sala del Rasgueador. Al cruzar la línea roja, la arena se cierra.' }
@@ -2970,8 +2970,9 @@ const LEVELS = [
     pitch: 0,
     bpm: 120,
     secret: true,
-    // El Rasgueador vuelve más fuerte; solo está si ya lo venciste en su sala de la zona 1 (j1)
-    boss: { type: 'charanguero2', after: 'j1' },
+    // El Rasgueador vuelve más fuerte; solo está si ya lo venciste en su sala de la zona 1 (j1).
+    // Al ganarle da la quena y pide liberar a todos los animales (después da la zampoña)
+    boss: { type: 'charanguero2', after: 'j1', gives: 'quena' },
     exits: [{ x: 0, y: 13, w: 1, h: 3, goes: 'n20' }],
     props: {
       '6,15': { texto: 'Mirador del Rasgueador. Se oye un charango entre la niebla.' }

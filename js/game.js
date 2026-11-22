@@ -2879,7 +2879,6 @@ updateEchoes(dt) {
     this.vecinos.draw(ctx, this);
     if (this.boss) {
       this.boss.draw(ctx);
-      this.boss.drawWarn(ctx);
     }
     BossShow.drawWorld(ctx);
 

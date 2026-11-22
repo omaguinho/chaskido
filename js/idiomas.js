@@ -809,7 +809,13 @@ const I18N = (function () {
     // ---------- v95: zampoña, pulso y carteles ----------
     ['Zona 2', 'Zone 2', 'Zona 2'],
     ['Por aquí, a la izquierda: el Puerto de los Molinos.', 'This way, to the left: the Windmill Harbor.', 'Por aqui, à esquerda: o Porto dos Moinhos.'],
-    ['Zona 2 por aquí. El muro rojo se abre con la nota Do del diapasón.', 'Zone 2 this way. The red wall opens with the tuning fork note C.', 'Zona 2 por aqui. O muro vermelho abre com a nota Dó do diapasão.']
+    ['Zona 2 por aquí. El muro rojo se abre con la nota Do del diapasón.', 'Zone 2 this way. The red wall opens with the tuning fork note C.', 'Zona 2 por aqui. O muro vermelho abre com a nota Dó do diapasão.'],
+    // ---------- v96 ----------
+    ['Buen golpe, chasqui. Hace tiempo que nadie me ganaba.', 'Nice hit, chasqui. Nobody had beaten me in a long time.', 'Belo golpe, chasqui. Fazia tempo que ninguém me vencia.'],
+    ['Dicen que en la Ciudadela de Niebla todavía se escucha un charango. Si quieres saber más, búscame por allá.', 'They say a charango can still be heard in the Mist Citadel. If you want to know more, look for me there.', 'Dizem que na Cidadela da Névoa ainda se ouve um charango. Se quiser saber mais, me procure por lá.'],
+    ['Por eso te di mi quena: libéralos a todos con ella. Cuando estén todos libres, vuelve: te doy mi zampoña.', 'That is why I gave you my quena: free them all with it. When they are all free, come back: I will give you my panpipe.', 'Por isso te dei minha quena: liberte todos com ela. Quando estiverem todos livres, volte: te dou minha zampoña.'],
+    ['Arriba de Calles del Ocaso, donde solo se llega con doble salto, toca el Rasgueador. Dicen que guarda una quena... pero no se la da a cualquiera.', 'Above Sunset Streets, where only a double jump reaches, the Strummer plays. They say he keeps a quena... but he does not give it to just anyone.', 'Acima das Ruas do Ocaso, onde só se chega com pulo duplo, toca o Rasgueador. Dizem que ele guarda uma quena... mas não a dá para qualquer um.'],
+    ['El Rasgueador Maestro (Mirador del Rasgueador, en el Templo sin Nombre)', "The Master Strummer (Strummer's Lookout, in the Nameless Temple)", 'O Rasgueador Mestre (Mirante do Rasgueador, no Templo sem Nome)']
   ];
 
   // ---------- Moldes: frases con partes que cambian ({0}, {1}...) ----------

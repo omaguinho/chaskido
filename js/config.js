@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v95',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v96',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -78,8 +78,6 @@ const CONFIG = {
     normal: { REST_SCALE: 1 },
     hard:   { REST_SCALE: 1, REST_MAX: 1.0 }
   },
-  // Aviso al empezar un ataque: anillo blanco que se abre (TIME s)
-  BOSS_WARN: { TIME: 0.45, ALPHA: 0.8 },
 
   // Nueva partida +: se desbloquea con el final de Difícil; empieza con estas habilidades
   NEW_GAME_PLUS_ABILITIES: ['dash', 'hook', 'tuner'],
@@ -364,7 +362,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.95.0.0',
+    VERSION: '0.96.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -445,17 +443,18 @@ const CONFIG = {
     // Habla de los jefes secretos y de lo que dan
     { id: 'sabio', name: 'Don Huamantanga', room: 'n5', dx: 8, kind: 'flauta', color: '#e8c58e',
       lines: ['Hay jefes que no están en el camino. Se esconden, pero lo que dan vale la pena.',
-              'Arriba de Calles del Ocaso, donde solo se llega con doble salto, toca el Rasgueador. Si le ganas, te da la quena: con ella los animales quedan libres.',
+              'Arriba de Calles del Ocaso, donde solo se llega con doble salto, toca el Rasgueador. Dicen que guarda una quena... pero no se la da a cualquiera.',
               'Al este de estas acequias duerme un tótem de piedra. Dicen que guarda un corazón más.',
               'En las geodas, en el granizo y en el fondo del lago hay otros guardianes. Cada uno enseña algo que no se aprende en otro lado.'] },
     // El Rasgueador, ya vencido, se queda en su sala. En la zona 1 da pistas (se va cuando
-    // lo vences en la zona 7); en la zona 7 pide liberar a todos los animales y da la zampoña.
+    // lo vences en la zona 7); en la zona 7 te da la quena (premio de la pelea), pide liberar a
+    // todos los animales y, al cumplir, da la zampoña.
     // bossBeaten: aparece cuando el jefe de la sala está vencido; sprite: se dibuja con ese dibujo
     { id: 'rasgueador', name: 'El Rasgueador', room: 'j1', dx: 17, sprite: 'charanguero_tocar', bossBeaten: true,
       goneAfter: 'j7', noStomp: true,
-      lines: ['Buen golpe, chasqui. Quédate con la quena: yo ya no la necesito... por ahora.',
+      lines: ['Buen golpe, chasqui. Hace tiempo que nadie me ganaba.',
               'Ando buscando algo. No te voy a decir qué, pero tengo mis razones.',
-              'Dicen que en la Ciudadela de Niebla todavía se escucha un charango. Quizás nos veamos por allá.'] },
+              'Dicen que en la Ciudadela de Niebla todavía se escucha un charango. Si quieres saber más, búscame por allá.'] },
     { id: 'rasgueador7', name: 'El Rasgueador', room: 'j7', dx: 17, sprite: 'charanguero_tocar', bossBeaten: true,
       noStomp: true, gift: { power: 'zampona', when: function (game) { return Codex.freedLeft(game) === 0; } },
       lines: [
@@ -463,7 +462,7 @@ const CONFIG = {
           if (Codex.freedLeft(game) === 0) return '¡Todos libres! ¿Escuchas? Así sonaba la ciudad. Toma mi zampoña: te la ganaste.';
           return 'Me ganaste otra vez. Ahora te digo lo que buscaba: a los animales. Antes bailaban con mis cuerdas.';
         },
-        'Libéralos a todos con la quena. Cuando estén todos libres, vuelve: te doy mi zampoña.',
+        'Por eso te di mi quena: libéralos a todos con ella. Cuando estén todos libres, vuelve: te doy mi zampoña.',
         function (game) {
           const C = Codex.freed(game);
           return 'Llevas ' + C.got + ' de ' + C.total + ' animales liberados.';
@@ -548,7 +547,7 @@ const CONFIG = {
       p2: { teclado: 'teclado_zona_1.m4a', bajo: 'bajo_zona_1.m4a', percusion: 'percusion_zona_1.m4a', tema: 'tema_zona_1_3voces.m4a' },
       n2: z1,
       n5: { percusion: 'percusion_n5.mp3', kalimba: 'kalimba_n5.mp3', violin: 'violin_n5.mp3', tema: 'tema_n5.mp3' },
-      n3: { teclado2: 'teclado2_zona_1.mp3', bajo: 'bajo_zona_1.m4a', percusion: 'percusion_zona_1.m4a', tema: 'tema_zona_1_4voces.m4a' },
+      n3: z1,                                // Guardián del Tambor: los mismos instrumentos del nivel 1
       n1: z2, n4: z2,
       n6: { bajo: 'bajo_n6.mp3', percusion: 'percusion_n6.mp3', teclado: 'teclado_n6.mp3', tema: 'tema_n6.mp3' },
       // Zona 3: el bosque suena con la música del pantano y el pantano con el vals del bosque
@@ -596,7 +595,8 @@ const CONFIG = {
 
   // Música de cada jefe al cerrarse la arena (por sala)
   BOSS_MUSIC: {
-    n3: { track: 'zona1' },                 // primer jefe: el tema de la zona 1 a 3 voces
+    p2: { track: 'main' },                  // Eco del Silencio (prólogo): zona 1 a 3 voces
+    n3: { track: 'main' },                  // Guardián del Tambor: zona 1 a 3 voces
     n6: { track: 'n6' },
     n9: { track: 'zona3' },                 // jefe del pantano: el vals del bosque
     n12: { track: 'zona4' },
