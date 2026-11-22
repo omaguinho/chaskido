@@ -240,7 +240,7 @@ const CONFIG = {
   // Informe de juego (js/registro.js). URL: la de la aplicación web de la planilla
   // (Apps Script, termina en /exec); vacía = solo se guarda en el aparato.
   REGISTRO: {
-    URL: '',
+    URL: 'https://script.google.com/macros/s/AKfycbym1_Tx3TC1cgSdZudGKlCJu2IteD9ZqMOarWxL-9beVvTtTL2aqBfyd7eGcvGXX04D/exec',
     SEND_DEFAULT: true,     // "Datos anónimos: Sí" en Opciones
     IDLE: 60,               // segundos sin tocar nada = una pausa larga
     ABANDON: 300,           // segundos sin tocar nada = abandono (se cierra la sesión)
