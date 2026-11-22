@@ -485,6 +485,16 @@ const Registro = (function () {
     return true;
   }
 
+  // Prueba de conexión: manda una fila corta a la planilla, sin esperar una partida
+  function test() {
+    if (!R.URL) return Promise.resolve('Falta la dirección de la planilla (CONFIG.REGISTRO.URL).');
+    const data = { resumen: { sesion: 'prueba', jugador: playerId(false), version: CONFIG.GAME_VERSION,
+      fecha: new Date().toISOString(), fin: 'prueba de conexión', dispositivo: device() } };
+    return fetch(R.URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) })
+      .then(function () { return 'Prueba enviada: en unos segundos debe aparecer una fila "prueba".'; })
+      .catch(function () { return 'No se pudo enviar: sin internet o la dirección está mal.'; });
+  }
+
   // "Nuevo jugador" (expo): cierra la sesión y la siguiente cuenta como otra persona
   function newPlayer() {
     end('nuevo jugador');
@@ -504,5 +514,5 @@ const Registro = (function () {
   });
   window.addEventListener('online', function () { send(); });
 
-  return { tick: tick, ev: ev, end: end, send: send, download: download, newPlayer: newPlayer, last: last, text: text };
+  return { tick: tick, ev: ev, end: end, send: send, test: test, download: download, newPlayer: newPlayer, last: last, text: text };
 })();

@@ -597,6 +597,12 @@ class Game {
       Registro.newPlayer();
       this.registroNote = 'Listo: la próxima partida es de otra persona.';
       Sfx.play('save');
+    } else if (Input.pressed('dash')) {
+      const self = this;
+      this.registroNote = 'Enviando prueba…';
+      Registro.send();                                   // y lo que haya en cola
+      Registro.test().then(function (msg) { self.registroNote = msg; });
+      Sfx.play('select');
     } else if (Input.pressed('pause')) {
       this.state = 'title';
       this.screenTime = 0;

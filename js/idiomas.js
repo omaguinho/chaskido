@@ -676,7 +676,7 @@ const I18N = (function () {
     ['¡Ya suena! El portón está abierto. Suerte con el jefe.', "It's playing! The gate is open. Good luck with the boss.", 'Já está tocando! O portão está aberto. Boa sorte com o chefe.'],
     ['¡Guardado!', 'Saved!', 'Salvo!'], ['Datos anónimos', 'Anonymous data', 'Dados anônimos'],
     ['Informe de juego', 'Play report', 'Relatório de jogo'],
-    ['Aceptar: descargar   ♪: nuevo jugador   Pausa: volver', 'Confirm: download   ♪: new player   Pause: back', 'Aceptar: baixar   ♪: novo jogador   Pausa: voltar'],
+    ['Aceptar: descargar   ♪: nuevo jugador   Dash: probar envío   Pausa: volver', 'Confirm: download   ♪: new player   Dash: test sending   Pause: back', 'Aceptar: baixar   ♪: novo jogador   Dash: testar envio   Pausa: voltar'],
     ['La fiesta del barrio', 'The Neighborhood Party', 'A festa do bairro'],
     ['La noche robada', 'The Stolen Night', 'A noite roubada'],
     ['Agua de acequia', 'Canal Water', 'Água do canal'],

@@ -869,7 +869,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       ] : ['Todavía no hay sesiones.'];
       lines.forEach(function (l, i) { text(ctx, l, 20, 48 + i * 14, '#fbf6ec', 6); });
       if (note) text(ctx, note, W / 2, 118, '#7be0a0', 6, 'center');
-      text(ctx, 'Aceptar: descargar   ♪: nuevo jugador   Pausa: volver', W / 2, H - 14, '#6b6580', 5, 'center');
+      text(ctx, 'Aceptar: descargar   ♪: nuevo jugador   Dash: probar envío   Pausa: volver', W / 2, H - 14, '#6b6580', 5, 'center');
     },
 
     drawTitle(ctx, time, items, index, plus, towerOpen) {
