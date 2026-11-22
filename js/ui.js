@@ -701,7 +701,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       });
       // Lo que cuenta el vendedor al venderte algo (lore)
       if (O.lore) {
-        wrap(ctx, '«' + tr(O.lore) + '»', w, 5).forEach(function (line, i) {
+        wrap(ctx, (O.loreName ? O.loreName + ': ' : '') + '«' + tr(O.lore) + '»', w, 5).forEach(function (line, i) {
           shadowText(ctx, line, W / 2, Math.max(2, y - 16) + i * lineStep(5), '#fbf6ec', 5, 'center');
         });
       }

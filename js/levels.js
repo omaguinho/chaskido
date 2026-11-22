@@ -2904,7 +2904,7 @@ const LEVELS = [
     pitch: -3,   // Blues en La mayor · 101 bpm
     bpm: 120,
     secret: true,
-    boss: { type: 'charanguero' },
+    boss: { type: 'charanguero', gives: 'quena' },
     exits: [{ x: 8, y: 20, w: 4, h: 2, goes: 'n2' }],
     props: {
       '13,19': { texto: 'Sala del Rasgueador. Al cruzar la línea roja, la arena se cierra.' }

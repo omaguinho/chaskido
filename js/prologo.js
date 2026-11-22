@@ -475,7 +475,9 @@ const Scenes = (function () {
   updateHints(this.hints, dt, game.player);
   // Hablar con la vecina: arriba (cruceta o flecha) cuando estás a su lado
   if (this.nearTalker(game) && Input.pressed('up') && !game.modal) {
-    game.say(TALK_LINES[this.talkIndex % TALK_LINES.length], 6, true);
+    const name = CONFIG.CODEX.FIESTA_NAME;
+    game.say(name + ': ' + tr(TALK_LINES[this.talkIndex % TALK_LINES.length]), 6, true);
+    Codex.papa(game, 'fiesta', name);
     this.talkIndex++;
     Sfx.play('select');
   }

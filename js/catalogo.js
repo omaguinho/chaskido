@@ -200,6 +200,8 @@ const CATALOGO = (function () {
       como: 'Abajo dos veces: la papa se achica; otra vez para crecer.', abre: 'Túneles de un bloque.', gana: 'Pez Linterna Abisal (Fondo Abisal)', estado: 'nuevo' },
     { id: 'shell',      nombre: 'Caracol del eco', region: 7, color: '#F7E3A1', simbolo: 'Espiral',
       como: 'Quieta, mantén Acción (E / Cuadrado): soplas el caracol. Los enemigos cercanos quedan hipnotizados 2 segundos.', abre: 'Plataformas y puertas escondidas en la niebla.', gana: 'Cóndor de Bronce (Mirador del Eco)', estado: 'nuevo' },
+    { id: 'quena',      nombre: 'Llamado de la quena', region: 1, color: '#9FE3C8', simbolo: 'Quena de caña',
+      como: 'Cerca de un animal, toca Acción (E / Cuadrado): la quena lo calma. Deja de atacar, baila y se puede pisar como plataforma un rato.', abre: 'El Códex: los animales calmados o vencidos se anotan en la pausa.', gana: 'El Rasgueador (Sala del Rasgueador, arriba de Calles del Ocaso)', estado: 'nuevo' },
     { id: 'tuner',      nombre: 'Diapasón',        region: 0, color: '#FFB37A', simbolo: 'Horquilla de dos puntas',
       como: 'F o Triángulo. Toque corto: suena La. Mantén: el anillo sube por las notas que sabes (La, Si, Do, Re, Mi, Fa, Sol) y suena al soltar. Con abajo al soltar, el bemol (notas blue). Hace resonar los muros de su nota.',
       abre: 'Los muros de cada nota. Viene con La; el Eco enseña Si, el Guardián del Tambor Do, el Cuy Re, el Gusano Mi, el Toro Fa y el Oso Sol. Las notas blue (Si♭, Mi♭, Sol♭) las enseñan los jefes de las salas secretas.', gana: 'Eco del Silencio (prólogo)', estado: 'hecho' }
@@ -514,7 +516,7 @@ const CATALOGO = (function () {
       que: 'Prólogo. Flota y llena la arena de silencios: A, espiral; B, columnas que caen. Después se estrella y queda recalentado.' },
     { id: 'bombo',       region: 1, nombre: 'Guardián del Tambor',   da: 'doubleJump', llave: 'celeste', estado: 'hecho', sala: 'n3', mmx: 'Chill Penguin', apodo: 'el redoble que no deja pasar',
       que: 'A: rueda de pared a pared. B: se cuelga del techo y su redoble levanta un ventarrón.' },
-    { id: 'charanguero', region: 1, nombre: 'El Rasgueador',         da: 'monedas',    estado: 'hecho', sala: 'j1', mmx: 'Armored Armadillo', apodo: 'cuerdas sin dueño',
+    { id: 'charanguero', region: 1, nombre: 'El Rasgueador',         da: 'quena',    estado: 'hecho', sala: 'j1', mmx: 'Armored Armadillo', apodo: 'cuerdas sin dueño',
       que: 'A: se enrolla como bola y rebota. B: dispara notas.' },
     { id: 'huaca',       region: 1, nombre: 'Tótem de Piedra',       da: 'corazon',    estado: 'hecho', sala: 'j2', mmx: 'Boomer Kuwanger', apodo: 'la corona que siempre vuelve',
       que: 'A: desaparece y reaparece junto a la papa. B: lanza su corona como bumerán.' },

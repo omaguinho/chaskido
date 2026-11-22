@@ -1263,8 +1263,9 @@ class Shots {
 
 class Enemies {
   constructor(level) {
-    this.list = level.enemySpawns.map(function (s) {
+    this.list = level.enemySpawns.map(function (s, i) {
       const e = new Enemy(s.type, s.tx, s.ty);
+      e.spawnIndex = i;                     // para el Códex: cada animal cuenta una vez
       e.props = s.props || {};
       e.inArena = level.insideArena(e);
       e.calm = (level.region || 1) <= CONFIG.PALOMA.CALM_UNTIL_REGION;
@@ -1276,6 +1277,8 @@ class Enemies {
 
   update(dt, level, player, camera) {
     this.list.forEach(function (e) {
+      // Calmado por la quena: baila quieto, no daña y se puede pisar
+      if (e.calmed > 0) { e.calmed -= dt; e.animTime += dt; return; }
       // Hipnotizado por el caracol: no se mueve ni dispara
       if (e.frozen > 0) { e.frozen -= dt; return; }
       e.update(dt, level, player);
@@ -1353,6 +1356,16 @@ class Enemies {
           if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
         }
         ctx.stroke();
+      }
+      if (e.calmed > 0 && e.state !== 'dead') {
+        // Calmado por la quena: una nota que sube y un brillo verde agua bajo los pies
+        const cx = e.x + e.w / 2, k = (e.calmed * 1.5) % 1;
+        ctx.globalAlpha = 1 - k;
+        UI.text(ctx, '♪', cx + Math.sin(e.calmed * 4) * 3, e.y - 6 - k * 10, CONFIG.SKINS.quena, 7, 'center');
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = CONFIG.SKINS.quena;
+        ctx.fillRect(e.x, e.y + e.h - 1, e.w, 1);
+        ctx.globalAlpha = 1;
       }
     });
     this.shots.draw(ctx);

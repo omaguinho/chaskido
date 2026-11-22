@@ -893,6 +893,7 @@ class Game {
     }
     this.time += dt;
     this.slotBlink = Math.max(0, (this.slotBlink || 0) - dt);
+    Codex.update(dt);
     Registro.tick(this, dt);                    // informe de juego (js/registro.js)
     if (Input.keyPressed('KeyM')) Sfx.setMuted(Music.toggleMute());
 
@@ -1024,6 +1025,10 @@ class Game {
     this.playerEvents();
     this.instrumentos.update(dt, this.level, p, this.level.id);
     this.enemies.update(dt, this.level, p, this.camera);
+    this.updateQuena(dt);
+    this.enemies.list.forEach(function (e) {           // animales vencidos: al Códex
+      if (!e.codexed && (e.state === 'squashed' || e.state === 'dead')) { e.codexed = true; Codex.animal(this, e); }
+    }, this);
     this.vecinos.update(dt, this);
     this.enemies.takeShoves().forEach(function (e) { p.shove(e.dir); Sfx.play('stomp'); });
     this.dropCoins();
@@ -1668,7 +1673,10 @@ class Game {
     if (good.id === 'aji') P.chiliBought = (P.chiliBought || 0) + 1;
     good.precioActual = this.priceOf(good);
     const V = CONFIG.LORE.VENDEDORES;
+    const who = O.merchant && CONFIG.CODEX.VENDOR_NAMES[O.merchant.id];
     O.lore = V[Math.floor(Math.random() * V.length)];   // el vendedor cuenta algo
+    O.loreName = who || '';
+    if (who) Codex.papa(this, 'vendedor_' + O.merchant.id, who);
     Sfx.play('cube');
   }
 
@@ -1750,6 +1758,7 @@ class Game {
     }
     this.arenaPhase = 'done';
     this.roomState(L.id).boss = true;
+    if (L.boss && this.mode === 'story') Codex.boss(this, L.boss.type);
     L.arenaActive = false;
     Music.setRate(L.rate);
     Music.play(L.music);
@@ -1977,6 +1986,27 @@ stems.forEach(stem => {
     this.useChili();
   }
 
+  // Llamado de la quena: cerca de un animal, Acción (toque) lo calma QUENA.TIME
+  // segundos: deja de atacar, baila y se puede pisar. Calmarlo cuenta para el Códex.
+  updateQuena(dt) {
+    const Q = CONFIG.QUENA, p = this.player;
+    this.quenaCool = Math.max(0, (this.quenaCool || 0) - dt);
+    if (!p.has('quena') || this.prompt || this.quenaCool > 0 || !Input.pressed('action')) return;
+    const cx = p.x + p.w / 2, cy = p.y + p.h / 2, R = Q.RADIUS * CONFIG.TILE;
+    const near = this.enemies.alive().filter(function (e) {
+      return !e.def.npc && !e.inArena && !(e.calmed > 0) && Math.hypot(e.x + e.w / 2 - cx, e.y + e.h / 2 - cy) < R;
+    });
+    if (!near.length) return;
+    this.quenaCool = Q.COOLDOWN;
+    near.forEach(function (e) {
+      e.calmed = Q.TIME;
+      Effects.play('poof', e.x + e.w / 2, e.y);
+      if (!e.codexed) { e.codexed = true; Codex.animal(this, e); }
+    }, this);
+    Sfx.play('cube');
+    Registro.ev('quena', { n: near.length });
+  }
+
   // Caracol del eco: quieta y con Acción apretada un momento, la papa sopla. Las
   // plataformas ocultas que alcanza la onda aparecen para siempre y la niebla se despeja
   updateShell(dt) {
@@ -2140,6 +2170,14 @@ stems.forEach(stem => {
     const p = this.player;
     this.enemies.alive().forEach(function (e) {
       if (e.def.npc) return;   // los vecinos (barrendero) no dañan ni se pisan
+      if (e.calmed > 0) {      // calmado por la quena: plataforma que baila
+        if (p.vy >= 0 && overlaps(e, p) && p.prevBottom <= e.y + 3) {
+          p.y = e.y - p.h;
+          p.vy = 0;
+          p.onGround = true;
+        }
+        return;
+      }
       // La lengua de la rana y el pico de la garza dañan aunque no se toque el cuerpo
       const reach = e.reach();
       if (reach && overlaps(reach, p) && !p.invincible() && !overlaps(e, p)) return this.hurtByEnemy(e);
@@ -2830,6 +2868,7 @@ updateEchoes(dt) {
     if (!(scene && scene.hudHidden)) UI.drawHud(ctx, this);
     BossShow.drawBar(ctx, this.boss);
     if (this.mode === 'speedrun' || this.mode === 'tower') SpeedRun.drawHud(ctx, this);
+    Codex.drawToast(ctx);
     if (this.banner && !this.menu.open) UI.drawBanner(ctx, this.banner);
     if (!this.menu.open && !(scene && scene.hudHidden)) this.drawTopTexts(ctx);
     if (this.overlay) UI.drawOverlay(ctx, this);

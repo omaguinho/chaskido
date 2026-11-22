@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v92',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v93',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -116,7 +116,9 @@ const CONFIG = {
     { id: 'dive',       name: 'Buceo',  key: 'KeyI',   say: 'el buceo',
       text: 'Ganaste el buceo: abajo dentro del agua para sumergirte.' },
     { id: 'shell',      name: 'Caracol', key: 'KeyO',  say: 'el caracol del eco',
-      text: 'Ganaste el caracol del eco: quieta, mantén E o Cuadrado y soplas.' }
+      text: 'Ganaste el caracol del eco: quieta, mantén E o Cuadrado y soplas.' },
+    { id: 'quena',      name: 'Quena', key: 'KeyH',  say: 'el llamado de la quena',
+      text: 'Ganaste el llamado de la quena: cerca de un animal, toca E o Cuadrado y se calma. Ahora entiendes a los animales: mira el Códex en la pausa.' }
   ],
 
   // Skin provisional: color según la última habilidad obtenida
@@ -128,7 +130,8 @@ const CONFIG = {
     hook: '#f0b860',
     glide: '#b8e0ff',
     dive: '#6fa8c7',
-    shell: '#f7e3a1'
+    shell: '#f7e3a1',
+    quena: '#9fe3c8'
   },
 
   // ---------- Dibujos "Tejido HD" ----------
@@ -258,6 +261,61 @@ const CONFIG = {
     ]
   },
 
+  // Llamado de la quena: calma a los animales a RADIUS bloques por TIME segundos
+  QUENA: { RADIUS: 3, TIME: 8, COOLDOWN: 1.5 },
+
+  // ---------- Códex (js/codex.js) ----------
+  // Se abre con la quena. Se anotan: las papas al hablarles, los jefes al vencerlos y
+  // cada especie de animal cuando venciste o calmaste a todos los de esa especie del
+  // juego (se cuentan solos desde los mapas). Suma al porcentaje de completado.
+  CODEX: {
+    TOAST: 2.4,              // segundos del aviso "Se agregó al Códex"
+    // Nombres: guardián del portón (por sala), la vecina de la fiesta y los vendedores
+    GUARD_NAMES: { n3: 'Allqa', n6: 'Waña', n9: 'Capiro', n12: 'Tomasa', n15: 'Perricholi', n18: 'Única', n21: 'Ojo de Perdiz' },
+    FIESTA_NAME: 'Tarmeña',
+    VENDOR_NAMES: { viajero: 'Don Revolución', cocinera: 'Doña Huevo de Indio', coleccion: 'Tío Sangre de Toro' },
+    // Animales: nombre y una frase. Los que no están aquí no cuentan (vecinos, etc.)
+    SPECIES: {
+      beetle:     { name: 'Escarabajo de vereda', text: 'Caminaba al ritmo de los tambores. Sin música, solo empuja.' },
+      cuy:        { name: 'Cuy', text: 'Antes silbaba con las flautas. Ahora corre asustado.' },
+      shooter:    { name: 'Escupidor de semillas', text: 'Sembraba al compás. Hoy escupe semillas a quien pasa.' },
+      oruga:      { name: 'Oruga', text: 'Soñaba con bailar con alas. Todavía no despierta.' },
+      paloma:     { name: 'Paloma', text: 'Se posaba en los faroles de la fiesta. Ahora se lanza en picada.' },
+      colibri:    { name: 'Colibrí', text: 'Zumbaba en La. Sin música, no sabe qué nota zumbar.' },
+      mono:       { name: 'Mono', text: 'Tocaba maracas de semillas. Ahora las tira.' },
+      murcielago: { name: 'Murciélago', text: 'Escuchaba los ecos de la mina. El Silencio lo dejó a ciegas.' },
+      rueda:      { name: 'Rueda de piedra', text: 'Giraba en el molino al ritmo del agua.' },
+      escorpion:  { name: 'Escorpión de cristal', text: 'Su cola sonaba como campanita. Ya no suena.' },
+      topo:       { name: 'Topo', text: 'Cavaba siguiendo el bajo de la tierra.' },
+      armadillo:  { name: 'Armadillo', text: 'Su caparazón era un charango. Ahora se enrolla y no se deja tocar.' },
+      brasa:      { name: 'Brasa', text: 'Bailaba en los fogones de la fiesta. Sin música, quema.' },
+      zorro:      { name: 'Zorro andino', text: 'Aullaba a dúo con las quenas. Ahora acecha.' },
+      bolaNieve:  { name: 'Bola de nieve', text: 'Rodaba cantando cuesta abajo. Ahora solo rueda.' },
+      vizcacha:   { name: 'Vizcacha', text: 'Saltaba al compás del charango.' },
+      nubeGranizo:{ name: 'Nube de granizo', text: 'Llovía notas. Ahora llueve piedras.' },
+      rana:       { name: 'Rana saltarina', text: 'Cantaba de noche en el lago. Se le olvidó la canción.' },
+      pez:        { name: 'Pez bigotón', text: 'Nadaba en círculos con la música del agua.' },
+      libelula:   { name: 'Libélula espejo', text: 'Sus alas brillaban con cada nota.' },
+      garza:      { name: 'Garza de alambre', text: 'Marcaba el tiempo con el pico. Ahora picotea.' }
+    },
+    // Jefes: una frase (el nombre sale de CONFIG.BOSSES)
+    BOSS_TEXT: {
+      eco: 'El primer silencio. De él nace todo: hasta la música.',
+      bombo: 'El ritmo. Su corazón hueco marca el pulso de la ciudad.',
+      charanguero: 'La melodía. Sus cuerdas no tenían dueño hasta que llegaste.',
+      cuy: 'El tempo. Corre cada vez más rápido, como un accelerando.',
+      gusano: 'El grave. Su vibración se siente antes de oírla.',
+      toro: 'La intensidad. Fortísimo, dorado y sin pausa.',
+      oso: 'La pausa. Congela el pulso para que nada suene.',
+      rana: 'El timbre. Su eco vive en el agua.',
+      condor: 'El aire. Corta el viento como una quena.',
+      huaca: 'La piedra que recuerda. Guarda lo que no se pierde.',
+      silencio: 'Llegó antes que todas las canciones. Les tiene miedo.'
+    },
+    // Peso de cada parte en el porcentaje de completado (suman 100)
+    COMPLETION: { ROOMS: 40, POWERS: 25, BOSSES: 20, CODEX: 15 }
+  },
+
   // Saludos de los vecinos en su globo (uno al azar; al hablar sigue su frase)
   SALUDOS: ['¡Psst!', '¡Oye, tú!', '¿Tienes un minuto?', '¡Te cuento algo!', '¿Qué tal, papa?', '¡Ven, ven!'],
 
@@ -266,7 +324,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.92.0.0',
+    VERSION: '0.93.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -318,48 +376,54 @@ const CONFIG = {
   // gift: regalo (una vez): { coins } o { heart } · after: lo que dice después del regalo
   // hard: el vecino difícil (HP pisotones, PRICE monedas para pagarle)
   VECINOS: [
-    { id: 'z1', room: 'n2', dx: 5, kind: 'flauta', color: '#9fd3e0',
+    { id: 'z1', name: 'Huayro', room: 'n2', dx: 5, kind: 'flauta', color: '#9fd3e0',
       lines: ['Aprieta Pausa y mira el mapa: las salas que ya pisaste se van dibujando, y abajo ves los instrumentos que rescataste.',
               '¿Viste la fiesta? Estábamos todos bailando cuando la plaza se quedó muda. El Silencio llegó sin hacer ruido.',
               'Los instrumentos se asustaron y escaparon por la ciudad. ¡Tú eres chasqui: tráelos de vuelta!'] },
-    { id: 'z2', room: 'n1', dx: 5, kind: 'aplaude', color: '#f4b6c2',
+    { id: 'z2', name: 'Yungay', room: 'n1', dx: 5, kind: 'aplaude', color: '#f4b6c2',
       lines: ['¡Venciste al Guardián del Tambor! Ahora vuelve a las Acequias Hondas: hay un muro amarillo que se abre con la nota Re.',
               'Antes teníamos música y los animales no nos atacaban: bailaban con nosotros en la plaza.',
               'Sin música, a los animales les salió un aura oscura. No son malos: están tristes y asustados.'] },
-    { id: 'z3', room: 'n7', dx: 5, kind: 'baila', color: '#8fbf9a',
+    { id: 'z3', name: 'Peruanita', room: 'n7', dx: 5, kind: 'baila', color: '#8fbf9a',
       lines: ['¿Te cansaste de una canción? En Pausa → Opciones puedes bajar la música o cada instrumento.',
               'Este bosque cantaba solo: los pájaros, el viento, las hojas. Ahora solo se oyen mis pasos.',
               'Las raíces todavía recuerdan las canciones. Si escuchas bien, se nota un vals muy bajito.'] },
-    { id: 'z4', room: 'n10', dx: 5, kind: 'tambor', color: '#e8c58e', gift: { coins: 59 },
+    { id: 'z4', name: 'Canchán', room: 'n10', dx: 5, kind: 'tambor', color: '#e8c58e', gift: { coins: 59 },
       lines: ['Toma, para el camino: 59 monedas. ¡Gástalas bien!',
               'En el templo dorado, el toro guardaba el ritmo de la ciudad. El Silencio lo volvió furioso.'],
       after: ['¿Ya gastaste mis monedas? ¡Que suene la música!'] },
-    { id: 'z5', room: 'n13', dx: 5, kind: 'cuerdas', color: '#c9b8e3',
+    { id: 'z5', name: 'Tumbay', room: 'n13', dx: 5, kind: 'cuerdas', color: '#c9b8e3',
       lines: ['Con el planeo, vuelve al Puerto de los Molinos: en el muelle del oeste, el muro de Sol te deja cruzar el mar.',
               'Cuando el Silencio pasó por aquí, la música se congeló. Dicen que los ecos quedaron atrapados en el hielo.'] },
-    { id: 'z6', room: 'n16', dx: 5, kind: 'baila', color: '#9fd3e0',
+    { id: 'z6', name: 'Wenccos', room: 'n16', dx: 5, kind: 'baila', color: '#9fd3e0',
       lines: ['La cascada de la Orilla de Juncos no se escala: se sube buceando. Arriba está la Ciudadela de Niebla.',
               'Mira el lago: refleja la ciudad como era antes, con faroles y fiesta. Por eso duele mirarlo.'] },
-    { id: 'z7', room: 'n19', dx: 5, kind: 'aplaude', color: '#f7e3a1',
+    { id: 'z7', name: 'Abuela Qompis', room: 'n19', dx: 5, kind: 'aplaude', color: '#f7e3a1',
       lines: ['La puerta dorada del Bosque lleva al último jefe. Solo se abre si rescataste los instrumentos de todos los niveles.',
               'El Silencio no odia la música: le tiene miedo. Dicen que nació antes que todas las canciones.',
               'En la música, primero está el silencio. De ahí nace el ritmo, y del ritmo, la melodía.'] },
+    // Habla de los jefes secretos y de lo que dan
+    { id: 'sabio', name: 'Don Huamantanga', room: 'n5', dx: 8, kind: 'flauta', color: '#e8c58e',
+      lines: ['Hay jefes que no están en el camino. Se esconden, pero lo que dan vale la pena.',
+              'Arriba de Calles del Ocaso, donde solo se llega con doble salto, toca el Rasgueador. Si le ganas, te da la quena: con ella los animales se calman.',
+              'Al este de estas acequias duerme un tótem de piedra. Dicen que guarda un corazón más.',
+              'En las geodas, en el granizo y en el fondo del lago hay otros guardianes. Cada uno enseña algo que no se aprende en otro lado.'] },
     // Llegan cuando la sala vuelve a sonar (sala afinada): vienen solo por la música
-    { id: 't1', room: 'n2', dx: 9, kind: 'aplaude', color: '#ffd34d', tuned: true,
+    { id: 't1', name: 'Chaucha', room: 'n2', dx: 9, kind: 'aplaude', color: '#ffd34d', tuned: true,
       lines: ['¡Escuché el bajo desde mi casa y vine corriendo! ¿Bailamos?'] },
-    { id: 't2', room: 'n1', dx: 9, kind: 'baila', color: '#9fd3e0', tuned: true,
+    { id: 't2', name: 'Puka', room: 'n1', dx: 9, kind: 'baila', color: '#9fd3e0', tuned: true,
       lines: ['Volvió la música y mi perro dejó de gruñir. ¡Gracias, chasqui!'] },
-    { id: 't3', room: 'n7', dx: 9, kind: 'flauta', color: '#c9b8e3', tuned: true,
+    { id: 't3', name: 'Muru', room: 'n7', dx: 9, kind: 'flauta', color: '#c9b8e3', tuned: true,
       lines: ['Traje mi quena: ahora que el bosque suena otra vez, quiero tocar con él.'] },
-    { id: 't4', room: 'n10', dx: 9, kind: 'cuerdas', color: '#f4b6c2', tuned: true,
+    { id: 't4', name: 'Leona', room: 'n10', dx: 9, kind: 'cuerdas', color: '#f4b6c2', tuned: true,
       lines: ['Subí toda la escalinata siguiendo la música. ¡Valió la pena!'] },
-    { id: 't5', room: 'n13', dx: 9, kind: 'tambor', color: '#8fbf9a', tuned: true,
+    { id: 't5', name: 'Sumaq', room: 'n13', dx: 9, kind: 'tambor', color: '#8fbf9a', tuned: true,
       lines: ['El hielo se derrite cuando suena el tambor. Lo sentí en los pies.'] },
-    { id: 't6', room: 'n16', dx: 9, kind: 'aplaude', color: '#f7e3a1', tuned: true,
+    { id: 't6', name: 'Amarilla', room: 'n16', dx: 9, kind: 'aplaude', color: '#f7e3a1', tuned: true,
       lines: ['Ahora el lago refleja lo que hay de verdad: una ciudad que vuelve a bailar.'] },
-    { id: 't7', room: 'n19', dx: 9, kind: 'baila', color: '#ff9a6b', tuned: true,
+    { id: 't7', name: 'Mariva', room: 'n19', dx: 9, kind: 'baila', color: '#ff9a6b', tuned: true,
       lines: ['Ya casi. Cuando la ciudad entera suene, el Silencio no va a tener dónde esconderse.'] },
-    { id: 'dificil', room: 's3', dx: 6, kind: 'baila', color: '#ff6b8a', gift: { heart: true, coins: 300 },
+    { id: 'dificil', name: 'Ccompis', room: 's3', dx: 6, kind: 'baila', color: '#ff6b8a', gift: { heart: true, coins: 300 },
       lines: ['¿Quieres mi tesoro? Págame 800 monedas... o intenta pisarme tres veces.'],
       after: ['Ya tienes mi tesoro. ¡Nadie me había alcanzado!'],
       hard: { HP: 3, PRICE: 800, SPEED: 150, JUMP: 300, SEE: 70,
@@ -399,7 +463,10 @@ const CONFIG = {
     zona_1: { bpm: 120, bars: 12 },      // 36 o 48 compases: múltiplo de 12
     zona_2: { bpm: 128, bars: 16 },
     zona_3: { bpm: 122, bars: 8 },
-    zona_5: { bpm: 120, bars: 12 }
+    zona_5: { bpm: 120, bars: 12 },
+    zona_4: { bpm: 120, bars: 4 },       // zonas 4, 6 y 7: 120 BPM (compases: múltiplo de 4)
+    zona_6: { bpm: 120, bars: 4 },
+    zona_7: { bpm: 120, bars: 4 }
   },
 
   // Instrumentos de cada sala: nombre -> archivo. "tema" es la base: suena siempre

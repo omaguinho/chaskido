@@ -41,7 +41,7 @@ class Vecinos {
     const spot = Vecinos.findFloor(level, gate.x + side * G.DX * T, gate.y);
     if (A && spot.x > A.left && spot.x < A.right && spot.feet > A.top && spot.feet <= A.bottom + T) return;   // no dentro de la arena
     this.list.push({
-      def: Object.assign({ id: 'guardia', guard: true }, G), i: this.list.length, x: spot.x, feet: spot.feet,
+      def: Object.assign({ id: 'guardia', guard: true, name: CONFIG.CODEX.GUARD_NAMES[level.id] }, G), i: this.list.length, x: spot.x, feet: spot.feet,
       vx: 0, vy: 0, hp: 1, inv: 0, down: false, line: 0, angry: false, hello: G.BUBBLE
     });
   }
@@ -113,7 +113,7 @@ class Vecinos {
           v.down = true;
           Effects.play('poof', v.x, v.feet - 10);
           if (v.def.hard) {
-            game.say(v.def.hard.WIN, 4, true);
+            game.say(v.def.name + ': ' + tr(v.def.hard.WIN), 4, true);
             Registro.ev('vecino', { id: v.def.id, duro: 'pisado' });
           }
           this.give(v, game);
@@ -130,14 +130,18 @@ class Vecinos {
           game.progress.coins -= H.PRICE;
           v.down = true;
           Effects.play('poof', v.x, v.feet - 10);
-          game.say(H.PAID, 4, true);
+          game.say(v.def.name + ': ' + tr(H.PAID), 4, true);
           Registro.ev('vecino', { id: v.def.id, duro: 'pagado' });
           this.give(v, game);
           return;
         }
         const lines = (this.gave(v) || (v.def.guard && game.level.gateOpen)) && v.def.after ? v.def.after : v.def.lines;
         const line = lines[v.line % lines.length];
-        game.say(typeof line === 'function' ? line(game) : line, 6, true);
+        // "Nombre: frase" (la frase se traduce aquí; el nombre es propio y no cambia)
+        const name = v.def.name;
+        const said = tr(typeof line === 'function' ? line(game) : line);
+        game.say(name ? name + ': ' + said : said, 6, true);
+        if (name) Codex.papa(game, v.def.guard ? 'guardia_' + game.level.id : v.def.id, name);
         Registro.ev('vecino', { id: v.def.id });
         v.line++;
         Sfx.play('select');

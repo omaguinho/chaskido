@@ -30,6 +30,7 @@ class PauseMenu {
       { id: 'mapa', label: 'Mapa', icon: 0 },
       { id: 'zona', label: 'Zona', icon: 1 },
       { id: 'poderes', label: 'Poderes', icon: 2 },
+      { id: 'codex', label: 'Códex', icon: -1 },
       { id: 'canciones', label: 'Canciones', icon: 3 },
       { id: 'guardar', label: 'Guardar', icon: 4 },
       { id: 'opciones', label: 'Opciones', icon: 5 }
@@ -56,7 +57,8 @@ class PauseMenu {
   tabs() {
     const all = PauseMenu.TABS;
     if (this.game.mode === 'tower') return all.filter(function (t) { return t.id === 'poderes' || t.id === 'opciones'; });
-    return all;
+    const quena = !!this.game.progress.abilities.quena;      // el Códex se abre con la quena
+    return all.filter(function (t) { return t.id !== 'codex' || quena; });
   }
 
   current() {
@@ -113,6 +115,7 @@ class PauseMenu {
 
     if (tab === 'poderes') this.updatePowers(step);
     else if (tab === 'canciones') this.updateSongs();
+    else if (tab === 'codex') this.updateCodex();
     else if (rows > 0) this.updateRows(tab, rows, step);
   }
 
@@ -224,6 +227,40 @@ class PauseMenu {
     if (Input.pressed('confirm')) this.playSong(songs[this.songPick]);
   }
 
+  // Códex: arriba/abajo recorre la lista
+  updateCodex() {
+    const n = Codex.entries(this.game).length;
+    this.codexPick = Math.max(0, Math.min(n - 1, this.codexPick || 0));
+    if (Input.pressed('down')) { this.codexPick = Math.min(n - 1, this.codexPick + 1); Sfx.play('move'); }
+    else if (Input.pressed('up')) { this.codexPick = Math.max(0, this.codexPick - 1); Sfx.play('move'); }
+  }
+
+  drawCodex(ctx) {
+    const W = CONFIG.WIDTH, list = Codex.entries(this.game), cx = Codex.progress(this.game);
+    const view = 8, step = 11, top = 46;
+    this.codexScroll = Math.max(0, Math.min(this.codexScroll || 0, list.length - view));
+    if (this.codexPick < this.codexScroll) this.codexScroll = this.codexPick;
+    if (this.codexPick >= this.codexScroll + view) this.codexScroll = this.codexPick - view + 1;
+    UI.text(ctx, tr('Anotados') + ': ' + cx.got + ' / ' + cx.total + '    ' + tr('Completado') + ': ' + Codex.completion(this.game) + '%',
+      W / 2, 32, '#9fe3c8', 6, 'center');
+    list.slice(this.codexScroll, this.codexScroll + view).forEach(function (e, i) {
+      const k = this.codexScroll + i, on = k === this.codexPick, y = top + i * step;
+      if (on) {
+        ctx.fillStyle = 'rgba(159, 227, 200, 0.16)';
+        ctx.fillRect(16, y - 2, W - 32, step - 1);
+      }
+      UI.text(ctx, tr(e.group), 22, y, '#9a93b0', 5);
+      UI.text(ctx, tr(e.name), 78, y, e.name === '???' ? '#6b6580' : (on ? '#ffd34d' : '#fbf6ec'), 6);
+      if (e.count) UI.text(ctx, e.count, W - 22, y, '#9a93b0', 5, 'right');
+    }, this);
+    const sel = list[this.codexPick];
+    if (sel && sel.text) {
+      UI.wrap(ctx, tr(sel.text), W - 40, 5).forEach(function (line, i) {
+        UI.text(ctx, line, W / 2, top + view * step + 4 + i * 8, '#c9c2dd', 5, 'center');
+      });
+    }
+  }
+
   // Suena la canción elegida (todas sus pistas juntas) con el menú abierto
   playSong(id) {
     if (!Music.hasStems(id)) return;
@@ -304,6 +341,7 @@ class PauseMenu {
     else if (tab === 'zona') this.drawZone(ctx);
     else if (tab === 'poderes') this.drawPowers(ctx);
     else if (tab === 'canciones') this.drawSongs(ctx);
+    else if (tab === 'codex') this.drawCodex(ctx);
     else if (tab === 'guardar') this.drawSave(ctx);
     else this.drawOptions(ctx);
     this.drawFooter(ctx, tab);
@@ -322,7 +360,7 @@ class PauseMenu {
         ctx.fillStyle = '#fbf6ec';
         ctx.fillRect(x + 1, 21, 24, 1);
       }
-      if (!Sprites.drawFrame(ctx, 'menu_iconos', t.icon, x + 5, 4, false)) this.drawTabIcon(ctx, t.id, x + 13, 12, on);
+      if (t.icon < 0 || !Sprites.drawFrame(ctx, 'menu_iconos', t.icon, x + 5, 4, false)) this.drawTabIcon(ctx, t.id, x + 13, 12, on);
     }, this);
     const label = list[this.tab].label;
     UI.shadowText(ctx, label, CONFIG.WIDTH / 2, 22, '#ffd34d', 7, 'center');
@@ -332,6 +370,16 @@ class PauseMenu {
   drawTabIcon(ctx, id, cx, cy, on) {
     const c = on ? '#2e2a47' : '#fbf6ec';
     ctx.fillStyle = c;
+    if (id === 'codex') {                  // un libro abierto
+      ctx.fillRect(cx - 6, cy - 4, 5, 9);
+      ctx.fillRect(cx + 1, cy - 4, 5, 9);
+      ctx.fillStyle = on ? '#e9c46a' : '#5b5478';
+      ctx.fillRect(cx - 5, cy - 2, 3, 1);
+      ctx.fillRect(cx + 2, cy - 2, 3, 1);
+      ctx.fillRect(cx - 5, cy, 3, 1);
+      ctx.fillRect(cx + 2, cy, 3, 1);
+      return;
+    }
     if (id === 'mapa') {
       ctx.fillRect(cx - 6, cy - 5, 12, 10);
       ctx.fillStyle = on ? '#e9c46a' : '#5b5478';
@@ -363,7 +411,7 @@ class PauseMenu {
   drawFooter(ctx, tab) {
     let hint = '< > pestañas   Pausa: seguir';
     if (tab === 'poderes') hint = '< > pestañas   arriba/abajo: elegir';
-    if (tab === 'canciones') hint = '< > pestañas   arriba/abajo: ver más';
+    if (tab === 'canciones' || tab === 'codex') hint = '< > pestañas   arriba/abajo: ver más';
     if ((tab === 'opciones' || tab === 'guardar') && this.row >= 0) hint = 'arriba/abajo: elegir   < >: cambiar   E: aceptar';
     else if (tab === 'opciones' || tab === 'guardar') hint = '< > pestañas   abajo: entrar';
     UI.text(ctx, hint, CONFIG.WIDTH / 2, CONFIG.HEIGHT - 9, '#9a93b0', 6, 'center');
