@@ -241,7 +241,9 @@ class PauseMenu {
     this.codexScroll = Math.max(0, Math.min(this.codexScroll || 0, list.length - view));
     if (this.codexPick < this.codexScroll) this.codexScroll = this.codexPick;
     if (this.codexPick >= this.codexScroll + view) this.codexScroll = this.codexPick - view + 1;
-    UI.text(ctx, tr('Anotados') + ': ' + cx.got + ' / ' + cx.total + '    ' + tr('Completado') + ': ' + Codex.completion(this.game) + '%',
+    const fr = Codex.freed(this.game);
+    UI.text(ctx, tr('Anotados') + ': ' + cx.got + ' / ' + cx.total + '    ' + tr('Liberados') + ': ' + fr.got + ' / ' + fr.total +
+      '    ' + tr('Completado') + ': ' + Codex.completion(this.game) + '%',
       W / 2, 32, '#9fe3c8', 6, 'center');
     list.slice(this.codexScroll, this.codexScroll + view).forEach(function (e, i) {
       const k = this.codexScroll + i, on = k === this.codexPick, y = top + i * step;

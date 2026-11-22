@@ -103,13 +103,18 @@ class Enemy {
   }
 
   // Murciélago: se pega al techo que tiene encima
+  isAliveState() {
+    return this.state !== 'hidden' && this.state !== 'squashed' && this.state !== 'dead';
+  }
+
   spawnHang() {
     const T = CONFIG.TILE;
     this.y = this.spawnY - (T - this.h);
   }
 
+  // Se puede tocar (los liberados por la quena ya no)
   isAlive() {
-    return this.state !== 'hidden' && this.state !== 'squashed' && this.state !== 'dead';
+    return !this.freed && this.isAliveState();
   }
 
   appear() {
@@ -500,6 +505,35 @@ class Enemy {
     }
   }
 
+  // Liberado por la quena: vuelve a moverse como antes, tranquilo y sin atacar.
+  // Los que caminan pasean de lado a lado; los que vuelan o nadan flotan cerca de su lugar.
+  wander(dt, level) {
+    const F = CONFIG.QUENA.FREED;
+    this.animTime += dt;
+    this.buried = false;
+    if (this.def.flies || this.def.still || F.FLOAT.indexOf(this.def.move) >= 0) {
+      this.x = this.spawnX + Math.sin(this.animTime * F.SWAY_SPEED + this.spawnIndex) * F.SWAY;
+      this.y = this.homeY + Math.sin(this.animTime * F.BOB_SPEED) * F.BOB;
+      this.dir = Math.cos(this.animTime * F.SWAY_SPEED + this.spawnIndex) >= 0 ? 1 : -1;
+      return;
+    }
+    this.state = 'walk';
+    this.vx = this.dir * F.WALK;
+    if (this.blockedAhead(level)) this.dir = -this.dir;
+    this.x += this.vx * dt;
+    this.fall(dt, level);
+    if (this.state === 'dead') { this.state = 'walk'; this.x = this.spawnX; this.y = this.homeY; this.vy = 0; }
+  }
+
+  // Liberarlo (quena): queda en el fondo, ya no toca a la papa
+  free() {
+    this.freed = true;
+    this.frozen = 0;
+    if (!this.isAliveState()) this.reset();
+    this.state = 'walk';
+    this.homeY = this.y;
+  }
+
   stomp() {
     this.state = 'squashed';
     this.timer = CONFIG.ENEMIES.SQUASH_TIME;
@@ -867,7 +901,7 @@ class Enemy {
     const s = SPRITES[name];
     const flip = this.dir < 0;
     // Los animales poseídos por el Silencio sueltan partículas moradas que suben (los vecinos, no)
-    if (!this.def.npc && this.state !== 'squashed') {
+    if (!this.def.npc && !this.freed && this.state !== 'squashed') {
       const P = CONFIG.POSSESSED;
       const cx = this.x + this.w / 2;
       ctx.fillStyle = P.COLOR;
@@ -1262,7 +1296,8 @@ class Shots {
 }
 
 class Enemies {
-  constructor(level) {
+  // libres: { índice: true } de los animales que ya liberó la quena en esta sala
+  constructor(level, libres) {
     this.list = level.enemySpawns.map(function (s, i) {
       const e = new Enemy(s.type, s.tx, s.ty);
       e.spawnIndex = i;                     // para el Códex: cada animal cuenta una vez
@@ -1270,6 +1305,7 @@ class Enemies {
       e.inArena = level.insideArena(e);
       e.calm = (level.region || 1) <= CONFIG.PALOMA.CALM_UNTIL_REGION;
       e.reset();
+      if (libres && libres[i]) e.free();
       return e;
     });
     this.shots = new Shots();
@@ -1277,8 +1313,8 @@ class Enemies {
 
   update(dt, level, player, camera) {
     this.list.forEach(function (e) {
-      // Calmado por la quena: baila quieto, no daña y se puede pisar
-      if (e.calmed > 0) { e.calmed -= dt; e.animTime += dt; return; }
+      // Liberado por la quena: pasea en el fondo y no ataca
+      if (e.freed) return e.wander(dt, level);
       // Hipnotizado por el caracol: no se mueve ni dispara
       if (e.frozen > 0) { e.frozen -= dt; return; }
       e.update(dt, level, player);
@@ -1341,8 +1377,27 @@ class Enemies {
     this.arenaList().forEach(function (e) { e.reset(); });
   }
 
+  // Los liberados van en otra capa: detrás de todo lo que se toca (ver Game.draw)
+  drawFreed(ctx, time) {
+    const F = CONFIG.QUENA.FREED;
+    this.list.forEach(function (e) {
+      if (!e.freed) return;
+      ctx.globalAlpha = F.ALPHA;
+      e.draw(ctx);
+      ctx.globalAlpha = 1;
+      // Una notita que sube de vez en cuando: está contento
+      const k = (time * 0.6 + e.spawnIndex * 0.37) % 1;
+      if (k < 0.5) {
+        ctx.globalAlpha = (0.5 - k) * 1.6;
+        UI.text(ctx, '♪', e.x + e.w / 2 + Math.sin(time * 3 + e.spawnIndex) * 3, e.y - 4 - k * 20, CONFIG.SKINS.quena, 7, 'center');
+        ctx.globalAlpha = 1;
+      }
+    });
+  }
+
   draw(ctx) {
     this.list.forEach(function (e) {
+      if (e.freed) return;
       e.draw(ctx);
       if (e.frozen > 0 && e.state !== 'dead') {
         // Hipnotizado: una espiral color arena que gira sobre su cabeza
@@ -1356,16 +1411,6 @@ class Enemies {
           if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
         }
         ctx.stroke();
-      }
-      if (e.calmed > 0 && e.state !== 'dead') {
-        // Calmado por la quena: una nota que sube y un brillo verde agua bajo los pies
-        const cx = e.x + e.w / 2, k = (e.calmed * 1.5) % 1;
-        ctx.globalAlpha = 1 - k;
-        UI.text(ctx, '♪', cx + Math.sin(e.calmed * 4) * 3, e.y - 6 - k * 10, CONFIG.SKINS.quena, 7, 'center');
-        ctx.globalAlpha = 0.5;
-        ctx.fillStyle = CONFIG.SKINS.quena;
-        ctx.fillRect(e.x, e.y + e.h - 1, e.w, 1);
-        ctx.globalAlpha = 1;
       }
     });
     this.shots.draw(ctx);

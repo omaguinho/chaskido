@@ -39,6 +39,7 @@ const WORLD = (function () {
     { id: 'n21', num: '21', r: 7, x: 16, y: 2, w: 4, h: 5 },
     { id: 's9', num: 'S9', r: 7, x: 12, y: 3, w: 2, h: 2 },
     { id: 's10', num: 'S10', r: 7, x: 17, y: 0, w: 2, h: 2 },
+    { id: 'j7', num: 'S12', r: 7, x: 16, y: 7, w: 2, h: 2 },
     { id: 'c1', num: 'C1', r: 1, x: 13, y: 10, w: 4, h: 2 },
     { id: 'c2', num: 'C2', r: 2, x: 24, y: 8, w: 2, h: 3 },
     { id: 'c3', num: 'C3', r: 3, x: 23, y: 23, w: 5, h: 2 },

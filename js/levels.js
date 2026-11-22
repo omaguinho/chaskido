@@ -2556,7 +2556,7 @@ const LEVELS = [
     pitch: 3,   // Blues en Mi bemol mayor · 143 bpm
     bpm: 120,
     time: 200,
-    exits: [{ x: 99, y: 5, w: 1, h: 4, goes: 'n21' }, { x: 0, y: 34, w: 1, h: 4, goes: 'n19' }],
+    exits: [{ x: 99, y: 5, w: 1, h: 4, goes: 'n21' }, { x: 0, y: 34, w: 1, h: 4, goes: 'n19' }, { x: 99, y: 35, w: 1, h: 3, goes: 'j7' }],
     props: {
       '13,37': { texto: 'Templo sin Nombre. Se sube piso por piso; con la llave, los huecos de la izquierda bajan derecho al tótem.' },
       '23,37': { destino: 'q20', tipo: 'tienda' },
@@ -2606,9 +2606,9 @@ const LEVELS = [
       'B.................................____......................OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB',
       'B...........................................................OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB',
       ':..............................$............................OOO_____OOOOOOO_____OOOOOOOOOOOOOOOOOOOB',
-      ':.............................____..........................OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB',
-      ':.................................................$.$.......OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB',
-      ':..P....W....?...@.....Q...S.................e............d.....^^^...e.....^^^......%....S....n...B',
+      ':.............................____..........................OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.',
+      ':.................................................$.$.......OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.',
+      ':..P....W....?...@.....Q...S.................e............d.....^^^...e.....^^^......%....S....n....',
       'B##################################################################################################B',
       'B##################################################################################################B',
       'B##################################################################################################B',
@@ -2956,6 +2956,47 @@ const LEVELS = [
       '..B...B.......F...B.......B.........B...',
       '........................................',
       '........................................'
+    ]
+  },
+  {
+    id: 'j7',
+    name: 'Mirador del Rasgueador',
+    region: 7,   // Ciudadela de Niebla
+    kind: 'secreto',
+    theme: 'niebla',
+    music: 'main',
+    pitch: 0,
+    bpm: 120,
+    secret: true,
+    // El Rasgueador vuelve más fuerte; solo está si ya lo venciste en su sala de la zona 1 (j1)
+    boss: { type: 'charanguero2', after: 'j1' },
+    exits: [{ x: 0, y: 13, w: 1, h: 3, goes: 'n20' }],
+    props: {
+      '6,15': { texto: 'Mirador del Rasgueador. Se oye un charango entre la niebla.' }
+    },
+    map: [
+      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L........................B',
+      'B.............L.....====......====.....B',
+      'B.............L........................B',
+      '..............L........................B',
+      '..............L........................B',
+      '..P.S.?.......L...............J........B',
+      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
     ]
   },
   {

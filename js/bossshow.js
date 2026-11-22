@@ -9,7 +9,7 @@
 const BossShow = (function () {
   const W = CONFIG.WIDTH;
   const H = CONFIG.HEIGHT;
-  const PORTRAITS = { cuy: 'retrato_cuygig' };
+  const PORTRAITS = { cuy: 'retrato_cuygig', charanguero2: 'retrato_charanguero' };
   const PHASE_COLORS = [['#ff4d6d', '#ff9a6b'], ['#ff6b2e', '#ffd34d'], ['#c03cff', '#ff4dc4']];
   const NOTE_COLORS = ['#ffd34d', '#ff6b8a', '#7be0a0', '#9fd3e0', '#c9b8ff', '#ff9a6b'];
   let intro = null;         // { t, boss, type, name, apodo }

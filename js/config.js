@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v93',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v94',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -118,7 +118,9 @@ const CONFIG = {
     { id: 'shell',      name: 'Caracol', key: 'KeyO',  say: 'el caracol del eco',
       text: 'Ganaste el caracol del eco: quieta, mantén E o Cuadrado y soplas.' },
     { id: 'quena',      name: 'Quena', key: 'KeyH',  say: 'el llamado de la quena',
-      text: 'Ganaste el llamado de la quena: cerca de un animal, toca E o Cuadrado y se calma. Ahora entiendes a los animales: mira el Códex en la pausa.' }
+      text: 'Ganaste el llamado de la quena: cerca de un animal, toca E o Cuadrado y queda libre. Ahora entiendes a los animales: mira el Códex en la pausa.' },
+    { id: 'zampona',    name: 'Zampoña', key: 'KeyZ',  say: 'la zampoña',
+      text: 'Ganaste la zampoña: con R1 y los botones tocas las 7 notas del diapasón; cada nota deja un escalón de su color que dura un compás.' }
   ],
 
   // Skin provisional: color según la última habilidad obtenida
@@ -261,8 +263,24 @@ const CONFIG = {
     ]
   },
 
-  // Llamado de la quena: calma a los animales a RADIUS bloques por TIME segundos
-  QUENA: { RADIUS: 3, TIME: 8, COOLDOWN: 1.5 },
+  // Llamado de la quena: libera a los animales a RADIUS bloques. Liberados quedan para
+  // siempre en otra capa (detrás de la papa): pasean y bailan, ya no atacan ni se tocan.
+  // FREED: ALPHA transparencia; WALK velocidad al pasear; FLOAT movimientos que flotan
+  // en su lugar (SWAY bloques de lado, BOB de arriba a abajo)
+  QUENA: {
+    RADIUS: 3, COOLDOWN: 1.5,
+    FREED: { ALPHA: 0.6, WALK: 18, FLOAT: ['fish', 'hail', 'bat', 'swoop', 'dart', 'zigzag'],
+             SWAY: 14, SWAY_SPEED: 0.7, BOB: 3, BOB_SPEED: 2 }
+  },
+
+  // El Rasgueador y su charango (assets/music/charango.mp3, lo pones tú):
+  // ROOMS: sus salas (ahí reemplaza la música, menos en la pelea); NEAR: en la sala de al
+  // lado se oye al acercarse a la salida que lleva a él (RADIUS bloques). VOLUME 0.6 = 6.
+  CHARANGO: {
+    FILE: 'charango.mp3', VOLUME: 0.6, RADIUS: 12,
+    ROOMS: ['j1', 'j7'],
+    NEAR: { n2: 'j1', n20: 'j7' }
+  },
 
   // ---------- Códex (js/codex.js) ----------
   // Se abre con la quena. Se anotan: las papas al hablarles, los jefes al vencerlos y
@@ -310,7 +328,8 @@ const CONFIG = {
       rana: 'El timbre. Su eco vive en el agua.',
       condor: 'El aire. Corta el viento como una quena.',
       huaca: 'La piedra que recuerda. Guarda lo que no se pierde.',
-      silencio: 'Llegó antes que todas las canciones. Les tiene miedo.'
+      silencio: 'Llegó antes que todas las canciones. Les tiene miedo.',
+      charanguero2: 'La melodía que vuelve. Buscaba a los que bailaban con sus cuerdas.'
     },
     // Peso de cada parte en el porcentaje de completado (suman 100)
     COMPLETION: { ROOMS: 40, POWERS: 25, BOSSES: 20, CODEX: 15 }
@@ -324,7 +343,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.93.0.0',
+    VERSION: '0.94.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -405,9 +424,32 @@ const CONFIG = {
     // Habla de los jefes secretos y de lo que dan
     { id: 'sabio', name: 'Don Huamantanga', room: 'n5', dx: 8, kind: 'flauta', color: '#e8c58e',
       lines: ['Hay jefes que no están en el camino. Se esconden, pero lo que dan vale la pena.',
-              'Arriba de Calles del Ocaso, donde solo se llega con doble salto, toca el Rasgueador. Si le ganas, te da la quena: con ella los animales se calman.',
+              'Arriba de Calles del Ocaso, donde solo se llega con doble salto, toca el Rasgueador. Si le ganas, te da la quena: con ella los animales quedan libres.',
               'Al este de estas acequias duerme un tótem de piedra. Dicen que guarda un corazón más.',
               'En las geodas, en el granizo y en el fondo del lago hay otros guardianes. Cada uno enseña algo que no se aprende en otro lado.'] },
+    // El Rasgueador, ya vencido, se queda en su sala. En la zona 1 da pistas (se va cuando
+    // lo vences en la zona 7); en la zona 7 pide liberar a todos los animales y da la zampoña.
+    // bossBeaten: aparece cuando el jefe de la sala está vencido; sprite: se dibuja con ese dibujo
+    { id: 'rasgueador', name: 'El Rasgueador', room: 'j1', dx: 17, sprite: 'charanguero_tocar', bossBeaten: true,
+      goneAfter: 'j7', noStomp: true,
+      lines: ['Buen golpe, chasqui. Quédate con la quena: yo ya no la necesito... por ahora.',
+              'Ando buscando algo. No te voy a decir qué, pero tengo mis razones.',
+              'Dicen que en la Ciudadela de Niebla todavía se escucha un charango. Quizás nos veamos por allá.'] },
+    { id: 'rasgueador7', name: 'El Rasgueador', room: 'j7', dx: 17, sprite: 'charanguero_tocar', bossBeaten: true,
+      noStomp: true, gift: { power: 'zampona', when: function (game) { return Codex.freedLeft(game) === 0; } },
+      lines: [
+        function (game) {
+          if (Codex.freedLeft(game) === 0) return '¡Todos libres! ¿Escuchas? Así sonaba la ciudad. Toma mi zampoña: te la ganaste.';
+          return 'Me ganaste otra vez. Ahora te digo lo que buscaba: a los animales. Antes bailaban con mis cuerdas.';
+        },
+        'Libéralos a todos con la quena. Cuando estén todos libres, vuelve: te doy mi zampoña.',
+        function (game) {
+          const C = Codex.freed(game);
+          return 'Llevas ' + C.got + ' de ' + C.total + ' animales liberados.';
+        },
+        'Si pisas a uno, no se pierde: vuelve a aparecer y todavía lo puedes liberar.'],
+      after: ['Las siete cañas de la zampoña son las siete notas del diapasón. Tócalas y el aire te sostiene.',
+              'Ya no busco nada, chasqui. Ahora solo toco.'] },
     // Llegan cuando la sala vuelve a sonar (sala afinada): vienen solo por la música
     { id: 't1', name: 'Chaucha', room: 'n2', dx: 9, kind: 'aplaude', color: '#ffd34d', tuned: true,
       lines: ['¡Escuché el bajo desde mi casa y vine corriendo! ¿Bailamos?'] },
@@ -872,6 +914,19 @@ const CONFIG = {
       NOTE_SPEED: 110,
       HOP_TIME: 0.9,
       WAVE_SPEED: 110
+    },
+    // El Rasgueador Maestro (sala secreta de la zona 7): lo mismo que el Rasgueador, más
+    // rápido y con un tercer ataque C: acorde de notas que persiguen a la papa un rato
+    charanguero2: {
+      NAME: 'EL RASGUEADOR MAESTRO', HP: 6, W: 20, H: 26,
+      BALL_SPEED: 175, BALL_TIME: 3, IDLE_TIME: 1.2, ANGRY_SPEED: 1.35,
+      NOTE_WAVES: 2, ANGRY_NOTE_WAVES: 3, NOTES_PER_WAVE: 4, NOTE_EVERY: 0.3, WAVE_PAUSE: 0.7,
+      NOTE_SPEED: 125, HOP_TIME: 0.8, WAVE_SPEED: 125,
+      CHORD_NOTES: 3,       // notas del acorde que persigue
+      CHORD_SPEED: 70,      // velocidad de esas notas
+      CHORD_TURN: 2.2,      // qué tan rápido doblan hacia la papa
+      CHORD_FOLLOW: 1.8,    // segundos que persiguen (después siguen derecho)
+      CHORD_COLOR: '#9fe3c8'
     },
     // Tótem de Piedra (de Boomer Kuwanger): A lanza su corona como bumerán;
     // B desaparece y reaparece junto a la papa

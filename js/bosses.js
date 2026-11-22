@@ -402,6 +402,7 @@ class ArenaBoss {
     this.shots.forEach(function (s) {
       if (s.kind === 'spark') return this.updateSpark(s, dt, level);
       if (s.kind === 'corona') return this.updateCrown(s, dt);
+      if (s.kind === 'nota_guia') return this.updateGuided(s, dt, level);
       s.life -= dt;
       s.vy += s.g * dt;
       s.x += s.vx * dt;
@@ -422,6 +423,24 @@ class ArenaBoss {
       }
     }, this);
     this.shots = this.shots.filter(function (s) { return s.life > 0; });
+  }
+
+  // Nota que persigue: dobla hacia la papa (s.target) mientras le quede s.follow;
+  // después sigue derecho. Se rompe contra las paredes.
+  updateGuided(s, dt, level) {
+    s.life -= dt;
+    s.follow -= dt;
+    const t = s.target;
+    if (s.follow > 0 && t) {
+      const dx = t.x + t.w / 2 - (s.x + s.w / 2), dy = t.y + t.h / 2 - (s.y + s.h / 2);
+      const d = Math.hypot(dx, dy) || 1;
+      const k = Math.min(1, s.turn * dt);
+      s.vx += (dx / d * s.speed - s.vx) * k;
+      s.vy += (dy / d * s.speed - s.vy) * k;
+    }
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    if (level.rectHitsSolid(s.x, s.y, s.w, s.h)) s.life = 0;
   }
 
   // Chispa del Cuy: corre por el suelo y, al llegar a una pared, sube por ella
@@ -620,6 +639,10 @@ class ArenaBoss {
     const y = Math.round(s.y);
     // Todo proyectil brilla un poco (se suma a lo que hay)
     Light.drawGlow(ctx, s.x + s.w / 2, s.y + s.h / 2, Math.max(8, s.w), s.light || '#ff9ad5', 0.45);
+    if (s.kind === 'nota_guia') {
+      BossShow.drawNote(ctx, s.x + s.w / 2, s.y + s.h / 2, s.color || '#9fe3c8', 1);
+      return;
+    }
     if (s.kind === 'nota_fuego') {
       BossShow.drawNote(ctx, s.x + s.w / 2, s.y + s.h / 2, Math.floor(s.life * 10) % 2 ? '#ff4dc4' : '#ffd34d', 1);
       return;
@@ -917,8 +940,8 @@ class Condor extends ArenaBoss {
 // Ataque B (bola): se enrolla en su caparazón y rebota en diagonal por la arena;
 // al final cae y suelta un acorde que corre por el suelo.
 class Charanguero extends ArenaBoss {
-  constructor(tx, ty) {
-    super(tx, ty, CONFIG.BOSSES.charanguero);
+  constructor(tx, ty, def) {
+    super(tx, ty, def || CONFIG.BOSSES.charanguero);
   }
 
   prepare() {
@@ -1084,6 +1107,48 @@ class Charanguero extends ArenaBoss {
     ctx.fillStyle = '#8a5a2b';
     ctx.fillRect(cx, y + 14, 8, 6);
     ctx.fillRect(this.dir > 0 ? cx + 7 : cx - 5, y + 12, 6, 2);
+  }
+}
+
+// ---------- El Rasgueador Maestro (sala secreta de la zona 7) ----------
+// El mismo Rasgueador, más rápido y con un tercer ataque:
+// C (acorde): rasguea fuerte y suelta notas que persiguen a la papa un rato.
+// Turna A (notas), C (acorde), B (bola).
+class CharangueroMaestro extends Charanguero {
+  constructor(tx, ty) {
+    super(tx, ty, CONFIG.BOSSES.charanguero2);
+  }
+
+  attackStates() { return super.attackStates().concat(['acorde']); }
+
+  nextAttack(level, player) {
+    this.attackIndex = (this.attackIndex + 1) % 3;
+    this.attack(['a', 'c', 'b'][this.attackIndex], level, player);
+  }
+
+  attack(kind, level, player) {
+    if (kind !== 'c') return super.attack(kind, level, player);
+    const D = this.def;
+    this.facePlayer(player);
+    this.setState('acorde', 1.2 / this.speed());
+    for (let i = 0; i < D.CHORD_NOTES; i++) {
+      const a = -Math.PI / 2 + (i - (D.CHORD_NOTES - 1) / 2) * 0.6;   // abanico hacia arriba
+      const v = D.CHORD_SPEED * this.speed();
+      this.addShot({ x: this.centerX() - 4, y: this.y, w: 8, h: 8, vx: Math.cos(a) * v + this.dir * 20, vy: Math.sin(a) * v,
+                     life: 5, kind: 'nota_guia', target: player, follow: D.CHORD_FOLLOW, speed: v,
+                     turn: D.CHORD_TURN, color: D.CHORD_COLOR, light: D.CHORD_COLOR });
+    }
+    this.shakeTime = 0.2;
+  }
+
+  think(dt, level, player) {
+    if (this.state !== 'acorde') return super.think(dt, level, player);
+    this.idleMove(dt, level, player);
+    if (this.timer <= 0) this.startIdle();
+  }
+
+  spriteName() {
+    return this.state === 'acorde' ? 'charanguero_rasgueo' : super.spriteName();
   }
 }
 
@@ -3429,6 +3494,7 @@ const BOSS_TYPES = {
   gusano: Gusano,
   condor: Condor,
   charanguero: Charanguero,
+  charanguero2: CharangueroMaestro,
   huaca: Huaca,
   cuy: GiantCuy,
   bombo: Bombo

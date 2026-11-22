@@ -6,13 +6,17 @@
 class Vecinos {
   // story: en la historia (el guardián del portón y los vecinos que llegan con la
   // música solo están ahí; no en el speedrun ni en el coliseo)
-  constructor(level, roomState, story) {
+  // progress: para saber qué jefes ya se vencieron en otras salas (goneAfter)
+  constructor(level, roomState, story, progress) {
+    const rooms = (progress && progress.rooms) || {};
     const T = CONFIG.TILE;
     this.rs = roomState;
     this.t = 0;
     this.list = (CONFIG.VECINOS || []).filter(function (v) {
       if (v.room !== level.id) return false;
       if (v.tuned) return story && !!roomState.afinada;     // llegan cuando la sala vuelve a sonar
+      if (v.bossBeaten && !(story && roomState.boss)) return false;   // se quedan después de perder
+      if (v.goneAfter && rooms[v.goneAfter] && rooms[v.goneAfter].boss) return false;
       return true;
     }).map(function (v, i) {
       const spot = Vecinos.findFloor(level, level.spawn.x + v.dx * T, level.spawn.y + CONFIG.PLAYER.H);
@@ -74,6 +78,7 @@ class Vecinos {
   // Regalo del vecino (una sola vez en toda la partida)
   give(v, game) {
     if (this.gave(v) || !v.def.gift) return;
+    if (v.def.gift.when && !v.def.gift.when(game)) return;   // todavía no se lo ganó
     (this.rs.vecinos || (this.rs.vecinos = {}))[v.def.id] = true;
     const g = v.def.gift;
     const P = game.progress;
@@ -81,6 +86,11 @@ class Vecinos {
       P.coins += g.coins;
       Effects.popup('+' + g.coins, v.x, v.feet - 30, '#ffd34d');
       Sfx.play('key');
+    }
+    if (g.power && !P.abilities[g.power]) {
+      // Un poder: se entrega como el premio de un jefe (aura y cartel del poder)
+      game.overlay = { kind: 'reward', steps: [{ kind: 'aura' }, { kind: 'power', power: g.power }], i: 0, t: 0, boss: v.def.name };
+      game.startRewardStep();
     }
     if (g.heart && P.maxHearts < CONFIG.GAME.MAX_HEARTS) {
       P.maxHearts++;
@@ -103,7 +113,7 @@ class Vecinos {
       if (v.def.hard) this.moveHard(v, dt, game);
       // Pisotón: la papa cae sobre su cabeza
       const head = { x: v.x - 6, y: v.feet - 22, w: 12, h: 8 };
-      if (!v.def.guard && p.vy > 0 && v.inv <= 0 && overlaps(head, p) && p.y + p.h < v.feet - 10) {
+      if (!v.def.guard && !v.def.noStomp && p.vy > 0 && v.inv <= 0 && overlaps(head, p) && p.y + p.h < v.feet - 10) {
         p.stomp();
         Sfx.play('stomp');
         v.hp--;
@@ -136,12 +146,14 @@ class Vecinos {
           return;
         }
         const lines = (this.gave(v) || (v.def.guard && game.level.gateOpen)) && v.def.after ? v.def.after : v.def.lines;
-        const line = lines[v.line % lines.length];
+        // Si ya cumpliste lo que pide, dice primero la frase del regalo
+        const ready = !this.gave(v) && v.def.gift && v.def.gift.when && v.def.gift.when(game);
+        const line = ready ? lines[0] : lines[v.line % lines.length];
         // "Nombre: frase" (la frase se traduce aquí; el nombre es propio y no cambia)
         const name = v.def.name;
         const said = tr(typeof line === 'function' ? line(game) : line);
         game.say(name ? name + ': ' + said : said, 6, true);
-        if (name) Codex.papa(game, v.def.guard ? 'guardia_' + game.level.id : v.def.id, name);
+        if (name && !v.def.sprite) Codex.papa(game, v.def.guard ? 'guardia_' + game.level.id : v.def.id, name);
         Registro.ev('vecino', { id: v.def.id });
         v.line++;
         Sfx.play('select');
@@ -187,9 +199,15 @@ class Vecinos {
     this.list.forEach(function (v) {
       if (v.down) return;
       if (v.inv > 0 && Math.floor(v.inv * 12) % 2 === 0) return;     // parpadea al recibir un golpe
-      Scenes.drawNpc(ctx, v.x, v.feet, v.def.kind, v.def.color, this.t, (this.t * 2) % 1, !music && Math.abs(v.vx) < 5, v.i + 3);
-      // Triángulo de pisotón (rojo, apunta hacia abajo); el guardián no se pisa
-      if (!v.def.guard) this.drawStompMark(ctx, v);
+      if (v.def.sprite && Sprites.has(v.def.sprite)) {
+        const sp = SPRITES[v.def.sprite];
+        const flip = p.x + p.w / 2 < v.x;
+        Sprites.drawFrame(ctx, v.def.sprite, Sprites.frameAt(v.def.sprite, this.t), v.x - sp.fw / 2, v.feet - sp.fh, flip);
+      } else {
+        Scenes.drawNpc(ctx, v.x, v.feet, v.def.kind, v.def.color, this.t, (this.t * 2) % 1, !music && Math.abs(v.vx) < 5, v.i + 3);
+      }
+      // Triángulo de pisotón (rojo, apunta hacia abajo); el guardián y los jefes no se pisan
+      if (!v.def.guard && !v.def.noStomp) this.drawStompMark(ctx, v);
       this.drawBubble(ctx, v, this.near(v, p));
     }, this);
   }

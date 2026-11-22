@@ -1,7 +1,8 @@
 // Códex: quiénes viven en la ciudad de las papas (CONFIG.CODEX).
 //   · papas: se anotan al hablarles (vecinos, guardianes, vendedores, la vecina de la fiesta)
 //   · jefes: al vencerlos
-//   · animales: cuando venciste o calmaste a TODOS los de esa especie del juego
+//   · animales: cuando venciste o liberaste a TODOS los de esa especie del juego
+// También lleva la cuenta de los animales liberados con la quena (misión del Rasgueador).
 // Se guarda en la partida (progress.codex) y se ve en la pausa desde que tienes la quena.
 // Cada entrada nueva avisa con una notificación corta que no detiene el juego.
 const Codex = (function () {
@@ -24,6 +25,7 @@ const Codex = (function () {
     if (totals) return totals;
     totals = {};
     LEVELS.forEach(function (raw) {
+      if (raw.kind === 'prologo') return;    // el prólogo no se vuelve a visitar
       let L;
       try { L = new Level(raw); } catch (e) { return; }
       L.enemySpawns.forEach(function (s) {
@@ -56,10 +58,10 @@ const Codex = (function () {
     notify(bossName(type));
   }
 
-  // Un animal vencido o calmado (cada uno cuenta una vez: sala + lugar en el mapa)
+  // Un animal vencido o liberado (cada uno cuenta una vez: sala + lugar en el mapa)
   function animal(game, e) {
     const S = C.SPECIES[e.type];
-    if (!S || e.spawnIndex === undefined) return;
+    if (!S || e.spawnIndex === undefined || game.level.kind === 'prologo') return;
     const d = data(game);
     const got = d.animales[e.type] || (d.animales[e.type] = {});
     const key = game.level.id + ':' + e.spawnIndex;
@@ -70,6 +72,22 @@ const Codex = (function () {
       d.especies[e.type] = 1;
       notify(S.name);
     }
+  }
+
+  // Animales liberados con la quena: se guardan por sala (progress.rooms[id].libres)
+  function freed(game) {
+    const rooms = game.progress.rooms;
+    let got = 0;
+    Object.keys(rooms).forEach(function (id) { got += Object.keys(rooms[id].libres || {}).length; });
+    let total = 0;
+    const T = speciesTotals();
+    Object.keys(T).forEach(function (k) { total += T[k]; });
+    return { got: got, total: total };
+  }
+
+  function freedLeft(game) {
+    const f = freed(game);
+    return Math.max(0, f.total - f.got);
   }
 
   function bossName(type) {
@@ -95,7 +113,7 @@ const Codex = (function () {
   // Todas las papas con nombre del juego (id -> nombre)
   function papaList() {
     const list = [];
-    (CONFIG.VECINOS || []).forEach(function (v) { if (v.name) list.push({ id: v.id, name: v.name }); });
+    (CONFIG.VECINOS || []).forEach(function (v) { if (v.name && !v.sprite) list.push({ id: v.id, name: v.name }); });
     Object.keys(C.GUARD_NAMES).forEach(function (r) { list.push({ id: 'guardia_' + r, name: C.GUARD_NAMES[r] }); });
     Object.keys(C.VENDOR_NAMES).forEach(function (k) { list.push({ id: 'vendedor_' + k, name: C.VENDOR_NAMES[k] }); });
     list.push({ id: 'fiesta', name: C.FIESTA_NAME });
@@ -160,6 +178,6 @@ const Codex = (function () {
 
   return {
     papa: papa, boss: boss, animal: animal, progress: progress, completion: completion,
-    entries: entries, update: update, drawToast: drawToast, bossName: bossName
+    entries: entries, freed: freed, freedLeft: freedLeft, isAnimal: function (e) { return !!C.SPECIES[e.type]; }, update: update, drawToast: drawToast, bossName: bossName
   };
 })();

@@ -272,14 +272,14 @@ class Game {
     this.player = new Player(L.spawn.x, L.spawn.y);
     this.player.abilities = this.abilities;
     this.instrumentos = new Instrumentos(L);
-    this.enemies = new Enemies(L);
-    this.vecinos = new Vecinos(L, rs, this.mode === 'story');
+    this.enemies = new Enemies(L, this.isStory() ? rs.libres : null);
+    this.vecinos = new Vecinos(L, rs, this.mode === 'story', this.progress);
     this.gateBumps = 0;
     this.drops = new Drops();
     const b = L.bossSpawn;
     const type = L.boss ? L.boss.type : 'bombo';
     ArenaBoss.tuning = this.bossTuning();
-    this.boss = b && !rs.boss && BOSS_TYPES[type] ? new BOSS_TYPES[type](b.tx, b.ty) : null;
+    this.boss = b && !rs.boss && BOSS_TYPES[type] && this.bossReady(L) ? new BOSS_TYPES[type](b.tx, b.ty) : null;
     this.silencioForm = 1;
     this.arenaPhase = this.boss ? 'idle' : 'done';
     if (this.boss) this.boss.hidden = this.enemies.hasArenaEnemies();
@@ -450,6 +450,7 @@ class Game {
       this.scene.music(this);
       return;
     }
+    if (this.charangoRoom()) { Music.stop(); return; }   // suena su charango (updateCharango)
     const R = (CONFIG.MUSIC.ROOM_MUSIC || {})[L.id];
     Music.setRate(Music.hasStems(L.id) ? 1 : (R && R.rate ? R.rate : L.rate));
     if (this.mission === 'escape') Music.play('key');
@@ -482,6 +483,7 @@ class Game {
 
  // Música de la portada: Niño interno
   Music.play('portada');
+  Music.ambient(null);
   Music.setRate(1);
   Music.setNear(1);
 
@@ -1026,6 +1028,7 @@ class Game {
     this.instrumentos.update(dt, this.level, p, this.level.id);
     this.enemies.update(dt, this.level, p, this.camera);
     this.updateQuena(dt);
+    this.updateCharango();
     this.enemies.list.forEach(function (e) {           // animales vencidos: al Códex
       if (!e.codexed && (e.state === 'squashed' || e.state === 'dead')) { e.codexed = true; Codex.animal(this, e); }
     }, this);
@@ -1761,8 +1764,11 @@ class Game {
     if (L.boss && this.mode === 'story') Codex.boss(this, L.boss.type);
     L.arenaActive = false;
     Music.setRate(L.rate);
-    Music.play(L.music);
+    if (this.charangoRoom()) Music.stop();       // vuelve a sonar su charango
+    else Music.play(L.music);
     Sfx.play('bossWon');
+    // El que pierde y se queda (el Rasgueador): aparece como vecino
+    if (this.isStory()) this.vecinos = new Vecinos(L, this.roomState(L.id), true, this.progress);
     if (this.mode === 'tower') {
       this.towerNext = TOWER.NEXT_DELAY;
       this.say(TEXT.towerFloorDone(this.towerFloor + 1), TOWER.NEXT_DELAY);
@@ -1986,20 +1992,24 @@ stems.forEach(stem => {
     this.useChili();
   }
 
-  // Llamado de la quena: cerca de un animal, Acción (toque) lo calma QUENA.TIME
-  // segundos: deja de atacar, baila y se puede pisar. Calmarlo cuenta para el Códex.
+  // Llamado de la quena (Acción cerca de animales): los libera para siempre. Pasan al
+  // fondo, pasean y bailan sin atacar (ver Enemy.wander). Se guardan por sala
+  // (roomState.libres) y cuentan para el Códex y para la misión del Rasgueador.
   updateQuena(dt) {
     const Q = CONFIG.QUENA, p = this.player;
     this.quenaCool = Math.max(0, (this.quenaCool || 0) - dt);
     if (!p.has('quena') || this.prompt || this.quenaCool > 0 || !Input.pressed('action')) return;
     const cx = p.x + p.w / 2, cy = p.y + p.h / 2, R = Q.RADIUS * CONFIG.TILE;
     const near = this.enemies.alive().filter(function (e) {
-      return !e.def.npc && !e.inArena && !(e.calmed > 0) && Math.hypot(e.x + e.w / 2 - cx, e.y + e.h / 2 - cy) < R;
+      return Codex.isAnimal(e) && !e.inArena && Math.hypot(e.x + e.w / 2 - cx, e.y + e.h / 2 - cy) < R;
     });
     if (!near.length) return;
     this.quenaCool = Q.COOLDOWN;
+    const rs = this.roomState(this.level.id);
+    const libres = rs.libres || (rs.libres = {});
     near.forEach(function (e) {
-      e.calmed = Q.TIME;
+      e.free();
+      if (this.isStory() && this.level.kind !== 'prologo') libres[e.spawnIndex] = true;
       Effects.play('poof', e.x + e.w / 2, e.y);
       if (!e.codexed) { e.codexed = true; Codex.animal(this, e); }
     }, this);
@@ -2170,14 +2180,6 @@ stems.forEach(stem => {
     const p = this.player;
     this.enemies.alive().forEach(function (e) {
       if (e.def.npc) return;   // los vecinos (barrendero) no dañan ni se pisan
-      if (e.calmed > 0) {      // calmado por la quena: plataforma que baila
-        if (p.vy >= 0 && overlaps(e, p) && p.prevBottom <= e.y + 3) {
-          p.y = e.y - p.h;
-          p.vy = 0;
-          p.onGround = true;
-        }
-        return;
-      }
       // La lengua de la rana y el pico de la garza dañan aunque no se toque el cuerpo
       const reach = e.reach();
       if (reach && overlaps(reach, p) && !p.invincible() && !overlaps(e, p)) return this.hurtByEnemy(e);
@@ -2359,7 +2361,44 @@ stems.forEach(stem => {
     this.enemies.resetArena();
     this.boss.hidden = this.enemies.hasArenaEnemies();
     this.level.arenaActive = false;
-    Music.play(this.level.music);
+    if (this.charangoRoom()) Music.stop();
+    else Music.play(this.level.music);
+  }
+
+  // Jefe que espera a otro (boss.after: id de la sala cuyo jefe hay que vencer antes)
+  bossReady(L) {
+    const need = L.boss && L.boss.after;
+    if (!need || !this.isStory()) return true;
+    const r = this.progress.rooms[need];
+    return !!(r && r.boss);
+  }
+
+  // ---------- Charango del Rasgueador (CONFIG.CHARANGO) ----------
+
+  // Sala donde está el Rasgueador (y está ahí: en la zona 7, solo si ya lo venciste en la 1)
+  charangoRoom() {
+    const L = this.level;
+    return CONFIG.CHARANGO.ROOMS.indexOf(L.id) >= 0 && this.isStory() && this.bossReady(L);
+  }
+
+  // Cada cuadro: en su sala suena fijo (menos durante la pelea); en la sala de al lado,
+  // más fuerte mientras más cerca de la salida que lleva a él
+  updateCharango() {
+    const C = CONFIG.CHARANGO, L = this.level, p = this.player;
+    let vol = 0;
+    if (this.charangoRoom()) {
+      vol = this.arenaPhase === 'boss' || this.arenaPhase === 'guards' ? 0 : C.VOLUME;
+    } else if (C.NEAR[L.id] && this.isStory()) {
+      const to = C.NEAR[L.id];
+      const there = LEVELS.find(function (l) { return l.id === to; });
+      const ex = (L.exits || []).find(function (e) { return e.goes === to; });
+      if (ex && there && this.bossReady(there)) {
+        const T = CONFIG.TILE;
+        const d = Math.hypot(p.x + p.w / 2 - (ex.x + ex.w / 2) * T, p.y + p.h / 2 - (ex.y + ex.h / 2) * T) / T;
+        vol = C.VOLUME * Math.max(0, 1 - d / C.RADIUS);
+      }
+    }
+    Music.ambient(vol > 0 ? C.FILE : null, vol);
   }
 
   // ---------- Objetos ----------
@@ -2819,6 +2858,7 @@ updateEchoes(dt) {
     ctx.translate(-Math.round(this.camera.x) + shake.x, -Math.round(this.camera.y) + shake.y);
     this.level.draw(ctx, this.camera);
     if (scene && scene.drawMid) scene.drawMid(ctx, this);
+    this.enemies.drawFreed(ctx, this.time);     // animales liberados: capa del fondo
     if (this.showAreas) {
       const src = this.soundSources();
       Echoes.drawAreas(ctx, src.notes.concat(src.bosses));

@@ -459,6 +459,38 @@ const Music = (function () {
     play(name);
   }
 
+  // --- AMBIENTE (una pista suelta que suena encima de la música, ej. el charango) ---
+  // ambient(archivo, nivel 0..1): el nivel se sigue cuadro a cuadro (cercanía); con
+  // nivel 0 se apaga del todo. Si el archivo no existe, simplemente no suena.
+  const amb = { file: null, src: null, gain: null, bufs: {}, missing: {} };
+  function ambient(file, level) {
+    if (!file || level <= 0) {
+      if (amb.gain) amb.gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.15);
+      if (amb.src && !file) { try { amb.src.stop(audioCtx.currentTime + 0.6); } catch (e) {} amb.src = null; amb.file = null; }
+      return;
+    }
+    if (amb.missing[file] || !unlocked) return;
+    initCtx();
+    if (!amb.gain) { amb.gain = audioCtx.createGain(); amb.gain.gain.value = 0; amb.gain.connect(audioCtx.destination); }
+    amb.gain.gain.setTargetAtTime(muted ? 0 : volume * level, audioCtx.currentTime, 0.1);
+    if (amb.file === file) return;
+    if (amb.src) { try { amb.src.stop(); } catch (e) {} }
+    amb.src = null;
+    amb.file = file;
+    const ready = amb.bufs[file] ? Promise.resolve(amb.bufs[file]) : fetchDecode(file, STEM_TRIES - 1);
+    ready.then(function (b) {
+      if (!b) { amb.missing[file] = true; setError(''); return; }
+      amb.bufs[file] = b;
+      if (amb.file !== file || amb.src) return;
+      const s = audioCtx.createBufferSource();
+      s.buffer = b;
+      s.loop = true;
+      s.connect(amb.gain);
+      s.start();
+      amb.src = s;
+    });
+  }
+
   window.addEventListener('pointerdown', unlock);
   window.addEventListener('keydown', unlock);
   window.addEventListener('touchend', unlock);
@@ -500,7 +532,7 @@ const Music = (function () {
 
   return {
     wake: wake, keepAlive: keepAlive, play: play, stop: stop, pause: pause, resume: resume,
-    setVolume: setVolume, setNear: setNear, setRate: setRate, toggleMute: toggleMute, locked: locked,
+    ambient: ambient, setVolume: setVolume, setNear: setNear, setRate: setRate, toggleMute: toggleMute, locked: locked,
     setStemLevel: setStemLevel, setStemDistance: setStemDistance, collectStem: collectStem,
     hasStems: hasStems, startSearch: startSearch,
     isStemCollected: isStemCollected, allStemsCollected: allStemsCollected, playStems: playStems,
