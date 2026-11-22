@@ -97,7 +97,10 @@ class Vecinos {
         if (v.hp <= 0) {
           v.down = true;
           Effects.play('poof', v.x, v.feet - 10);
-          if (v.def.hard) game.say(v.def.hard.WIN, 4, true);
+          if (v.def.hard) {
+            game.say(v.def.hard.WIN, 4, true);
+            Registro.ev('vecino', { id: v.def.id, duro: 'pisado' });
+          }
           this.give(v, game);
         } else {
           v.vx = (v.x < p.x ? -1 : 1) * v.def.hard.SPEED * 1.5;   // sale disparado
@@ -113,12 +116,14 @@ class Vecinos {
           v.down = true;
           Effects.play('poof', v.x, v.feet - 10);
           game.say(H.PAID, 4, true);
+          Registro.ev('vecino', { id: v.def.id, duro: 'pagado' });
           this.give(v, game);
           return;
         }
         const lines = (this.gave(v) || (v.def.guard && game.level.gateOpen)) && v.def.after ? v.def.after : v.def.lines;
         const line = lines[v.line % lines.length];
         game.say(typeof line === 'function' ? line(game) : line, 6, true);
+        Registro.ev('vecino', { id: v.def.id });
         v.line++;
         Sfx.play('select');
         if (!H) this.give(v, game);

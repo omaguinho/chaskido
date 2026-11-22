@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v89',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v90',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -229,12 +229,29 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.89.0.0',
+    VERSION: '0.90.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
     BOARDS: ['speedrun_z1', 'speedrun_z2', 'speedrun_z3', 'speedrun_z4', 'speedrun_z5', 'speedrun_z6', 'speedrun_z7'],
     TOWER: 'coliseo'
+  },
+
+  // Informe de juego (js/registro.js). URL: la de la aplicación web de la planilla
+  // (Apps Script, termina en /exec); vacía = solo se guarda en el aparato.
+  REGISTRO: {
+    URL: '',
+    SEND_DEFAULT: true,     // "Datos anónimos: Sí" en Opciones
+    IDLE: 60,               // segundos sin tocar nada = una pausa larga
+    ABANDON: 300,           // segundos sin tocar nada = abandono (se cierra la sesión)
+    MIN_SESSION: 20,        // sesiones más cortas no se guardan
+    GRID: 4,                // bloques por celda para medir cuánto de la sala recorrió
+    KEEP: 40,               // sesiones guardadas en el aparato
+    EVENTS_MAX: 400,        // eventos detallados por sesión
+    POWER_EVENTS: ['jump', 'doubleJump', 'dash', 'wallJump', 'hook', 'stompStart'],
+    POWER_OF: { doubleJump: 'doubleJump', wallJump: 'wallJump', dash: 'dash', hook: 'hook', stomp: 'stompStart' },
+    // Perfiles: sala "rápida" (s), cobertura "buena" (0-1) y muertes por hora "muchas"
+    PROFILE: { FAST_ROOM: 90, GOOD_COVER: 0.6, MANY_DEATHS: 12 }
   },
 
   SPEEDRUN: {

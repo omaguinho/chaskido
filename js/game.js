@@ -566,16 +566,42 @@ class Game {
   // El coliseo se abre al terminar la historia en Normal o Difícil
   // Truco para probar: en la portada, izquierda, derecha, arriba, abajo (dos veces)
   // abre el Coliseo y el Speedrun sin terminar la historia
+  // Y arriba, arriba, abajo, abajo abre el informe de juego (descargar / nuevo jugador)
   checkCheat() {
     const dirs = ['left', 'right', 'up', 'down'];
     const hit = dirs.find(function (d) { return Input.pressed(d); });
     if (!hit) return;
     const seq = (this.cheatSeq || []).concat([hit]).slice(-8);
     this.cheatSeq = seq;
+    if (seq.slice(-4).join() === 'up,up,down,down') {
+      this.cheatSeq = [];
+      this.state = 'registro';
+      this.screenTime = 0;
+      this.registroNote = '';
+      Sfx.play('select');
+      return;
+    }
     if (seq.join() !== dirs.concat(dirs).join() || this.records.towerUnlocked) return;
     this.records.towerUnlocked = true;
     Save.writeRecords(this.records);
     Sfx.play('lifeUp');               // las opciones dejan de verse en gris
+  }
+
+  // Pantalla del informe de juego: descargar las sesiones o empezar otro jugador
+  updateRegistro() {
+    if (this.screenTime < 0.3) return;
+    if (Input.pressed('confirm')) {
+      this.registroNote = Registro.download() ? 'Descargado.' : 'Todavía no hay sesiones.';
+      Sfx.play('select');
+    } else if (Input.pressed('tuner')) {
+      Registro.newPlayer();
+      this.registroNote = 'Listo: la próxima partida es de otra persona.';
+      Sfx.play('save');
+    } else if (Input.pressed('pause')) {
+      this.state = 'title';
+      this.screenTime = 0;
+      Sfx.play('move');
+    }
   }
 
   towerUnlocked() {
@@ -857,16 +883,18 @@ class Game {
       // (si sfx.js o audio.js son de una versión vieja, no hace nada)
       if (Sfx.wake) Sfx.wake();
       if (Music.wake) Music.wake();
-      if (Music.keepAlive) Music.keepAlive();
-      this.slotBlink = Math.max(0, (this.slotBlink || 0) - dt);   // la pista que se cortó o no llegó vuelve a sonar
+      if (Music.keepAlive) Music.keepAlive();   // la pista que se cortó o no llegó vuelve a sonar
     }
     this.time += dt;
+    this.slotBlink = Math.max(0, (this.slotBlink || 0) - dt);
+    Registro.tick(this, dt);                    // informe de juego (js/registro.js)
     if (Input.keyPressed('KeyM')) Sfx.setMuted(Music.toggleMute());
 
-    if (this.state === 'splash' || this.state === 'title' || this.state === 'lang' || this.state === 'ready' || this.state === 'speedmenu') {
+    if (this.state === 'splash' || this.state === 'title' || this.state === 'lang' || this.state === 'ready' || this.state === 'speedmenu' || this.state === 'registro') {
       Echoes.silence();
       this.screenTime += dt;
       if (this.state === 'speedmenu') SpeedRun.updateMenu(this);
+      else if (this.state === 'registro') this.updateRegistro();
       else if (this.state === 'splash') this.updateSplash();
       else if (this.state === 'title') this.updateTitle();
       else if (this.state === 'lang') this.updateLang();
@@ -1616,6 +1644,7 @@ class Game {
       O.note = 'La nota ' + hint.nota + ' está en ' + WORLD.fullName(hint.room) + '.';
     }
     P.coins -= price;
+    Registro.ev('compra', { id: good.id, precio: price });
     if (good.id === 'aji') P.chiliBought = (P.chiliBought || 0) + 1;
     good.precioActual = this.priceOf(good);
     Sfx.play('cube');
@@ -1850,8 +1879,17 @@ stems.forEach(stem => {
     return this.hurtTimer <= 0 && this.level.rectHitsSpikes(p.x, p.y, p.w, p.h);
   }
 
+  // Qué golpeó a la papa (para el informe): enemigo, ataque del jefe o disparo
+  hurtCause(source) {
+    if (!source) return this.boss && this.arenaPhase === 'boss' ? 'jefe:onda' : 'rayo';
+    if (source === this.boss) return 'jefe:' + source.state;
+    if (source.type) return source.type;
+    return this.arenaPhase === 'boss' ? 'jefe:disparo' : 'disparo';
+  }
+
   // Cae al vacío o pisa espinas: pierde un corazón y vuelve a la banderita
   loseLife() {
+    Registro.ev('golpe', { causa: this.player.y > this.level.pxH + 32 ? 'caida' : 'espinas' });
     this.hearts = Math.max(0, this.hearts - this.rules().DAMAGE);
     if (this.hearts === 0) {
       this.gameOver();
@@ -1873,6 +1911,7 @@ stems.forEach(stem => {
 
   hurtByEnemy(source) {
     if (this.hurtTimer > 0 || this.player.invincible() || this.player.dancing) return;
+    Registro.ev('golpe', { causa: this.hurtCause(source) });
     const p = this.player;
     this.hearts = Math.max(0, this.hearts - this.rules().DAMAGE);
     if (this.hearts === 0) {
@@ -1989,6 +2028,7 @@ stems.forEach(stem => {
   // Sonó el diapasón: los muros de esa nota que alcanzó la onda se deshacen
   onTone(t) {
     const T = CONFIG.TILE;
+    Registro.ev('diapason', { nota: t.note, efectivo: t.opened.length > 0 });
     Sfx.tune(CONFIG.TUNER.NOTES[t.note].freq);
     if (t.opened.length) {
       t.opened.forEach(function (c, i) {
@@ -2690,6 +2730,10 @@ updateEchoes(dt) {
     }
     if (this.state === 'speedmenu') {
       SpeedRun.drawMenu(ctx, this);
+      return;
+    }
+    if (this.state === 'registro') {
+      UI.drawRegistro(ctx, Registro.last(), this.registroNote);
       return;
     }
     if (this.state === 'ready') {

@@ -3,11 +3,12 @@
 // o con "Guardar partida" en la pausa).
 // Si el navegador no deja guardar, el juego sigue igual (sin guardar).
 const Save = (function () {
-  // { music, sfx, master } de 0 a 10 y rumble (vibración) sí o no
+  // { music, sfx, master } de 0 a 10, rumble (vibración) sí o no y datos (enviar el
+  // informe de juego anónimo, sí o no)
   function loadSettings() {
     const V = CONFIG.VOLUME;
     const base = { music: V.MUSIC, sfx: V.SFX, master: V.MASTER,
-                   rumble: CONFIG.SFX.RUMBLE_DEFAULT, light: CONFIG.LIGHT.QUALITY };
+                   rumble: CONFIG.SFX.RUMBLE_DEFAULT, light: CONFIG.LIGHT.QUALITY, datos: CONFIG.REGISTRO.SEND_DEFAULT };
     try {
       const raw = window.localStorage.getItem(CONFIG.GAME.SETTINGS_KEY);
       return raw ? Object.assign(base, JSON.parse(raw)) : base;

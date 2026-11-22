@@ -37,7 +37,7 @@ class PauseMenu {
   }
 
   static get OPTIONS() {
-    return ['resume', 'music', 'sfx', 'master', 'light', 'rumble', 'touch', 'lang', 'quit'];
+    return ['resume', 'music', 'sfx', 'master', 'light', 'rumble', 'touch', 'datos', 'lang', 'quit'];
   }
 
   // Alto de cada fila de Opciones
@@ -45,7 +45,7 @@ class PauseMenu {
   static get BAR() { return { LEFT: 150, STEP: 9 }; }
 
   static get OPTION_STEP() {
-    return 14;
+    return 13;
   }
 
   // Marcas del mapa (cuadros de mapa_marcas.png)
@@ -153,6 +153,14 @@ class PauseMenu {
     const G = this.game;
     if (item === 'rumble') {
       if (step !== 0 || confirm) G.toggleRumble();
+      return;
+    }
+    if (item === 'datos') {                 // enviar el informe de juego anónimo
+      if (step !== 0 || confirm) {
+        G.settings.datos = !G.settings.datos;
+        Save.writeSettings(G.settings);
+        Sfx.play('select');
+      }
       return;
     }
     if (item === 'touch') {                 // botones táctiles en pantalla
@@ -717,7 +725,7 @@ class PauseMenu {
 
   drawOptions(ctx) {
     const G = this.game;
-    const LABELS = { resume: 'Seguir', music: 'Música', sfx: 'Efectos', master: 'General', light: 'Luces', rumble: 'Vibración', touch: 'Táctil', lang: 'Idioma', quit: 'Salir al inicio' };
+    const LABELS = { resume: 'Seguir', music: 'Música', sfx: 'Efectos', master: 'General', light: 'Luces', rumble: 'Vibración', touch: 'Táctil', datos: 'Datos anónimos', lang: 'Idioma', quit: 'Salir al inicio' };
     const LIGHT = ['Apagadas', 'Simples', 'Completas'];
     const max = CONFIG.VOLUME.STEPS;
     const blink = Math.floor(this.time * 3) % 2 === 0;

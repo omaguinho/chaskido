@@ -852,6 +852,26 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
     },
 
     // Menú: un panel oscuro y elegante a la derecha, con la explicación abajo
+    // Informe de juego (portada: arriba, arriba, abajo, abajo)
+    drawRegistro(ctx, info, note) {
+      const W = CONFIG.WIDTH, H = CONFIG.HEIGHT, r = info.ultima;
+      ctx.fillStyle = '#140b2b';
+      ctx.fillRect(0, 0, W, H);
+      text(ctx, 'Informe de juego', W / 2, 10, '#ffd34d', 10, 'center');
+      text(ctx, info.total + ' sesiones guardadas · ' + info.pendientes + ' por enviar' +
+        (CONFIG.REGISTRO.URL ? '' : ' (sin planilla)'), W / 2, 26, '#9a93b0', 5, 'center');
+      const lines = r ? [
+        'Última: ' + r.minutos + ' min · ' + r.fin + ' en ' + r.sala_final,
+        'Perfil: ' + r.perfil + '  (Exp ' + r.p_experto + ' · Explo ' + r.p_explorador + ' · Apu ' + r.p_apurado +
+          ' · Prin ' + r.p_principiante + ' · Enf ' + r.p_enfocado + ')',
+        'Muertes ' + r.muertes + ' · jefes ' + r.jefes_vencidos + '/' + r.intentos_jefe + ' · diapasón ' + r.diapason_usos,
+        'Recorrió ' + r.cobertura_pct + '% · portón ' + r.choques_porton + ' · mensajes rápidos ' + r.mensajes_rapidos + '/' + r.mensajes
+      ] : ['Todavía no hay sesiones.'];
+      lines.forEach(function (l, i) { text(ctx, l, 20, 48 + i * 14, '#fbf6ec', 6); });
+      if (note) text(ctx, note, W / 2, 118, '#7be0a0', 6, 'center');
+      text(ctx, 'Aceptar: descargar   ♪: nuevo jugador   Pausa: volver', W / 2, H - 14, '#6b6580', 5, 'center');
+    },
+
     drawTitle(ctx, time, items, index, plus, towerOpen) {
       this.drawLogo(ctx, time);
       // Versión en la esquina: así se sabe qué copia está sirviendo el servidor

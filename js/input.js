@@ -234,6 +234,8 @@ const Input = (function () {
     axisX: function () { return axisX; },
     // 'pad' si lo último que se usó fue el mando; si no, 'keys'
     device: function () { return device; },
+    // Todas las acciones (left, right, jump…), para el informe de juego
+    actions: function () { return ACTIONS; },
     // Cualquier toque, tecla o botón nuevo (pantallas de inicio y fin)
     anyPressed: function () { return stepTap; },
     // Solo un toque de pantalla o clic (para aceptar en la pantalla de inicio)
