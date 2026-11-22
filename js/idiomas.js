@@ -710,11 +710,6 @@ const I18N = (function () {
     // ---------- v91: lore ----------
     ['E: bailar', 'E: dance', 'E: dançar'],
     ['¿Intentaste juntar todos los instrumentos? Puedes revisar el mapa (Pausa) para ver dónde están.', 'Did you try to gather all the instruments? Check the map (Pause) to see where they are.', 'Você tentou juntar todos os instrumentos? Dá para olhar o mapa (Pausa) para ver onde estão.'],
-    ['En la ciudad de las papas nadie camina: todos bailan.', 'In the city of potatoes nobody walks: everybody dances.', 'Na cidade das batatas ninguém anda: todo mundo dança.'],
-    ['Aquí la música lo es todo: con ella crecen las papas y se encienden los faroles.', 'Here music is everything: it makes the potatoes grow and the lanterns glow.', 'Aqui a música é tudo: com ela as batatas crescem e as lanternas acendem.'],
-    ['Una vez al año, en la gran fiesta, toda la ciudad toca junta.', 'Once a year, at the great party, the whole city plays together.', 'Uma vez por ano, na grande festa, a cidade inteira toca junta.'],
-    ['Dicen que una papa sin música se arruga... ¡por eso nunca dejamos de bailar!', "They say a potato without music shrivels up... that's why we never stop dancing!", 'Dizem que batata sem música murcha... por isso a gente nunca para de dançar!'],
-    ['¡A la plaza! Ahí toca la orquesta del barrio.', 'To the square! The neighborhood band is playing there.', 'Para a praça! Lá toca a orquestra do bairro.'],
     ['La música se fue...', 'The music is gone...', 'A música foi embora...'],
     ['Antes cobraba en canciones. Ahora, sin música, solo me quedan monedas.', 'I used to charge in songs. Now, without music, all I have left is coins.', 'Eu cobrava em canções. Agora, sem música, só me sobram moedas.'],
     ['Desde que llegó el Silencio, mis clientes ni silban. ¡Gracias por comprar!', "Since the Silence came, my customers don't even whistle. Thanks for buying!", 'Desde que o Silêncio chegou, meus clientes nem assobiam. Obrigado pela compra!'],

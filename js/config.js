@@ -230,17 +230,10 @@ const CONFIG = {
   // sin música, se volvieron hostiles (aura oscura). La papa es un chasqui: el mensajero
   // que lleva la música de vuelta, sala por sala.
   LORE: {
-    // La Fiesta (p1): frases del narrador al pasar por cada bloque x (no detienen)
-    FIESTA: [
-      { x: 8, text: 'En la ciudad de las papas nadie camina: todos bailan.' },
-      { x: 22, text: 'Aquí la música lo es todo: con ella crecen las papas y se encienden los faroles.' },
-      { x: 36, text: 'Una vez al año, en la gran fiesta, toda la ciudad toca junta.' },
-      { x: 55, text: 'Dicen que una papa sin música se arruga... ¡por eso nunca dejamos de bailar!' },
-      { x: 70, text: '¡A la plaza! Ahí toca la orquesta del barrio.' }
-    ],
     // Pista de baile al comienzo de la fiesta (bloques x): E o Cuadrado para bailar
     DANCE_FLOOR: { FROM: 4, TO: 9, ROW: 17 },
-    // Al despertar en la cueva (p2), después de la caída
+    // El narrador habla una sola vez: al despertar en la cueva (p2), cuando la música
+    // ya se fue. El resto del lore lo cuentan los vecinos.
     CUEVA: 'La música se fue...',
     // Escombros que siguen cayendo al llegar a la cueva
     ROCKS: { TIME: 2.4, EVERY: 0.09 },

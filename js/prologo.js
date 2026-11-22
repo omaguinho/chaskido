@@ -480,7 +480,7 @@ const Scenes = (function () {
     Sfx.play('select');
   }
   
-  if (!this.event) this.updateLore(game);
+  if (!this.event) this.updateDanceFloor(game);
 
   if (!this.event) {
     // SI NO ESTAMOS EN LA MISIÓN, MANTENER LA MÚSICA AL 100%
@@ -628,19 +628,11 @@ const Scenes = (function () {
     game.screenShake = 0.8;
   };
 
-  // Lore de la fiesta: el narrador cuenta algo al pasar por ciertos lugares, y en la
-  // pista de baile del comienzo se baila con E o Cuadrado (el mismo baile del mix)
-  Fiesta.prototype.updateLore = function (game) {
-    const LO = CONFIG.LORE, p = game.player;
+  // Pista de baile del comienzo: se baila con E o Cuadrado (el mismo baile del mix)
+  Fiesta.prototype.updateDanceFloor = function (game) {
+    const p = game.player;
     const tx = (p.x + p.w / 2) / T;
-    this.told = this.told || {};
-    LO.FIESTA.forEach(function (f, i) {
-      if (!this.told[i] && tx >= f.x) {
-        this.told[i] = true;
-        game.sayMission(f.text);
-      }
-    }, this);
-    const D = LO.DANCE_FLOOR;
+    const D = CONFIG.LORE.DANCE_FLOOR;
     this.onFloor = p.onGround && tx >= D.FROM && tx < D.TO + 1;
     if (p.dancing && game.mission !== 'merging') {
       if (Input.pressed('action') || !this.onFloor && p.onGround) p.stopDance();
