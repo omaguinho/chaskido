@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v97',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v98',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -285,13 +285,12 @@ const CONFIG = {
     KEY_LABELS: ['1', '2', '3', '4', '5', '6', '7']
   },
 
-  // Indicador de pulso (js/pulso.js): rombo arriba al centro con una línea celeste que
-  // hace "clic" en cada tiempo. Si tocas el diapasón o la zampoña justo en un tiempo
-  // (TOLERANCE segundos antes o después), se enciende el cuadrado verde y suena.
+  // Indicador de pulso (js/pulso.js): una línea en la barra de arriba (Y, alto H) que
+  // brilla en cada tiempo. Si tocas el diapasón o la zampoña justo en un tiempo
+  // (TOLERANCE segundos antes o después), se pone verde y suena.
   PULSO: {
-    TOLERANCE: 0.1, SIZE: 9, Y: 16,
-    LINE: '#8fe3ff', OK: '#6bd17a', OK_TIME: 0.35, CLICK_TIME: 0.12,
-    FRAME: ['#e0465a', '#ffd34d', '#3ec8c8', '#fbf6ec']   // colores del marco tejido
+    TOLERANCE: 0.1, Y: 2, H: 10,
+    LINE: '#8fe3ff', OK: '#6bd17a', OK_TIME: 0.35, CLICK_TIME: 0.12
   },
 
   // El Rasgueador y su charango (assets/music/charango.mp3, lo pones tú):
@@ -359,7 +358,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.97.0.0',
+    VERSION: '0.98.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -417,7 +416,7 @@ const CONFIG = {
     main: 'tema_zona_1_3voces.m4a',
     key: 'tema_zona_1_4voces.m4a',
     final: 'tema_final.mp3',
-    portada: 'nino_interno.mp3',
+    portada: 'momentounico.mp3',    // portada e introducción: Momento único
     creditos: 'momentounico.mp3',
     zona1: 'tema_zona_1_3voces.m4a',
     zona1b: 'tema_zona_1_4voces.m4a',
@@ -493,7 +492,7 @@ const CONFIG = {
   },
   // Otras músicas (para el catálogo): portada, créditos, salas sin instrumentos, jefe y ají
   OTHER_TITLES: {
-    portada: 'Niño interno', creditos: 'Momento único', otras: 'Ocaso escondido',
+    portada: 'Momento único', creditos: 'Momento único', otras: 'Ocaso escondido',
     tambor: 'Tambor del puerto', aji: 'Ocaso picante'
   },
 

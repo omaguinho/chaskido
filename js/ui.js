@@ -780,24 +780,22 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
 
     // Pantalla de inicio: la ciudad de noche con las notas que se escapan (js/prologo.js)
     // y el título armado con notas. Con CONFIG.TITLE_PORTADA en true usa portada.png
-    drawLogo(ctx, time, noPapa) {
+    drawLogo(ctx, time) {
+      if (Titulo.draw(ctx, time)) return;           // portada con parallax (si están sus capas)
       if (CONFIG.TITLE_PORTADA && Sprites.drawFrame(ctx, 'portada', 0, 0, 0, false)) {
         if (!Sprites.drawFrame(ctx, 'logo', 0, W / 2 - 80, 8, false)) shadowText(ctx, 'CHASKIDO', W / 2, 24, '#ffd34d', 24, 'center');
         return;
       }
-      Scenes.drawTitleBackground(ctx, time, true, noPapa);
+      Scenes.drawTitleBackground(ctx, time, true);
     },
 
     // La primera vez (sin idioma elegido) el aviso va cambiando entre los tres idiomas
-    // El aviso está dentro de una caja que el chasqui puede golpear (js/portada.js)
     drawSplash(ctx, time, canStart, firstTime) {
-      this.drawLogo(ctx, time, true);
-      Portada.draw(ctx, time, canStart, this.splashLabel(time, firstTime));
-    },
-
-    splashLabel(time, firstTime) {
+      this.drawLogo(ctx, time);
+      if (!canStart || Math.floor(time * 1.5) % 2 !== 0) return;
       const PRESS = ['Pulsa un botón', 'Press a button', 'Aperte um botão'];
-      return firstTime ? PRESS[Math.floor(time / 1.333) % 3] : tr('Pulsa un botón');
+      const str = firstTime ? PRESS[Math.floor(time / 1.333) % 3] : tr('Pulsa un botón');
+      shadowText(ctx, str, W / 2, Titulo.active() ? H - 16 : 118, '#fff6e0', 8, 'center');
     },
 
     // Mensaje importante: pausa el juego hasta apretar Acción

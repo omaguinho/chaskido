@@ -478,7 +478,6 @@ class Game {
 
   openTitle() {
   this.state = 'splash';
-  Portada.reset();
   this.screenTime = 0;
   Backdrop.set('none');
   Backdrop.setMuted(false);
@@ -496,12 +495,8 @@ class Game {
     return this.screenTime >= CONFIG.GAME.READY_DELAY;
   }
 
-  // Portada jugable: el chasqui camina; la caja "Pulsa un botón" se abre con un botón
-  // (no las direcciones) o golpeándola desde abajo
-  updateSplash(dt) {
-    const label = UI.splashLabel(this.time, !this.settings.lang);
-    if (!Portada.update(dt, this.screenReady(), label)) return;
-    Portada.reset();
+  updateSplash() {
+    if (!this.screenReady() || !Input.anyPressed()) return;
     Sfx.play('select');
     this.screenTime = 0;
     this.titleIndex = 0;
@@ -910,7 +905,7 @@ class Game {
       this.screenTime += dt;
       if (this.state === 'speedmenu') SpeedRun.updateMenu(this);
       else if (this.state === 'registro') this.updateRegistro();
-      else if (this.state === 'splash') this.updateSplash(dt);
+      else if (this.state === 'splash') this.updateSplash();
       else if (this.state === 'title') this.updateTitle();
       else if (this.state === 'lang') this.updateLang();
       else this.updateReady();

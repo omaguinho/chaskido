@@ -1182,8 +1182,7 @@ function drawTitleWord(ctx, t, life, y, alphaMax) {
   const titleNotes = [];
   for (let i = 0; i < 18; i++) titleNotes.push({ x: rand(i * 3) * W, speed: 8 + rand(i * 7) * 14, phase: rand(i * 11) * 200, kind: i % 3, color: FLAG_COLORS[i % FLAG_COLORS.length] });
 
-  // noPapa: la papa no se dibuja sentada (en la portada jugable camina, js/portada.js)
-  function drawTitleBackground(ctx, time, showWord, noPapa) {
+  function drawTitleBackground(ctx, time, showWord) {
     drawNightSky(ctx, time * 6, time, { lights: 0.85 });
     // Notas que se escapan de la ciudad
     titleNotes.forEach(function (n) {
@@ -1200,8 +1199,7 @@ function drawTitleWord(ctx, t, life, y, alphaMax) {
     const py = H - 26;
     ctx.fillStyle = '#1b1035';
     ctx.fillRect(20, py + 8, 60, H - py - 8);
-    if (noPapa) { /* la dibuja la portada jugable */ }
-    else if (!Sprites.drawFrame(ctx, 'papa_quieta', Sprites.frameAt('papa_quieta', time), px - 8, py - 16, false)) {
+    if (!Sprites.drawFrame(ctx, 'papa_quieta', Sprites.frameAt('papa_quieta', time), px - 8, py - 16, false)) {
       ctx.fillStyle = '#e8c58e';
       ctx.beginPath();
       ctx.ellipse(px, py, 6, 8, 0, 0, Math.PI * 2);
