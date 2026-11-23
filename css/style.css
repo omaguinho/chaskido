@@ -1,5 +1,13 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Estilos de HUD (Opciones → Estilo de HUD): la letra de cada uno.
+   El juego la lee de aquí (UI.hudFont); cámbiala sin tocar el código */
+:root {
+  --hud-font-0: "Josefin Sans", "Trebuchet MS", sans-serif;   /* Tejido */
+  --hud-font-1: "Courier New", Courier, monospace;            /* Clásico */
+  --hud-font-2: Verdana, "Trebuchet MS", sans-serif;          /* Limpio */
+}
+
 html, body {
   width: 100%;
   height: 100%;

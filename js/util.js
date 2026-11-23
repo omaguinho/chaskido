@@ -5,6 +5,13 @@ function gameFont(size) {
   return CONFIG.FONT_WEIGHT + ' ' + Math.round(size * CONFIG.FONT_SCALE * 10) / 10 + 'px ' + CONFIG.FONT;
 }
 
+// ¿Se juega en un celular o tablet? (pantalla táctil sin mouse fino)
+function isMobile() {
+  const ua = navigator.userAgent || '';
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  return /Mobi|Android|iPad|Tablet|SM-T/i.test(ua) || (coarse && navigator.maxTouchPoints > 0);
+}
+
 function clamp(v, min, max) {
   return Math.max(min, Math.min(v, max));
 }

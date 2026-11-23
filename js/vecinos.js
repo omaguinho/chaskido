@@ -59,7 +59,7 @@ class Vecinos {
 
   // Lo que grita en su globo: uno de sus saludos, al azar
   static saludo(v) {
-    const S = v.saludos || ['¡Hola!'];
+    const S = (v && v.saludos) || ['¡Hola!', '¡Oye, tú!'];
     return S[Math.floor(Math.random() * S.length)];
   }
 

@@ -104,7 +104,7 @@ class Player {
   }
 
   running() {
-    return Input.held('run') && !this.frozen;
+    return (Input.held('run') || Player.autoRun) && !this.frozen;
   }
 
   jumpMult() {

@@ -53,6 +53,7 @@ const PERSONAJES = {
                      'Los cóndores vuelan sin mover las alas. Yo lo intento y me caigo.'] }
   },
   FIESTA: 'Tarmelina',                       // la vecina que habla en la fiesta del prólogo
+  FIESTA_SALUDOS: ['¡Ven a bailar!', '¡Qué fiesta!', '¡Hola, chasqui!'],
   VENDEDORES: { viajero: 'Don Revuelo', cocinera: 'Doña Huevina', coleccion: 'Tío Torito' },
 
   VECINOS: [

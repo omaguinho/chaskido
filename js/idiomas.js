@@ -891,7 +891,17 @@ const I18N = (function () {
     ['Desde aquí se ve toda la ciudad. Cada día suena un poco más.', 'From here you can see the whole city. Every day it sounds a little more.', 'Daqui se vê a cidade toda. Cada dia ela soa um pouco mais.'],
     ['El viento trae noticias. Hoy trae olor a pan.', 'The wind brings news. Today it smells of bread.', 'O vento traz notícias. Hoje traz cheiro de pão.'],
     ['Los cóndores vuelan sin mover las alas. Yo lo intento y me caigo.', 'Condors fly without flapping. I try and fall.', 'Os condores voam sem mexer as asas. Eu tento e caio.'],
-    ['Marcado como desarrollador.', 'Marked as developer.', 'Marcado como desenvolvedor.'], ['Ya no es desarrollador.', 'No longer developer.', 'Não é mais desenvolvedor.']
+    ['Marcado como desarrollador.', 'Marked as developer.', 'Marcado como desenvolvedor.'], ['Ya no es desarrollador.', 'No longer developer.', 'Não é mais desenvolvedor.'],
+    // ---------- v100 ----------
+    ['¡Ven a bailar!', 'Come dance!', 'Vem dançar!'], ['¡Qué fiesta!', 'What a party!', 'Que festa!'],
+    ['Letra', 'Text', 'Letra'], ['Estilo de HUD', 'HUD style', 'Estilo do HUD'], ['Grande', 'Large', 'Grande'], ['Media', 'Medium', 'Média'], ['Chica', 'Small', 'Pequena'],
+    ['Tejido', 'Woven', 'Tecido'], ['Clásico', 'Classic', 'Clássico'], ['Limpio', 'Clean', 'Limpo'],
+    ['Correr automático', 'Auto-run', 'Correr automático'], ['La papa siempre corre: tú solo saltas y esquivas', 'The potato always runs: you just jump and dodge', 'A batata sempre corre: você só pula e desvia'],
+    ['Carrera', 'Run', 'Corrida'], ['Reiniciar speedrun', 'Restart speedrun', 'Reiniciar speedrun'], ['Reiniciar coliseo', 'Restart colosseum', 'Reiniciar coliseu'], ['Salir', 'Exit', 'Sair'],
+    ['Perdiste en el coliseo: llegaste al piso', 'You lost in the colosseum: you reached floor', 'Você perdeu no coliseu: chegou ao andar'],
+    ['Poderes', 'Powers', 'Poderes'], ['Vecinos que volvieron a bailar', 'Neighbors who danced again', 'Vizinhos que voltaram a dançar'],
+    ['Animales liberados', 'Animals freed', 'Animais libertados'], ['Gracias por jugar', 'Thanks for playing', 'Obrigado por jogar'],
+    ['Juego hecho por', 'Game made by', 'Jogo feito por'], ['Música original', 'Original music', 'Música original'], ['Con la asistencia de', 'With the assistance of', 'Com a assistência de']
   ];
 
   // ---------- Moldes: frases con partes que cambian ({0}, {1}...) ----------

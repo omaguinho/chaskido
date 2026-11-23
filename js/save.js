@@ -8,7 +8,8 @@ const Save = (function () {
   function loadSettings() {
     const V = CONFIG.VOLUME;
     const base = { music: V.MUSIC, sfx: V.SFX, master: V.MASTER,
-                   rumble: CONFIG.SFX.RUMBLE_DEFAULT, light: CONFIG.LIGHT.QUALITY, datos: CONFIG.REGISTRO.SEND_DEFAULT };
+                   rumble: CONFIG.SFX.RUMBLE_DEFAULT, light: CONFIG.LIGHT.QUALITY, datos: CONFIG.REGISTRO.SEND_DEFAULT,
+                   textSize: CONFIG.TEXT_SIZE.DEFAULT, hud: 0, autoRun: isMobile() };
     try {
       const raw = window.localStorage.getItem(CONFIG.GAME.SETTINGS_KEY);
       return raw ? Object.assign(base, JSON.parse(raw)) : base;

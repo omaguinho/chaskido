@@ -88,6 +88,8 @@ class Game {
     this.state = 'splash';
     this.debug = false;
     this.settings = Save.loadSettings();
+    this.applyTextSize();
+    Player.autoRun = !!this.settings.autoRun;
     I18N.set(this.settings.lang || 'es');
     this.records = Save.loadRecords();
     this.applyVolume();
@@ -257,6 +259,11 @@ class Game {
     L.powers = this.abilities;
     L.openDoors = Object.assign({}, rs.doors);
     L.exits.forEach(function (e) { if (!WORLD.built(e.goes)) L.blockExit(e); });
+    // Speedrun: las salidas a salas de otra zona se cierran con un muro arcoíris
+    if (this.mode === 'speedrun' && this.speed) {
+      const zone = CONFIG.SPEEDRUN.ZONES[this.speed.zone].rooms;
+      L.exits.forEach(function (e) { if (zone.indexOf(e.goes) < 0) { L.blockExit(e); e.rainbow = true; } });
+    }
     L.gateOpen = rs.afinada || !this.isMissionRoom(L);
     if (rs.broken.length) L.removeCells(rs.broken);
     if (rs.shown && rs.shown.length) L.showCells(rs.shown);
@@ -563,6 +570,7 @@ class Game {
     items.push('tower');
     items.push('speedrun');
     items.push('lang');
+    if (isMobile() || Touch.isOn()) items.push('autorun');   // correr automático (celular)
     items.push('credits');
     return items;
   }
@@ -659,6 +667,10 @@ class Game {
         this.plus = !this.plus;
         Sfx.play('move');
       }
+      return;
+    }
+    if (item === 'autorun') {
+      if (Input.pressed('left') || Input.pressed('right') || accept) this.toggleAutoRun();
       return;
     }
     if (item === 'lang') {
@@ -766,6 +778,11 @@ class Game {
       SpeedRun.fail(this);
       return;
     }
+    if (this.mode === 'tower') {              // en el coliseo, si mueres, pierdes
+      Sfx.play('collapse');
+      SpeedRun.towerLost(this);
+      return;
+    }
     // La papa cae: sonido de derrumbe y un temblor fuerte
     Sfx.play('collapse');
     this.screenShake = 0.6;
@@ -832,7 +849,23 @@ class Game {
   updateFiesta(dt) {
     this.endTimer += dt;
     const F = CONFIG.ENDGAME;
-    if (this.endTimer > F.FIESTA_TIME || (this.endTimer > 4 && Input.anyPressed())) this.winGame();
+    if (this.endTimer > F.FIESTA_TIME || (this.endTimer > 4 && Input.anyPressed())) this.startEndCredits();
+  }
+
+  // Créditos del final: el chasqui camina por los paisajes con los vecinos rescatados
+  // (y los animales, si los liberó), con la música de la portada
+  startEndCredits() {
+    this.state = 'endcredits';
+    this.endTimer = 0;
+    Music.setRate(1);
+    Music.play('creditos');
+    Titulo.startCredits(this);
+  }
+
+  updateEndCredits(dt) {
+    this.endTimer += dt;
+    const done = Titulo.updateCredits(dt);
+    if (done || (this.endTimer > 5 && Input.anyPressed())) this.winGame();
   }
 
   winGame() {
@@ -925,6 +958,11 @@ class Game {
     if (this.state === 'fiesta') {
       Echoes.silence();
       this.updateFiesta(dt);
+      return;
+    }
+    if (this.state === 'endcredits') {
+      Echoes.silence();
+      this.updateEndCredits(dt);
       return;
     }
     if (this.modal) {
@@ -1042,6 +1080,7 @@ class Game {
     this.updateShell(dt);              // claves (después de la quena: no usan el mismo toque)
     this.updateCharango();
     this.updateVictory(dt);
+    this.updateBossTempo();
     this.enemies.list.forEach(function (e) {           // animales vencidos: al Códex
       if (!e.codexed && (e.state === 'squashed' || e.state === 'dead')) { e.codexed = true; Codex.animal(this, e); }
     }, this);
@@ -1894,6 +1933,28 @@ class Game {
     Sfx.play('move');
   }
 
+  // Letra (Grande, Media, Chica) y estilo de HUD: dan la vuelta con < >
+  cycleSetting(id, step) {
+    const n = id === 'textSize' ? CONFIG.TEXT_SIZE.LIST.length : CONFIG.HUD_STYLES.length;
+    this.settings[id] = ((this.settings[id] || 0) + step + n) % n;
+    this.applyTextSize();
+    Save.writeSettings(this.settings);
+    Sfx.play('move');
+  }
+
+  applyTextSize() {
+    const T = CONFIG.TEXT_SIZE, opt = T.LIST[this.settings.textSize || 0] || T.LIST[0];
+    CONFIG.FONT_SCALE = T.BASE_SCALE * opt.pct / T.BASE_PCT;
+  }
+
+  // Correr automático (en el menú de inicio; por defecto Sí en celulares y tablets)
+  toggleAutoRun() {
+    this.settings.autoRun = !this.settings.autoRun;
+    Player.autoRun = this.settings.autoRun;
+    Save.writeSettings(this.settings);
+    Sfx.play('move');
+  }
+
   toggleRumble() {
     this.settings.rumble = !this.settings.rumble;
     this.applyVolume();
@@ -2343,8 +2404,11 @@ stems.forEach(stem => {
       L.arenaActive = true;
       Sfx.play('walls');
       const BM = (CONFIG.MUSIC.BOSS_MUSIC || {})[L.id];
+      Music.ambient(null);            // el charango se calla ya (la portada del jefe congela el juego)
       Music.play(BM ? BM.track : CONFIG.MUSIC.BOSS_TRACK);
-      Music.setRate(BM && BM.rate ? BM.rate : 1);
+      this.bossRate = BM && BM.rate ? BM.rate : 1;
+      this.bossHpSeen = -1;
+      Music.setRate(this.bossRate);
       Music.setNear(1);
       if (this.enemies.hasArenaEnemies()) {
         this.arenaPhase = 'guards';
@@ -2413,6 +2477,15 @@ stems.forEach(stem => {
     this.level.arenaActive = false;
     if (this.charangoRoom()) Music.stop();
     else Music.play(this.level.music);
+  }
+
+  // La música del jefe se acelera a medida que pierde vida (CONFIG.MUSIC.BOSS_ACCEL)
+  updateBossTempo() {
+    const B = this.boss;
+    if (this.arenaPhase !== 'boss' || !B || !B.def || B.hp === this.bossHpSeen || B.hp <= 0) return;
+    this.bossHpSeen = B.hp;
+    const lost = 1 - B.hp / B.def.HP;
+    Music.setRate((this.bossRate || 1) * (1 + CONFIG.MUSIC.BOSS_ACCEL * lost));
   }
 
   // Termina la fanfarria de victoria: vuelve la música de la sala (o el charango)
@@ -2890,6 +2963,10 @@ updateEchoes(dt) {
       UI.drawFiesta(ctx, this.time, this.endTimer);
       return;
     }
+    if (this.state === 'endcredits') {
+      Titulo.drawCredits(ctx, this.time);
+      return;
+    }
     if (this.state === 'lang') {
       UI.drawLang(ctx, this.time, this.langIndex);
       return;
@@ -2972,7 +3049,7 @@ updateEchoes(dt) {
       UI.drawHud(ctx, this);
       Pulso.draw(ctx, this);
     }
-    BossShow.drawBar(ctx, this.boss);
+    BossShow.drawBar(ctx, this.boss, this);
     if (this.mode === 'speedrun' || this.mode === 'tower') SpeedRun.drawHud(ctx, this);
     Codex.drawToast(ctx);
     if (this.banner && !this.menu.open) UI.drawBanner(ctx, this.banner);

@@ -38,7 +38,7 @@ class PauseMenu {
   }
 
   static get OPTIONS() {
-    return ['resume', 'music', 'sfx', 'master', 'light', 'rumble', 'touch', 'datos', 'lang', 'quit'];
+    return ['resume', 'music', 'sfx', 'master', 'light', 'rumble', 'touch', 'textSize', 'hud', 'datos', 'lang', 'quit'];
   }
 
   // Alto de cada fila de Opciones
@@ -46,7 +46,7 @@ class PauseMenu {
   static get BAR() { return { LEFT: 150, STEP: 9 }; }
 
   static get OPTION_STEP() {
-    return 13;
+    return 11;
   }
 
   // Marcas del mapa (cuadros de mapa_marcas.png)
@@ -54,9 +54,14 @@ class PauseMenu {
     return { PAPA: 0, POSTA: 1, TOTEM: 2, VENDOR: 3, BOSS: 4, HEART: 5, DOOR: 6, CORCHEA: 7 };
   }
 
+  // Speedrun y coliseo: primero "Carrera" (reiniciar o salir), después Poderes y Opciones
+  racing() { return this.game.mode === 'speedrun' || this.game.mode === 'tower'; }
+
   tabs() {
     const all = PauseMenu.TABS;
-    if (this.game.mode === 'tower') return all.filter(function (t) { return t.id === 'poderes' || t.id === 'opciones'; });
+    if (this.racing()) {
+      return [{ id: 'guardar', label: 'Carrera', icon: 4 }].concat(all.filter(function (t) { return t.id === 'poderes' || t.id === 'opciones'; }));
+    }
     const quena = !!this.game.progress.abilities.quena;      // el Códex se abre con la quena
     return all.filter(function (t) { return t.id !== 'codex' || quena; });
   }
@@ -174,6 +179,10 @@ class PauseMenu {
       if (step !== 0 || confirm) G.changeLight(step || 1);
       return;
     }
+    if (item === 'textSize' || item === 'hud') {   // tamaño de letra y estilo de HUD
+      if (step !== 0 || confirm) G.cycleSetting(item, step || 1);
+      return;
+    }
     if (item === 'lang') {
       if (step !== 0 || confirm) G.changeLang(step || 1);
       return;
@@ -191,6 +200,18 @@ class PauseMenu {
   }
 
   useSaveRow(row) {
+    if (this.racing()) {
+      const G = this.game, tower = G.mode === 'tower';
+      this.close();
+      if (row === 0) {                       // reiniciar
+        if (tower) SpeedRun.startTower(G);
+        else SpeedRun.start(G, G.speed ? G.speed.zone : 0);
+      } else {                               // salir: al menú de zonas y coliseo
+        if (tower) G.speedPick = CONFIG.SPEEDRUN.ZONES.length;
+        SpeedRun.openMenu(G);
+      }
+      return;
+    }
     if (row === 1) {
       this.close();
       return;
@@ -199,6 +220,23 @@ class PauseMenu {
     this.notice = ok ? 'Partida guardada.' : 'No se pudo guardar (¿el navegador no deja guardar?).';
     this.noticeTime = 2.5;
     Sfx.play(ok ? 'save' : 'hurt');
+  }
+
+  // Carrera (speedrun / coliseo): reiniciar desde el principio o salir
+  drawRace(ctx) {
+    const tower = this.game.mode === 'tower';
+    UI.panel(ctx, 40, 38, CONFIG.WIDTH - 80, 112);
+    const ink = '#2e2a47';
+    UI.text(ctx, tower ? 'Coliseo de los jefes' : 'Speedrun', CONFIG.WIDTH / 2, 50, ink, 8, 'center');
+    [tower ? 'Reiniciar coliseo' : 'Reiniciar speedrun', 'Salir'].forEach(function (label, i) {
+      const y = 108 + i * 16;
+      const on = i === this.row;
+      if (on) {
+        ctx.fillStyle = 'rgba(233, 196, 106, 0.55)';
+        ctx.fillRect(56, y - 2, CONFIG.WIDTH - 112, 12);
+      }
+      UI.text(ctx, label, CONFIG.WIDTH / 2, y, on ? ink : '#6b6385', 7, 'center');
+    }, this);
   }
 
   // Poderes: arriba/abajo recorre poderes y llaves; izquierda/derecha cambia de pestaña
@@ -314,7 +352,7 @@ class PauseMenu {
     const G = this.game;
     const B = PauseMenu.BAR;
     const v = G.settings[id];
-    if (typeof v === 'number' && id !== 'light') {
+    if (typeof v === 'number' && id !== 'light' && id !== 'textSize' && id !== 'hud') {
       if (x < B.LEFT - 2) { if (x > B.LEFT - 14) this.useOption(id, -1, false); return; }
       if (x >= B.LEFT + CONFIG.VOLUME.STEPS * B.STEP) { this.useOption(id, 1, false); return; }
       const want = Math.max(0, Math.min(CONFIG.VOLUME.STEPS, Math.floor((x - B.LEFT) / B.STEP) + 1));
@@ -745,6 +783,7 @@ class PauseMenu {
   // ---------- Guardar ----------
 
   drawSave(ctx) {
+    if (this.racing()) return this.drawRace(ctx);
     const G = this.game;
     const P = G.progress;
     UI.panel(ctx, 40, 38, CONFIG.WIDTH - 80, 112);
@@ -775,7 +814,8 @@ class PauseMenu {
 
   drawOptions(ctx) {
     const G = this.game;
-    const LABELS = { resume: 'Seguir', music: 'Música', sfx: 'Efectos', master: 'General', light: 'Luces', rumble: 'Vibración', touch: 'Táctil', datos: 'Datos anónimos', lang: 'Idioma', quit: 'Salir al inicio' };
+    const LABELS = { resume: 'Seguir', music: 'Música', sfx: 'Efectos', master: 'General', light: 'Luces', rumble: 'Vibración', touch: 'Táctil',
+                     textSize: 'Letra', hud: 'Estilo de HUD', datos: 'Datos anónimos', lang: 'Idioma', quit: 'Salir al inicio' };
     const LIGHT = ['Apagadas', 'Simples', 'Completas'];
     const max = CONFIG.VOLUME.STEPS;
     const blink = Math.floor(this.time * 3) % 2 === 0;
@@ -794,6 +834,15 @@ class PauseMenu {
       if (v === undefined) return;
       if (id === 'light') {
         UI.text(ctx, LIGHT[v], 150, y, color);
+        return;
+      }
+      if (id === 'textSize') {
+        const T = CONFIG.TEXT_SIZE.LIST[v];
+        UI.text(ctx, '< ' + tr(T.name) + ' (' + T.pct + ') >', 150, y, color);
+        return;
+      }
+      if (id === 'hud') {
+        UI.text(ctx, '< ' + tr(CONFIG.HUD_STYLES[v]) + ' >', 150, y, color);
         return;
       }
       if (typeof v === 'boolean') {

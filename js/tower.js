@@ -1,18 +1,25 @@
 // Coliseo de los jefes (torre): se elige en el menú de inicio.
-// Seis pisos, un jefe por piso y en el orden del juego. En cada piso tienes
+// Un piso por jefe (todos, también los secretos), en el orden del juego. En cada piso tienes
 // los poderes que darían los jefes anteriores. Se juega con las reglas de Normal.
 // Antes de cada pelea se presenta el jefe con su retrato (retrato_<jefe>.png).
 // Los pisos son salas más de LEVELS (con tower: true), fuera del mundo.
 const TOWER = {
   DIFFICULTY: 'normal',
   NEXT_DELAY: 2.5,        // segundos entre vencer a un jefe y subir al piso siguiente
+  // Todos los jefes en el orden del juego (los secretos donde se encuentran)
   FLOORS: [
-    { id: 't1', boss: 'bombo',       portrait: 'retrato_bombo',       abilities: [] },
-    { id: 't2', boss: 'cuy',         portrait: 'retrato_cuygig',      abilities: ['doubleJump'] },
-    { id: 't3', boss: 'charanguero', portrait: 'retrato_charanguero', abilities: ['doubleJump', 'wallJump'] },
-    { id: 't4', boss: 'huaca',       portrait: 'retrato_huaca',       abilities: ['doubleJump', 'wallJump', 'dash'] },
-    { id: 't5', boss: 'gusano',      portrait: 'retrato_gusano',      abilities: ['doubleJump', 'wallJump'] },
-    { id: 't6', boss: 'condor',      portrait: 'retrato_condor',      abilities: ['doubleJump', 'wallJump', 'dash', 'glide'] }
+    { id: 't1',  boss: 'eco',          portrait: 'retrato_eco',         abilities: [] },
+    { id: 't2',  boss: 'bombo',        portrait: 'retrato_bombo',       abilities: ['tuner'] },
+    { id: 't3',  boss: 'charanguero',  portrait: 'retrato_charanguero', abilities: ['tuner', 'doubleJump'] },
+    { id: 't4',  boss: 'cuy',          portrait: 'retrato_cuygig',      abilities: ['tuner', 'doubleJump'] },
+    { id: 't5',  boss: 'huaca',        portrait: 'retrato_huaca',       abilities: ['tuner', 'doubleJump', 'wallJump'] },
+    { id: 't6',  boss: 'gusano',       portrait: 'retrato_gusano',      abilities: ['tuner', 'doubleJump', 'wallJump'] },
+    { id: 't7',  boss: 'toro',         portrait: 'retrato_toro',        abilities: ['tuner', 'doubleJump', 'wallJump', 'dash'] },
+    { id: 't8',  boss: 'oso',          portrait: 'retrato_oso',         abilities: ['tuner', 'doubleJump', 'wallJump', 'dash', 'stomp'] },
+    { id: 't9',  boss: 'rana',         portrait: 'retrato_rana',        abilities: ['tuner', 'doubleJump', 'wallJump', 'dash', 'stomp', 'glide'] },
+    { id: 't10', boss: 'condor',       portrait: 'retrato_condor',      abilities: ['tuner', 'doubleJump', 'wallJump', 'dash', 'stomp', 'glide', 'dive'] },
+    { id: 't11', boss: 'charanguero2', portrait: 'retrato_charanguero', abilities: ['tuner', 'doubleJump', 'wallJump', 'dash', 'stomp', 'glide', 'dive', 'shell'] },
+    { id: 't12', boss: 'silencio',     portrait: 'retrato_silencio',    abilities: ['tuner', 'doubleJump', 'wallJump', 'dash', 'stomp', 'glide', 'dive', 'shell'] }
   ]
 };
 
@@ -36,12 +43,18 @@ const TOWER = {
     return rows;
   }
   const PLATFORMS = {
-    condor:      [[8, 10, 3], [8, 18, 3]],
-    charanguero: [[7, 10, 4], [7, 18, 4]],
-    huaca:       [[8, 14, 3]],
-    gusano:      [[7, 9, 3], [7, 18, 3]],
-    cuy:         [],
-    bombo:       [[7, 9, 3], [7, 19, 3]]
+    eco:          [[8, 10, 3], [8, 18, 3]],
+    bombo:        [[7, 9, 3], [7, 19, 3]],
+    charanguero:  [[7, 10, 4], [7, 18, 4]],
+    cuy:          [],
+    huaca:        [[8, 14, 3]],
+    gusano:       [[7, 9, 3], [7, 18, 3]],
+    toro:         [[7, 9, 3], [7, 19, 3]],
+    oso:          [[8, 10, 3], [8, 18, 3]],
+    rana:         [[7, 9, 3], [7, 19, 3]],
+    condor:       [[8, 10, 3], [8, 18, 3]],
+    charanguero2: [[7, 10, 4], [7, 18, 4]],
+    silencio:     [[8, 9, 3], [8, 19, 3]]
   };
   TOWER.FLOORS.forEach(function (f, i) {
     LEVELS.push({
@@ -54,7 +67,7 @@ const TOWER = {
       time: 120,
       bpm: 120,
       boss: { type: f.boss, gives: null },
-      map: floor(PLATFORMS[f.boss])
+      map: floor(PLATFORMS[f.boss] || [])
     });
   });
 })();

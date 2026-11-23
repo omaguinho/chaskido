@@ -214,9 +214,13 @@ class Level {
   }
 
   isBlockedExitCell(tx, ty) {
-    return this.exits.some(function (e) {
+    return !!this.blockedExitAt(tx, ty);
+  }
+
+  blockedExitAt(tx, ty) {
+    return this.exits.find(function (e) {
       return e.blocked && tx >= e.x && tx < e.x + e.w && ty >= e.y && ty < e.y + e.h;
-    });
+    }) || null;
   }
 
   // Decoración: una lista por capa (fondo y frente). Cada pieza se apoya abajo
@@ -1106,7 +1110,7 @@ class Level {
         else if (ch === 'A') this.drawSeal(ctx, tx, ty, px, py);
         else if (ch === 'Y') this.drawColorDoor(ctx, tx, ty, px, py);
         else if (ch === 'l') this.drawRayEmitter(ctx, px, py);
-        else if (ch === ':' && this.isBlockedExitCell(tx, ty)) this.drawBlockedExit(ctx, px, py);
+        else if (ch === ':' && this.isBlockedExitCell(tx, ty)) this.drawBlockedExit(ctx, px, py, tx, ty);
         else if (ch === 'h') this.drawHidden(ctx, tx, ty, px, py);
       }
     }
@@ -1729,8 +1733,22 @@ class Level {
   }
 
   // Paso a una sala que todavía no se construye: rejas con un cartel
-  drawBlockedExit(ctx, px, py) {
+  // Salida cerrada. La del speedrun (rainbow) es un muro de cuadros con los colores de
+  // las notas del diapasón, como un arcoíris que se mueve
+  drawBlockedExit(ctx, px, py, tx, ty) {
     const T = CONFIG.TILE;
+    const e = this.blockedExitAt(tx, ty);
+    if (e && e.rainbow) {
+      const N = CONFIG.TUNER.NOTES, keys = Object.keys(N);
+      const shift = Math.floor(performance.now() / 180);
+      for (let k = 0; k < 4; k++) {
+        ctx.fillStyle = N[keys[(ty * 2 + Math.floor(k / 2) + tx + shift) % keys.length]].color;
+        ctx.fillRect(px + (k % 2) * 8, py + Math.floor(k / 2) * 8, 8, 8);
+      }
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillRect(px, py, T, 1);
+      return;
+    }
     ctx.fillStyle = 'rgba(46, 42, 71, 0.75)';
     ctx.fillRect(px, py, T, T);
     ctx.fillStyle = '#e9c46a';

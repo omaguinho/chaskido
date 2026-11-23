@@ -1,6 +1,7 @@
 // HUD, mensajes, avisos de acción, carteles, ventanas (premio, tienda, viaje,
 // coliseo) y las pantallas de inicio y fin. El menú de pausa está en js/menu.js.
 const UI = (function () {
+  const hudFonts = {};      // letras de los estilos de HUD (de css/style.css)
   const W = CONFIG.WIDTH;
   const H = CONFIG.HEIGHT;
   const T = CONFIG.TILE;
@@ -228,8 +229,15 @@ const UI = (function () {
     // Arriba a la izquierda: corazones; luego monedas, cubos y (en misión) corcheas;
     // a la derecha: tiempo, llave y las llaves de color conseguidas
     drawHud(ctx, game) {
+      const style = (game.settings && game.settings.hud) || 0;
+      const font = CONFIG.FONT;
+      CONFIG.FONT = this.hudFont(style);           // la letra del estilo elegido, solo en el HUD
+      try { this.drawHudBody(ctx, game, style); } finally { CONFIG.FONT = font; }
+    },
+
+    drawHudBody(ctx, game, style) {
       const P = game.progress;
-      this.drawHudFrame(ctx);
+      this.drawHudFrame(ctx, style);
       const max = P.maxHearts;
       for (let i = 0; i < max; i++) heart(ctx, 3 + i * 8, 4, i < game.hearts);
       let x = 6 + max * 8;
@@ -314,7 +322,33 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
     },
 
     // Marco del HUD: franja oscura con un borde tejido (puntadas de colores y flecos)
-    drawHudFrame(ctx) {
+    // Letra del estilo de HUD n (de css/style.css: --hud-font-n)
+    hudFont(n) {
+      if (!hudFonts[n]) {
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--hud-font-' + n).trim();
+        hudFonts[n] = v || CONFIG.FONT;
+      }
+      return hudFonts[n];
+    },
+
+    // Marco de la barra de arriba según el estilo: 0 Tejido (puntadas y flecos),
+    // 1 Clásico (barra lisa con filo dorado), 2 Limpio (sin barra, solo una sombra suave)
+    drawHudFrame(ctx, style) {
+      if (style === 1) {
+        ctx.fillStyle = 'rgba(11, 6, 32, 0.9)';
+        ctx.fillRect(0, 0, W, 14);
+        ctx.fillStyle = '#e9c46a';
+        ctx.fillRect(0, 14, W, 1);
+        return;
+      }
+      if (style === 2) {
+        const g = ctx.createLinearGradient(0, 0, 0, 18);
+        g.addColorStop(0, 'rgba(11, 6, 32, 0.55)');
+        g.addColorStop(1, 'rgba(11, 6, 32, 0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, 18);
+        return;
+      }
       const COLORS = ['#ff6b8a', '#ffd34d', '#2ee6ff', '#ffd34d'];
       ctx.fillStyle = 'rgba(20, 11, 43, 0.78)';
       ctx.fillRect(0, 0, W, 14);
@@ -774,6 +808,13 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       if (!Sprites.drawFrame(ctx, 'placa_piso', 0, W / 2 - 64, 96, false)) panel(ctx, W / 2 - 64, 96, 128, 32, '#b8b2a7');
       text(ctx, 'Piso ' + (O.floor + 1), W / 2, 104, INK, 8, 'center');
       text(ctx, name, W / 2, 115, '#5b5478', 6, 'center');
+      // Los poderes que tienes en este piso
+      const P = F.abilities;
+      if (P.length) {
+        text(ctx, 'Poderes', W / 2, 136, '#fbf6ec', 6, 'center');
+        const x0 = W / 2 - (P.length - 1) * 9;
+        P.forEach(function (id, i) { PowerIcons.draw(ctx, id, x0 + i * 18, 154, 14, false); });
+      }
     },
 
     // ---------- Pantallas de inicio y fin ----------
@@ -891,6 +932,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
         if (id === 'lang') return 'Idioma: ' + I18N.name();
         if (id === 'credits') return 'Créditos';
         if (id === 'speedrun') return 'Speedrun';
+        if (id === 'autorun') return tr('Correr automático') + ': ' + tr(Player.autoRun ? 'Sí' : 'No');
         return 'Nueva · ' + CONFIG.DIFFICULTY[id].NAME;
       }
       function info(id) {
@@ -898,6 +940,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
         if (id === 'tower') return towerOpen ? 'Coliseo: ' + TOWER.FLOORS.length + ' jefes seguidos'
                                              : 'Se abre al terminar la historia en Normal o Difícil';
         if (id === 'credits') return 'Quién hizo Chaskido';
+        if (id === 'autorun') return 'La papa siempre corre: tú solo saltas y esquivas';
         if (id === 'speedrun') return towerOpen ? 'Elige una zona y rescata sus instrumentos contra el reloj'
                                                 : 'Se abre al terminar la historia en Normal o Difícil';
         if (id === 'lang') return 'Español · English · Português';

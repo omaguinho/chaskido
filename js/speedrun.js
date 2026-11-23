@@ -255,6 +255,13 @@ const SpeedRun = (function () {
     openMenu(game);
   }
 
+  // Coliseo: si mueres, pierdes (vuelve al menú, en la fila del coliseo)
+  function towerLost(game) {
+    game.speedPick = CONFIG.SPEEDRUN.ZONES.length;
+    openMenu(game);
+    game.say(tr('Perdiste en el coliseo: llegaste al piso') + ' ' + (game.towerFloor + 1) + '/' + TOWER.FLOORS.length + '.', 4);
+  }
+
   // Reloj y contador arriba al medio
   function drawHud(ctx, game) {
     if (game.mode === 'tower') {
@@ -270,7 +277,7 @@ const SpeedRun = (function () {
   }
 
   return {
-    openMenu: openMenu, updateMenu: updateMenu, drawMenu: drawMenu, tick: tick, fail: fail, drawHud: drawHud,
+    start: start, openMenu: openMenu, updateMenu: updateMenu, drawMenu: drawMenu, tick: tick, fail: fail, towerLost: towerLost, drawHud: drawHud,
     clock: clock, startTower: startTower, towerTick: towerTick, towerWon: towerWon
   };
 })();

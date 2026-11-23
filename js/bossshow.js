@@ -198,7 +198,9 @@ const BossShow = (function () {
   }
 
   // Barra de vida arriba: nombre, barra continua con estela y marcas de las fases
-  function drawBar(ctx, boss) {
+  // La barra va arriba; si hay reloj (speedrun, coliseo) baja un poco. Si la papa está en
+  // la mitad de arriba de la pantalla, la barra se va abajo para no taparla
+  function drawBar(ctx, boss, game) {
     if (!bar || !boss || !boss.isActive() || intro) return;
     const C = CONFIG.BOSS_SHOW;
     const HP = boss.def.HP;
@@ -206,7 +208,13 @@ const BossShow = (function () {
     const sx = bar.shake > 0 ? Math.round((Math.random() * 2 - 1) * 3 * bar.shake / 0.3) : 0;
     const sy = bar.shake > 0 ? Math.round((Math.random() * 2 - 1) * 2 * bar.shake / 0.3) : 0;
     const x = Math.round(W / 2 - bw / 2) + sx;
-    const y = 28 + sy;
+    const timer = game && (game.mode === 'speedrun' || game.mode === 'tower');
+    if (game && game.player) {
+      const py = game.player.y - game.camera.y;
+      if (py < H * 0.4) bar.low = true;          // papa arriba: barra abajo
+      else if (py > H * 0.55) bar.low = false;   // (con margen para que no salte)
+    }
+    const y = (bar.low ? H - 12 : timer ? 40 : 28) + sy;
     ctx.font = gameFont(8);
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';

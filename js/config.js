@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v99',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v100',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -10,6 +10,10 @@ const CONFIG = {
   // FONT_WEIGHT la engrosa
   FONT: '"Josefin Sans", "Trebuchet MS", sans-serif',
   FONT_SCALE: 1.45,
+  // Tamaño de letra (Opciones): porcentaje sobre el tamaño base (FONT_BASE = 90 %)
+  TEXT_SIZE: { DEFAULT: 0, LIST: [{ name: 'Grande', pct: 100 }, { name: 'Media', pct: 75 }, { name: 'Chica', pct: 60 }], BASE_PCT: 90, BASE_SCALE: 1.45 },
+  // Estilos de HUD (Opciones): la letra de cada uno sale de css/style.css (--hud-font-N)
+  HUD_STYLES: ['Tejido', 'Clásico', 'Limpio'],
   FONT_WEIGHT: 600,
 
   // Contraste del plano de juego (para que no se confunda con el fondo)
@@ -361,7 +365,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.99.0.0',
+    VERSION: '0.100.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -562,7 +566,8 @@ const CONFIG = {
 
   TRACK_PITCH: { key: 3 },
   BPM: 120,
-  BOSS_TRACK: 'key',              
+  BOSS_TRACK: 'key',
+  BOSS_ACCEL: 0.2,     // la música del jefe llega a ir un 20 % más rápido cuando le queda poca vida              
   ERROR_SHOW: 6                   
 },
   // Efectos de sonido (generados por código) y vibración del mando
