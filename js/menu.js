@@ -621,11 +621,10 @@ class PauseMenu {
 
   // ---------- Poderes, llaves y colección ----------
 
-  // Grilla: los poderes en 2 filas de 7, luego 7 llaves en una fila
+  // Grilla: los poderes en 2 filas de 8 (caben 16)
   powerCell(i) {
     const nP = CATALOGO.PODERES.length;
-    // Dos filas de 7 (13 poderes: el último es el diapasón)
-    if (i < nP) return { x: 26 + (i % 7) * 44, y: 40 + Math.floor(i / 7) * 22 };
+    if (i < nP) return { x: 22 + (i % 8) * 39, y: 40 + Math.floor(i / 8) * 22 };
     return { x: 38 + (i - nP) * 40, y: 90 };
   }
 

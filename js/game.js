@@ -478,7 +478,7 @@ class Game {
   // Volumen de la música sin misión: salas afinadas, salitas, retos y jefes suenan bajito
   baseMusic() {
     const L = this.level;
-    if (this.isMissionRoom(L)) return this.mission === 'done' ? 0.55 : CONFIG.ECHO.IDLE_MUSIC;
+    if (this.isMissionRoom(L)) return this.mission === 'done' ? CONFIG.MUSIC.DONE_VOLUME : CONFIG.ECHO.IDLE_MUSIC;
     return 0.6;
   }
 

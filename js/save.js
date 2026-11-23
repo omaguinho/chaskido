@@ -12,7 +12,10 @@ const Save = (function () {
                    textSize: CONFIG.TEXT_SIZE.DEFAULT, hud: 0, autoRun: isMobile() };
     try {
       const raw = window.localStorage.getItem(CONFIG.GAME.SETTINGS_KEY);
-      return raw ? Object.assign(base, JSON.parse(raw)) : base;
+      const s = raw ? Object.assign(base, JSON.parse(raw)) : base;
+      // v101: la letra parte en Media para todos (una sola vez)
+      if (s.textSizeV !== 2) { s.textSize = CONFIG.TEXT_SIZE.DEFAULT; s.textSizeV = 2; }
+      return s;
     } catch (e) {
       return base;
     }

@@ -181,7 +181,7 @@ const Music = (function () {
   //   · sala afinada (playStems con force): todas fijas
   // Las pistas se decodifican en mono y a STEM_RATE Hz para gastar poca memoria
   // (con 3 pistas de 3 minutos en estéreo el celular se quedaba sin audio).
-  const STEM_MIX = 0.55;            // volumen de un instrumento atrapado (x volumen general)
+  const STEM_MIX = CONFIG.MUSIC.DONE_VOLUME || 0.6;   // volumen de un instrumento atrapado y de la sala afinada
   const FADE = 0.08;                // segundos de transición del volumen
   let stemStart = 0;                // instante (audioCtx) en que partieron las pistas
   let stemFiles = {};               // nombre -> archivo de la sala actual
