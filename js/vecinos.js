@@ -1,4 +1,5 @@
-// Vecinos: la gente de la fiesta repartida por las zonas (CONFIG.VECINOS).
+// Vecinos: la gente de la fiesta repartida por las zonas (la base de datos con
+// nombres, personalidad, saludos y frases está en js/personajes.js).
 // Cada uno está cerca del inicio de su sala, con un globo de saludo (uno al azar):
 //   · arriba (a su lado): dice su frase y, la primera vez, da su regalo (si tiene)
 //   · también se le puede pisar (el triángulo de arriba lo avisa): igual da su regalo
@@ -23,7 +24,7 @@ class Vecinos {
       return {
         def: v, i: i, x: spot.x, feet: spot.feet, vx: 0, vy: 0,
         hp: v.hard ? v.hard.HP : 1, inv: 0, down: false, line: 0, angry: false,
-        hello: Vecinos.saludo()
+        hello: Vecinos.saludo(v)
       };
     });
     if (story && level.hasGate && level.boss && !level.gateOpen) this.addGuard(level);
@@ -54,10 +55,14 @@ class Vecinos {
     return this.list.find(function (v) { return v.def.guard; }) || null;
   }
 
-  static saludo() {
-    const S = CONFIG.SALUDOS;
+  // Lo que grita en su globo: uno de sus saludos, al azar
+  static saludo(v) {
+    const S = v.saludos || ['¡Hola!'];
     return S[Math.floor(Math.random() * S.length)];
   }
+
+  // ¿Ya le dijo su frase de inicio? (una vez en toda la partida)
+  greeted(v) { return !!(this.rs.hola || {})[v.def.id]; }
 
   // Busca el suelo bajo un punto (si es pared, prueba un poco al lado)
   static findFloor(level, x, y) {
@@ -143,6 +148,15 @@ class Vecinos {
           game.say(v.def.name + ': ' + tr(H.PAID), 4, true);
           Registro.ev('vecino', { id: v.def.id, duro: 'pagado' });
           this.give(v, game);
+          return;
+        }
+        // La primera vez: su frase de inicio (según su personalidad)
+        if (v.def.inicio && !this.greeted(v)) {
+          (this.rs.hola || (this.rs.hola = {}))[v.def.id] = true;
+          game.say(v.def.name + ': ' + tr(v.def.inicio), 6, true);
+          if (!v.def.guard && !v.def.sprite) Codex.papa(game, v.def.id, v.def.name);
+          Registro.ev('vecino', { id: v.def.id });
+          Sfx.play('select');
           return;
         }
         const lines = (this.gave(v) || (v.def.guard && game.level.gateOpen)) && v.def.after ? v.def.after : v.def.lines;

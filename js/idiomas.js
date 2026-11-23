@@ -815,7 +815,44 @@ const I18N = (function () {
     ['Dicen que en la Ciudadela de Niebla todavía se escucha un charango. Si quieres saber más, búscame por allá.', 'They say a charango can still be heard in the Mist Citadel. If you want to know more, look for me there.', 'Dizem que na Cidadela da Névoa ainda se ouve um charango. Se quiser saber mais, me procure por lá.'],
     ['Por eso te di mi quena: libéralos a todos con ella. Cuando estén todos libres, vuelve: te doy mi zampoña.', 'That is why I gave you my quena: free them all with it. When they are all free, come back: I will give you my panpipe.', 'Por isso te dei minha quena: liberte todos com ela. Quando estiverem todos livres, volte: te dou minha zampoña.'],
     ['Arriba de Calles del Ocaso, donde solo se llega con doble salto, toca el Rasgueador. Dicen que guarda una quena... pero no se la da a cualquiera.', 'Above Sunset Streets, where only a double jump reaches, the Strummer plays. They say he keeps a quena... but he does not give it to just anyone.', 'Acima das Ruas do Ocaso, onde só se chega com pulo duplo, toca o Rasgueador. Dizem que ele guarda uma quena... mas não a dá para qualquer um.'],
-    ['El Rasgueador Maestro (Mirador del Rasgueador, en el Templo sin Nombre)', "The Master Strummer (Strummer's Lookout, in the Nameless Temple)", 'O Rasgueador Mestre (Mirante do Rasgueador, no Templo sem Nome)']
+    ['El Rasgueador Maestro (Mirador del Rasgueador, en el Templo sin Nombre)', "The Master Strummer (Strummer's Lookout, in the Nameless Temple)", 'O Rasgueador Mestre (Mirante do Rasgueador, no Templo sem Nome)'],
+    // ---------- v97: personajes (saludos e inicio) y mensajes ----------
+    ['¡Récord!', 'Record!', 'Recorde!'], ['¡Zona completa!', 'Zone complete!', 'Zona completa!'], ['monedas', 'coins', 'moedas'],
+    ['¡Hola!', 'Hi!', 'Oi!'],
+    ['¡Espera, espera!', 'Wait, wait!', 'Espera, espera!'], ['¡Ven rápido!', 'Come quick!', 'Vem rápido!'], ['¡Tengo que decirte algo!', 'I have to tell you something!', 'Tenho que te contar uma coisa!'],
+    ['¡Por fin alguien! Tengo mil cosas que contarte y se me van a olvidar. ¡Escucha, escucha!', "Finally, someone! I have a thousand things to tell you and I'm going to forget them. Listen, listen!", 'Finalmente alguém! Tenho mil coisas para te contar e vou esquecer. Escuta, escuta!'],
+    ['¡Hola, hola!', 'Hello, hello!', 'Olá, olá!'], ['¡Qué buena suerte!', 'What luck!', 'Que sorte!'], ['¡Sabía que vendrías!', 'I knew you would come!', 'Eu sabia que você viria!'],
+    ['¡Sabía que hoy iba a pasar algo bueno! Me picaba la nariz desde la mañana.', 'I knew something good would happen today! My nose has been itching since morning.', 'Eu sabia que hoje ia acontecer algo bom! Meu nariz coça desde cedo.'],
+    ['...y entonces la música...', '...and then the music...', '...e então a música...'], ['Mmm, mmm...', 'Hmm, hmm...', 'Hum, hum...'], ['¿Dónde dejé el compás?', 'Where did I leave the beat?', 'Onde deixei o compasso?'],
+    ['Hoy debería haber música aquí... y no hay. Y yo no sé qué hacer con los pies. Ah, hola. ¿Estabas ahí?', "There should be music here today... and there isn't. And I don't know what to do with my feet. Oh, hi. Were you there?", 'Hoje deveria ter música aqui... e não tem. E eu não sei o que fazer com os pés. Ah, oi. Você estava aí?'],
+    ['¡Eh, compadre!', 'Hey, buddy!', 'Ei, compadre!'], ['¡Tengo algo para ti!', 'I have something for you!', 'Tenho algo para você!'], ['¡Acércate, acércate!', 'Come closer, come closer!', 'Chega mais, chega mais!'],
+    ['¡Compadre! Hoy ando generoso, aprovecha antes de que se me pase.', "Buddy! I'm feeling generous today, take advantage before it wears off.", 'Compadre! Hoje estou generoso, aproveita antes que passe.'],
+    ['¡Brrr!', 'Brrr!', 'Brrr!'], ['Qué frío...', 'So cold...', 'Que frio...'], ['¿Traes una frazada?', 'Did you bring a blanket?', 'Trouxe um cobertor?'],
+    ['Brrr... perdona, se me congelan hasta las palabras. ¿Qué querías?', 'Brrr... sorry, even my words are freezing. What did you want?', 'Brrr... desculpa, até as palavras congelam. O que você queria?'],
+    ['Ay...', 'Oh...', 'Ai...'], ['¿Lo ves tú también?', 'Do you see it too?', 'Você também vê?'], ['Antes era distinto...', 'It used to be different...', 'Antes era diferente...'],
+    ['Ay, perdona. Me quedé mirando el lago otra vez. A veces creo que todavía se oye la fiesta.', 'Oh, sorry. I was staring at the lake again. Sometimes I think I can still hear the party.', 'Ai, desculpa. Fiquei olhando o lago de novo. Às vezes acho que ainda se ouve a festa.'],
+    ['Siéntate un rato.', 'Sit for a while.', 'Senta um pouco.'], ['Escucha, chasqui...', 'Listen, chasqui...', 'Escuta, chasqui...'], ['Ven, ven, despacito.', 'Come, come, slowly.', 'Vem, vem, devagarinho.'],
+    ['Siéntate un momento. Los viejos sabemos cosas que los mapas no dicen.', 'Sit for a moment. Old folks know things that maps do not say.', 'Senta um momento. Os velhos sabem coisas que os mapas não dizem.'],
+    ['¡Psst!', 'Psst!', 'Psiu!'], ['Tengo un secreto...', 'I have a secret...', 'Tenho um segredo...'], ['No se lo digas a nadie...', "Don't tell anyone...", 'Não conta para ninguém...'],
+    ['Psst... acércate. No todos los guardianes están en el camino. ¿Quieres saber dónde?', 'Psst... come closer. Not every guardian is on the path. Want to know where?', 'Psiu... chega perto. Nem todos os guardiões estão no caminho. Quer saber onde?'],
+    ['♪ Tran, tran...', '♪ Strum, strum...', '♪ Tran, tran...'], ['Hmpf.', 'Hmph.', 'Hmpf.'], ['¿Otra vez tú?', 'You again?', 'Você de novo?'],
+    ['Ven, chasqui.', 'Come, chasqui.', 'Vem, chasqui.'], ['¿Cuántos llevas?', 'How many so far?', 'Quantos você já tem?'],
+    ['¡Música!', 'Music!', 'Música!'], ['¡A bailar!', "Let's dance!", 'Vamos dançar!'], ['¡Uy, uy, uy!', 'Ooh, ooh, ooh!', 'Ui, ui, ui!'],
+    ['¡Gracias, gracias!', 'Thanks, thanks!', 'Obrigado, obrigado!'], ['¡Volvió!', "It's back!", 'Voltou!'], ['¡Hola, chasqui!', 'Hi, chasqui!', 'Oi, chasqui!'],
+    ['Eh... hola.', 'Uh... hi.', 'É... oi.'], ['♪...', '♪...', '♪...'], ['Perdón...', 'Sorry...', 'Desculpa...'],
+    ['¡Uf, llegué!', 'Phew, made it!', 'Ufa, cheguei!'], ['¡Una, dos!', 'One, two!', 'Um, dois!'], ['¡Qué subida!', 'What a climb!', 'Que subida!'],
+    ['¿Lo sientes?', 'Do you feel it?', 'Você sente?'], ['Tum, tum...', 'Boom, boom...', 'Tum, tum...'], ['Ahh, qué rico.', 'Ahh, how nice.', 'Ahh, que gostoso.'],
+    ['Mira el agua...', 'Look at the water...', 'Olha a água...'], ['¡Qué luz!', 'What light!', 'Que luz!'], ['Escucha el lago.', 'Listen to the lake.', 'Escuta o lago.'],
+    ['¡Vamos!', "Let's go!", 'Vamos!'], ['¡Ya casi!', 'Almost there!', 'Quase lá!'], ['¡No pares!', "Don't stop!", 'Não para!'],
+    ['¡Atrápame!', 'Catch me!', 'Me pega!'], ['¡Je, je!', 'Heh, heh!', 'Hehe!'], ['¡A que no puedes!', "Bet you can't!", 'Duvido que consiga!'],
+    // ---------- v97: fermata ----------
+    ['Fermata', 'Fermata', 'Fermata'], ['la fermata', 'the fermata', 'a fermata'],
+    ['Ganaste la fermata: quieta, mantén E o Cuadrado y el tiempo se detiene un momento. Los enemigos y sus disparos se congelan, y aparece lo escondido en la niebla.', 'You got the fermata: stand still, hold E or Square and time stops for a moment. Enemies and their shots freeze, and what hides in the mist appears.', 'Você ganhou a fermata: parada, segure E ou Quadrado e o tempo para por um momento. Os inimigos e seus disparos congelam, e aparece o que se esconde na névoa.'],
+    ['Arco con un punto (𝄐)', 'Arc with a dot (𝄐)', 'Arco com um ponto (𝄐)'],
+    ['Quieta, mantén Acción (E / Cuadrado): el tiempo se detiene. Los enemigos cercanos y sus disparos quedan congelados 3 segundos.', 'Stand still and hold Action (E / Square): time stops. Nearby enemies and their shots freeze for 3 seconds.', 'Parada, segure Ação (E / Quadrado): o tempo para. Os inimigos próximos e seus disparos ficam congelados 3 segundos.'],
+    ['Invisible hasta que usas la fermata.', 'Invisible until you use the fermata.', 'Invisível até você usar a fermata.'],
+    ['Tapa lo que hay detrás; la fermata la despeja un rato.', 'It hides what is behind; the fermata clears it for a while.', 'Esconde o que há atrás; a fermata a dissipa um pouco.'],
+    ['La fermata despertó las plataformas de la niebla. Ya no se van.', 'The fermata woke the platforms in the mist. They stay now.', 'A fermata despertou as plataformas da névoa. Agora elas ficam.']
   ];
 
   // ---------- Moldes: frases con partes que cambian ({0}, {1}...) ----------
@@ -961,6 +998,7 @@ const I18N = (function () {
   });
 
   const cache = { en: {}, pt: {} };
+  const misses = {};      // textos que no se encontraron (para revisar: I18N.faltan())
 
   // Una parte suelta: primero entera; si empieza con minúscula, se prueba con
   // mayúscula y se devuelve en minúscula ("llave celeste" -> "light-blue key")
@@ -992,7 +1030,10 @@ const I18N = (function () {
   function tr(s) {
     if (lang === 'es' || typeof s !== 'string' || !s) return s;
     const c = cache[lang];
-    if (c[s] === undefined) c[s] = translate(s, lang, 0);
+    if (c[s] === undefined) {
+      c[s] = translate(s, lang, 0);
+      if (c[s] === s && /[a-záéíóúñ]{3}/i.test(s)) misses[s] = true;   // quedó en español
+    }
     return c[s];
   }
 
@@ -1004,6 +1045,7 @@ const I18N = (function () {
     LANGS: LANGS,
     tr: tr,
     set: set,
+    faltan: function () { return Object.keys(misses); },
     get: function () { return lang; },
     name: function (id) { return (LANGS.find(function (l) { return l.id === (id || lang); }) || LANGS[0]).name; },
     // El idioma siguiente (para elegirlo con izquierda/derecha)

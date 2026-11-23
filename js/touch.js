@@ -4,6 +4,8 @@
 //     la papa camina (más inclinada, más rápido). Arriba y abajo: hablar, puertas, bajar.
 //   · Derecha: botones redondos A (saltar), B (dash), E (acción / correr) y ♪ (diapasón).
 //   · Arriba a la derecha: II (pausa).
+//   · Con la zampoña: botón Z (como R1). Mientras lo mantienes, arriba aparecen las 7
+//     notas de colores (Do a Si): tócalas con otro dedo para dejar escalones.
 const Touch = (function () {
   const STICK = { R: 46, DEAD: 0.18, WALK: 0.45, UP: 0.6 };   // radio (px) y umbrales
   // Botones de la derecha: acción, texto, posición (px desde la esquina abajo derecha)
@@ -12,7 +14,8 @@ const Touch = (function () {
     { a: 'dash',   label: 'B', r: 96,  b: 16 },
     { a: 'action', label: 'E', r: 92,  b: 86, also: ['run'] },
     { a: 'tuner',  label: '♪', r: 30,  b: 112 },
-    { a: 'pause',  label: 'II', top: true }
+    { a: 'pause',  label: 'II', top: true },
+    { a: 'zampona', label: 'Z', r: 150, b: 24, zamp: true }
   ];
   let root = null;
   let enabled = null;          // null: todavía no se sabe (se prende con el primer toque)
@@ -89,14 +92,20 @@ const Touch = (function () {
   function buildButtons() {
     BUTTONS.forEach(function (b) {
       const el = document.createElement('div');
-      el.className = 'tbtn' + (b.top ? ' tbtn-top' : '') + (b.big ? ' tbtn-big' : '');
+      el.className = 'tbtn' + (b.top ? ' tbtn-top' : '') + (b.big ? ' tbtn-big' : '') + (b.zamp ? ' tbtn-zamp' : '');
       el.textContent = b.label;
       if (!b.top) {
         el.style.right = b.r + 'px';
         el.style.bottom = b.b + 'px';
       }
-      const down = function (e) { e.preventDefault(); e.stopPropagation(); el.classList.add('on'); press(b, true); };
-      const up = function (e) { e.preventDefault(); e.stopPropagation(); el.classList.remove('on'); press(b, false); };
+      const down = function (e) {
+        e.preventDefault(); e.stopPropagation(); el.classList.add('on'); press(b, true);
+        if (b.zamp) root.classList.add('zamp-play');
+      };
+      const up = function (e) {
+        e.preventDefault(); e.stopPropagation(); el.classList.remove('on'); press(b, false);
+        if (b.zamp) root.classList.remove('zamp-play');
+      };
       el.addEventListener('pointerdown', down);
       el.addEventListener('pointerup', up);
       el.addEventListener('pointercancel', up);
@@ -105,11 +114,31 @@ const Touch = (function () {
     });
   }
 
+  // Las 7 notas de la zampoña (arriba al centro; se ven mientras se mantiene Z)
+  function buildNotes() {
+    const row = document.createElement('div');
+    row.id = 'tnotes';
+    CONFIG.ZAMPONA.NOTES.forEach(function (n) {
+      const el = document.createElement('div');
+      el.className = 'tnote';
+      el.style.background = CONFIG.TUNER.NOTES[n].color;
+      el.textContent = CONFIG.TUNER.NOTES[n].name || n;
+      const b = { a: 'z_' + n };
+      el.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); el.classList.add('on'); press(b, true); });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
+        el.addEventListener(ev, function (e) { e.preventDefault(); el.classList.remove('on'); press(b, false); });
+      });
+      row.appendChild(el);
+    });
+    root.appendChild(row);
+  }
+
   function build() {
     root = document.createElement('div');
     root.id = 'touch';
     buildStick();
     buildButtons();
+    buildNotes();
     document.body.appendChild(root);
   }
 
@@ -145,6 +174,8 @@ const Touch = (function () {
     init: init,
     setFree: setFree,
     toggle: function () { show(!enabled); return enabled; },
+    // El botón Z solo se ve si la papa ya tiene la zampoña
+    setZampona: function (on) { if (root) root.classList.toggle('has-zamp', !!on); },
     isOn: function () { return !!enabled; }
   };
 })();

@@ -212,7 +212,7 @@ const SpeedRun = (function () {
       }
       Ranking.submit(CONFIG.RANKING.BOARDS[S.zone], S.t);
       Sfx.play('bossWon');
-      game.say((S.record ? '¡Récord! ' : '¡Zona completa! ') + clock(S.t), 3.4);
+      game.say(tr(S.record ? '¡Récord!' : '¡Zona completa!') + ' ' + clock(S.t), 3.4);
     }
   }
 

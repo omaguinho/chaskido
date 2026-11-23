@@ -822,6 +822,16 @@ html, body {
 }
 #touch .tbtn.on { background: rgba(255, 211, 77, 0.55); color: #2e2a47; transform: scale(0.92); }
 #touch .tbtn-big { width: 64px; height: 64px; font-size: 22px; line-height: 60px; }
+/* Zampoña: botón Z (solo con la zampoña) y las 7 notas mientras se mantiene */
+#touch .tbtn-zamp { display: none; }
+#touch.has-zamp .tbtn-zamp { display: block; }
+#tnotes { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: none; gap: 6px; }
+#touch.zamp-play #tnotes { display: flex; }
+#tnotes .tnote {
+  width: 40px; height: 40px; border-radius: 8px; pointer-events: auto; touch-action: none; user-select: none;
+  color: #2e2a47; font: bold 12px/40px sans-serif; text-align: center; border: 2px solid rgba(251, 246, 236, 0.8);
+}
+#tnotes .tnote.on { transform: scale(0.88); filter: brightness(1.3); }
 #touch .tbtn-top { top: 8px; right: 8px; width: 40px; height: 40px; line-height: 36px; font-size: 14px; border-radius: 10px; }
 /* Palanca: zona invisible en la mitad izquierda; la base aparece donde apoyas el dedo */
 #tzone { position: absolute; left: 0; bottom: 0; width: 45%; height: 78%; pointer-events: auto; touch-action: none; }

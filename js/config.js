@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v96',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v97',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -113,8 +113,9 @@ const CONFIG = {
       text: 'Ganaste el zapateo: abajo + salto en el aire. Rompe los suelos agrietados.' },
     { id: 'dive',       name: 'Buceo',  key: 'KeyI',   say: 'el buceo',
       text: 'Ganaste el buceo: abajo dentro del agua para sumergirte.' },
-    { id: 'shell',      name: 'Caracol', key: 'KeyO',  say: 'el caracol del eco',
-      text: 'Ganaste el caracol del eco: quieta, mantén E o Cuadrado y soplas.' },
+    // Fermata (id 'shell' por las partidas guardadas): la da el Cóndor de Bronce
+    { id: 'shell',      name: 'Fermata', key: 'KeyO',  say: 'la fermata',
+      text: 'Ganaste la fermata: quieta, mantén E o Cuadrado y el tiempo se detiene un momento. Los enemigos y sus disparos se congelan, y aparece lo escondido en la niebla.' },
     { id: 'quena',      name: 'Quena', key: 'KeyH',  say: 'el llamado de la quena',
       text: 'Ganaste el llamado de la quena: cerca de un animal, toca E o Cuadrado y queda libre. Ahora entiendes a los animales: mira el Códex en la pausa.' },
     { id: 'zampona',    name: 'Zampoña', key: 'KeyJ',  say: 'la zampoña',
@@ -189,16 +190,17 @@ const CONFIG = {
            'cuygig_mirar', 'gusano_quieto', 'toro_quieto', 'oso_quieto', 'ranagig_quieta', 'condor_volar', 'eco_flotar']
   },
 
-  // ---------- Caracol del eco (poder del Cóndor de Bronce, sala 21) ----------
-  // Quieta (sin moverte) y con E o Cuadrado apretado HOLD segundos: soplas. La onda
-  // hace aparecer las plataformas ocultas (h) para siempre y despeja la niebla (O) un rato
+  // ---------- Fermata (poder del Cóndor de Bronce, sala 21; id 'shell') ----------
+  // Quieta (sin moverte) y con E o Cuadrado apretado HOLD segundos: el tiempo se sostiene,
+  // como una nota con fermata. La onda congela a los enemigos y sus disparos FREEZE
+  // segundos, hace aparecer las plataformas ocultas (h) para siempre y despeja la niebla (O)
   SHELL: {
     HOLD: 0.45,           // segundos apretando antes de soplar
     RADIUS: 7,            // bloques que alcanza la onda
     CLEAR_TIME: 6,        // segundos que la niebla queda despejada
     COOLDOWN: 0.8,
     WAVE_TIME: 0.9,       // lo que dura el dibujo de la onda
-    FREEZE: 2,            // segundos que la onda deja quietos a los enemigos cercanos
+    FREEZE: 3,            // segundos que quedan congelados los enemigos cercanos y sus disparos
     FOG_ALPHA: 0.78,      // qué tan tapada está la niebla (0 a 1)
     FOG_COLOR: '#c9bfe6'
   },
@@ -307,10 +309,7 @@ const CONFIG = {
   // juego (se cuentan solos desde los mapas). Suma al porcentaje de completado.
   CODEX: {
     TOAST: 2.4,              // segundos del aviso "Se agregó al Códex"
-    // Nombres: guardián del portón (por sala), la vecina de la fiesta y los vendedores
-    GUARD_NAMES: { n3: 'Allqa', n6: 'Waña', n9: 'Capiro', n12: 'Tomasa', n15: 'Perricholi', n18: 'Única', n21: 'Ojo de Perdiz' },
-    FIESTA_NAME: 'Tarmeña',
-    VENDOR_NAMES: { viajero: 'Don Revolución', cocinera: 'Doña Huevo de Indio', coleccion: 'Tío Sangre de Toro' },
+    // Nombres de guardianes, fiesta y vendedores: en js/personajes.js
     // Animales: nombre y una frase. Los que no están aquí no cuentan (vecinos, etc.)
     SPECIES: {
       beetle:     { name: 'Escarabajo de vereda', text: 'Caminaba al ritmo de los tambores. Sin música, solo empuja.' },
@@ -354,15 +353,13 @@ const CONFIG = {
     COMPLETION: { ROOMS: 40, POWERS: 25, BOSSES: 20, CODEX: 15 }
   },
 
-  // Saludos de los vecinos en su globo (uno al azar; al hablar sigue su frase)
-  SALUDOS: ['¡Psst!', '¡Oye, tú!', '¿Tienes un minuto?', '¡Te cuento algo!', '¿Qué tal, papa?', '¡Ven, ven!'],
 
   // Récords mundiales (js/ranking.js). KEY: la clave del juego en LootLocker (no es
   // secreta: está hecha para ir dentro del juego)
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.96.0.0',
+    VERSION: '0.97.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -413,86 +410,6 @@ const CONFIG = {
   // room: sala · dx: bloques desde el inicio P · kind: baila, aplaude, tambor, flauta, cuerdas
   // gift: regalo (una vez): { coins } o { heart } · after: lo que dice después del regalo
   // hard: el vecino difícil (HP pisotones, PRICE monedas para pagarle)
-  VECINOS: [
-    { id: 'z1', name: 'Huayro', room: 'n2', dx: 5, kind: 'flauta', color: '#9fd3e0',
-      lines: ['Aprieta Pausa y mira el mapa: las salas que ya pisaste se van dibujando, y abajo ves los instrumentos que rescataste.',
-              '¿Viste la fiesta? Estábamos todos bailando cuando la plaza se quedó muda. El Silencio llegó sin hacer ruido.',
-              'Los instrumentos se asustaron y escaparon por la ciudad. ¡Tú eres chasqui: tráelos de vuelta!'] },
-    { id: 'z2', name: 'Yungay', room: 'n1', dx: 5, kind: 'aplaude', color: '#f4b6c2',
-      lines: ['¡Venciste al Guardián del Tambor! Ahora vuelve a las Acequias Hondas: hay un muro amarillo que se abre con la nota Re.',
-              'Antes teníamos música y los animales no nos atacaban: bailaban con nosotros en la plaza.',
-              'Sin música, a los animales les salió un aura oscura. No son malos: están tristes y asustados.'] },
-    { id: 'z3', name: 'Peruanita', room: 'n7', dx: 5, kind: 'baila', color: '#8fbf9a',
-      lines: ['¿Te cansaste de una canción? En Pausa → Opciones puedes bajar la música o cada instrumento.',
-              'Este bosque cantaba solo: los pájaros, el viento, las hojas. Ahora solo se oyen mis pasos.',
-              'Las raíces todavía recuerdan las canciones. Si escuchas bien, se nota un vals muy bajito.'] },
-    { id: 'z4', name: 'Canchán', room: 'n10', dx: 5, kind: 'tambor', color: '#e8c58e', gift: { coins: 59 },
-      lines: ['Toma, para el camino: 59 monedas. ¡Gástalas bien!',
-              'En el templo dorado, el toro guardaba el ritmo de la ciudad. El Silencio lo volvió furioso.'],
-      after: ['¿Ya gastaste mis monedas? ¡Que suene la música!'] },
-    { id: 'z5', name: 'Tumbay', room: 'n13', dx: 5, kind: 'cuerdas', color: '#c9b8e3',
-      lines: ['Con el planeo, vuelve al Puerto de los Molinos: en el muelle del oeste, el muro de Sol te deja cruzar el mar.',
-              'Cuando el Silencio pasó por aquí, la música se congeló. Dicen que los ecos quedaron atrapados en el hielo.'] },
-    { id: 'z6', name: 'Wenccos', room: 'n16', dx: 5, kind: 'baila', color: '#9fd3e0',
-      lines: ['La cascada de la Orilla de Juncos no se escala: se sube buceando. Arriba está la Ciudadela de Niebla.',
-              'Mira el lago: refleja la ciudad como era antes, con faroles y fiesta. Por eso duele mirarlo.'] },
-    { id: 'z7', name: 'Abuela Qompis', room: 'n19', dx: 5, kind: 'aplaude', color: '#f7e3a1',
-      lines: ['La puerta dorada del Bosque lleva al último jefe. Solo se abre si rescataste los instrumentos de todos los niveles.',
-              'El Silencio no odia la música: le tiene miedo. Dicen que nació antes que todas las canciones.',
-              'En la música, primero está el silencio. De ahí nace el ritmo, y del ritmo, la melodía.'] },
-    // Habla de los jefes secretos y de lo que dan
-    { id: 'sabio', name: 'Don Huamantanga', room: 'n5', dx: 8, kind: 'flauta', color: '#e8c58e',
-      lines: ['Hay jefes que no están en el camino. Se esconden, pero lo que dan vale la pena.',
-              'Arriba de Calles del Ocaso, donde solo se llega con doble salto, toca el Rasgueador. Dicen que guarda una quena... pero no se la da a cualquiera.',
-              'Al este de estas acequias duerme un tótem de piedra. Dicen que guarda un corazón más.',
-              'En las geodas, en el granizo y en el fondo del lago hay otros guardianes. Cada uno enseña algo que no se aprende en otro lado.'] },
-    // El Rasgueador, ya vencido, se queda en su sala. En la zona 1 da pistas (se va cuando
-    // lo vences en la zona 7); en la zona 7 te da la quena (premio de la pelea), pide liberar a
-    // todos los animales y, al cumplir, da la zampoña.
-    // bossBeaten: aparece cuando el jefe de la sala está vencido; sprite: se dibuja con ese dibujo
-    { id: 'rasgueador', name: 'El Rasgueador', room: 'j1', dx: 17, sprite: 'charanguero_tocar', bossBeaten: true,
-      goneAfter: 'j7', noStomp: true,
-      lines: ['Buen golpe, chasqui. Hace tiempo que nadie me ganaba.',
-              'Ando buscando algo. No te voy a decir qué, pero tengo mis razones.',
-              'Dicen que en la Ciudadela de Niebla todavía se escucha un charango. Si quieres saber más, búscame por allá.'] },
-    { id: 'rasgueador7', name: 'El Rasgueador', room: 'j7', dx: 17, sprite: 'charanguero_tocar', bossBeaten: true,
-      noStomp: true, gift: { power: 'zampona', when: function (game) { return Codex.freedLeft(game) === 0; } },
-      lines: [
-        function (game) {
-          if (Codex.freedLeft(game) === 0) return '¡Todos libres! ¿Escuchas? Así sonaba la ciudad. Toma mi zampoña: te la ganaste.';
-          return 'Me ganaste otra vez. Ahora te digo lo que buscaba: a los animales. Antes bailaban con mis cuerdas.';
-        },
-        'Por eso te di mi quena: libéralos a todos con ella. Cuando estén todos libres, vuelve: te doy mi zampoña.',
-        function (game) {
-          const C = Codex.freed(game);
-          return 'Llevas ' + C.got + ' de ' + C.total + ' animales liberados.';
-        },
-        'Si pisas a uno, no se pierde: vuelve a aparecer y todavía lo puedes liberar.'],
-      after: ['Las siete cañas de la zampoña son las siete notas del diapasón. Tócalas y el aire te sostiene.',
-              'Ya no busco nada, chasqui. Ahora solo toco.'] },
-    // Llegan cuando la sala vuelve a sonar (sala afinada): vienen solo por la música
-    { id: 't1', name: 'Chaucha', room: 'n2', dx: 9, kind: 'aplaude', color: '#ffd34d', tuned: true,
-      lines: ['¡Escuché el bajo desde mi casa y vine corriendo! ¿Bailamos?'] },
-    { id: 't2', name: 'Puka', room: 'n1', dx: 9, kind: 'baila', color: '#9fd3e0', tuned: true,
-      lines: ['Volvió la música y mi perro dejó de gruñir. ¡Gracias, chasqui!'] },
-    { id: 't3', name: 'Muru', room: 'n7', dx: 9, kind: 'flauta', color: '#c9b8e3', tuned: true,
-      lines: ['Traje mi quena: ahora que el bosque suena otra vez, quiero tocar con él.'] },
-    { id: 't4', name: 'Leona', room: 'n10', dx: 9, kind: 'cuerdas', color: '#f4b6c2', tuned: true,
-      lines: ['Subí toda la escalinata siguiendo la música. ¡Valió la pena!'] },
-    { id: 't5', name: 'Sumaq', room: 'n13', dx: 9, kind: 'tambor', color: '#8fbf9a', tuned: true,
-      lines: ['El hielo se derrite cuando suena el tambor. Lo sentí en los pies.'] },
-    { id: 't6', name: 'Amarilla', room: 'n16', dx: 9, kind: 'aplaude', color: '#f7e3a1', tuned: true,
-      lines: ['Ahora el lago refleja lo que hay de verdad: una ciudad que vuelve a bailar.'] },
-    { id: 't7', name: 'Mariva', room: 'n19', dx: 9, kind: 'baila', color: '#ff9a6b', tuned: true,
-      lines: ['Ya casi. Cuando la ciudad entera suene, el Silencio no va a tener dónde esconderse.'] },
-    { id: 'dificil', name: 'Ccompis', room: 's3', dx: 6, kind: 'baila', color: '#ff6b8a', gift: { heart: true, coins: 300 },
-      lines: ['¿Quieres mi tesoro? Págame 800 monedas... o intenta pisarme tres veces.'],
-      after: ['Ya tienes mi tesoro. ¡Nadie me había alcanzado!'],
-      hard: { HP: 3, PRICE: 800, SPEED: 150, JUMP: 300, SEE: 70,
-              WIN: '¡Me alcanzaste! Toma mi tesoro: un corazón más y 300 monedas.',
-              PAID: 'Trato hecho. Toma mi tesoro: un corazón más y 300 monedas.' } }
-  ],
-
   MUSIC: {
   PATH: 'assets/music/',
   // Pistas enteras (suenan solas): portada, créditos, temas de zona, jefes y el ají

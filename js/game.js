@@ -71,7 +71,7 @@ const TIPS = {
   tuneOpen: 'El muro resonó con su nota y se deshizo. Los muros abiertos quedan abiertos.',
   mud: 'Barro: corres más lento. Salta para no quedarte pegado.',
   crack: 'El zapateo rompió el suelo agrietado. Queda roto para siempre.',
-  shellOpen: 'El caracol despertó las plataformas de la niebla. Ya no se van.'
+  shellOpen: 'La fermata despertó las plataformas de la niebla. Ya no se van.'
 };
 
 const ENDINGS = {
@@ -478,6 +478,7 @@ class Game {
 
   openTitle() {
   this.state = 'splash';
+  Portada.reset();
   this.screenTime = 0;
   Backdrop.set('none');
   Backdrop.setMuted(false);
@@ -495,8 +496,12 @@ class Game {
     return this.screenTime >= CONFIG.GAME.READY_DELAY;
   }
 
-  updateSplash() {
-    if (!this.screenReady() || !Input.anyPressed()) return;
+  // Portada jugable: el chasqui camina; la caja "Pulsa un botón" se abre con un botón
+  // (no las direcciones) o golpeándola desde abajo
+  updateSplash(dt) {
+    const label = UI.splashLabel(this.time, !this.settings.lang);
+    if (!Portada.update(dt, this.screenReady(), label)) return;
+    Portada.reset();
     Sfx.play('select');
     this.screenTime = 0;
     this.titleIndex = 0;
@@ -905,7 +910,7 @@ class Game {
       this.screenTime += dt;
       if (this.state === 'speedmenu') SpeedRun.updateMenu(this);
       else if (this.state === 'registro') this.updateRegistro();
-      else if (this.state === 'splash') this.updateSplash();
+      else if (this.state === 'splash') this.updateSplash(dt);
       else if (this.state === 'title') this.updateTitle();
       else if (this.state === 'lang') this.updateLang();
       else this.updateReady();
@@ -1016,6 +1021,7 @@ class Game {
     p.hookBlocked = !!this.prompt;
     Pulso.update(dt, this);
     this.zampona.update(dt, this);     // con R1: los botones son notas (antes de mover a la papa)
+    Touch.setZampona(p.has('zampona'));
     p.update(dt, this.level);
     this.updateChiliMusic();
     this.level.passOneWay = false;     // solo la papa atraviesa las plataformas de paso al bajar
@@ -1350,13 +1356,14 @@ class Game {
     Sfx.play('clear');
     Effects.chiliBurst(t.x + 8, t.y + 8);
     const song = CATALOGO.nombreMusica(L.id);
-    let msg = TEXT.afinada(song);
+    // Cada parte se traduce por separado (la frase armada entera no está en idiomas.js)
+    let msg = tr(TEXT.afinada(song));
     if (L.hasGate) {
-      msg += ' ' + (L.gateHint || '');
+      if (L.gateHint) msg += ' ' + tr(L.gateHint);
       Sfx.play('gate');
     }
     const record = this.saveRecord();
-    if (record) msg += ' ' + record;
+    if (record) msg += ' ' + tr(record);
     this.say(msg, 7, this.mode !== 'speedrun');
     Music.playStems(L.id, true);     // la sala afinada suena con todos sus instrumentos
     this.saveGame();
@@ -1583,7 +1590,7 @@ class Game {
         P.coins += prize;
         this.hearts = P.maxHearts;
         Sfx.play('clear');
-        this.say(first ? TEXT.bonusWon(prize) : TEXT.bonusAgain + ' +' + prize + ' monedas.', 4);
+        this.say(first ? TEXT.bonusWon(prize) : tr(TEXT.bonusAgain) + ' +' + prize + ' ' + tr('monedas') + '.', 4);
       }
       Effects.chiliBurst(this.player.x + 5, this.player.y + 9);
       this.saveGame();
@@ -2023,8 +2030,8 @@ stems.forEach(stem => {
     Registro.ev('quena', { n: near.length });
   }
 
-  // Caracol del eco: quieta y con Acción apretada un momento, la papa sopla. Las
-  // plataformas ocultas que alcanza la onda aparecen para siempre y la niebla se despeja
+  // Fermata: quieta y con Acción apretada un momento, el tiempo se sostiene. Los enemigos
+  // y sus disparos se congelan; las plataformas ocultas aparecen para siempre y la niebla se despeja
   updateShell(dt) {
     const S = CONFIG.SHELL;
     const p = this.player;
@@ -2045,7 +2052,8 @@ stems.forEach(stem => {
     const shown = this.level.blowShell(cx, cy, S.RADIUS);
     this.shellWaves.push({ x: cx, y: cy, t: 0 });
     Sfx.tune(196);
-    // La onda hipnotiza: los enemigos cercanos quedan quietos S.FREEZE segundos
+    this.enemies.shots.frozen = S.FREEZE;        // los disparos también se detienen
+    // La onda congela: los enemigos cercanos quedan quietos S.FREEZE segundos
     const reach = S.RADIUS * T;
     this.enemies.list.forEach(function (e) {
       if (e.state === 'dead' || e.npc) return;
@@ -2064,7 +2072,8 @@ stems.forEach(stem => {
     this.showTip('shellOpen');
   }
 
-  // Ondas del caracol (anillos color arena que se abren) y la carga mientras se mantiene
+  // Ondas de la fermata (anillos color arena que se abren) y, mientras se carga, el
+  // signo de fermata (arco con un punto) que se dibuja sobre la papa
   drawShell(ctx) {
     const S = CONFIG.SHELL;
     const T = CONFIG.TILE;
@@ -2083,13 +2092,15 @@ stems.forEach(stem => {
       ctx.globalAlpha = 1;
     });
     if (this.shellHold > 0.08) {
-      const p = this.player;
+      const p = this.player, k = Math.min(1, this.shellHold / S.HOLD);
+      const cx = p.x + p.w / 2, cy = p.headY() - 4;
       ctx.strokeStyle = CONFIG.SKINS.shell;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(p.x + p.w / 2, p.headY() - 6, 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, this.shellHold / S.HOLD));
+      ctx.arc(cx, cy, 6, Math.PI, Math.PI + Math.PI * k);   // el arco se va cerrando
       ctx.stroke();
       ctx.lineWidth = 1;
+      if (k >= 1 || Math.floor(this.time * 10) % 2 === 0) { ctx.fillStyle = CONFIG.SKINS.shell; ctx.fillRect(Math.round(cx) - 1, Math.round(cy) - 3, 2, 2); }
     }
   }
 

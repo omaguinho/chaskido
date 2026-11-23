@@ -1249,6 +1249,8 @@ class Shots {
   }
 
   update(dt, level) {
+    // Fermata: los disparos quedan quietos en el aire mientras dure
+    if (this.frozen > 0) { this.frozen -= dt; return; }
     this.list.forEach(function (s) {
       s.life -= dt;
       s.vy += s.g * dt;
@@ -1315,7 +1317,7 @@ class Enemies {
     this.list.forEach(function (e) {
       // Liberado por la quena: pasea en el fondo y no ataca
       if (e.freed) return e.wander(dt, level);
-      // Hipnotizado por el caracol: no se mueve ni dispara
+      // Congelado por la fermata: no se mueve ni dispara
       if (e.frozen > 0) { e.frozen -= dt; return; }
       e.update(dt, level, player);
       if (e.wantsShot) {
