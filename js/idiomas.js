@@ -901,12 +901,20 @@ const I18N = (function () {
     ['Perdiste en el coliseo: llegaste al piso', 'You lost in the colosseum: you reached floor', 'Você perdeu no coliseu: chegou ao andar'],
     ['Poderes', 'Powers', 'Poderes'], ['Vecinos que volvieron a bailar', 'Neighbors who danced again', 'Vizinhos que voltaram a dançar'],
     ['Animales liberados', 'Animals freed', 'Animais libertados'], ['Gracias por jugar', 'Thanks for playing', 'Obrigado por jogar'],
-    ['Juego hecho por', 'Game made by', 'Jogo feito por'], ['Música original', 'Original music', 'Música original'], ['Con la asistencia de', 'With the assistance of', 'Com a assistência de']
+    ['Juego hecho por', 'Game made by', 'Jogo feito por'], ['Música original', 'Original music', 'Música original'], ['Con la asistencia de', 'With the assistance of', 'Com a assistência de'],
+    ['Mapa de tesoros de la región', 'Region treasure map', 'Mapa do tesouro da região'], ['Mapa de tesoros', 'Treasure map', 'Mapa do tesouro'],
+    ['Marca en el mapa las salas de la región que todavía esconden tesoros (corazones, poliedros, poderes).', 'Marks on the map the rooms of the region that still hide treasures (hearts, polyhedra, powers).', 'Marca no mapa as salas da região que ainda escondem tesouros (corações, poliedros, poderes).'],
+    ['Muestra la región entera y marca las salas que todavía esconden tesoros.', 'Shows the whole region and marks the rooms that still hide treasures.', 'Mostra a região inteira e marca as salas que ainda escondem tesouros.'],
+    ['Ya tienes el mapa de tesoros de esta zona.', 'You already have this zone\'s treasure map.', 'Você já tem o mapa do tesouro desta zona.'],
+    ['Los vendedores tienen el mapa de tesoros de cada región.', 'The vendors sell each region\'s treasure map.', 'Os vendedores têm o mapa do tesouro de cada região.'],
+    ['Tesoros que faltan en la región:', 'Treasures left in the region:', 'Tesouros que faltam na região:']
   ];
 
   // ---------- Moldes: frases con partes que cambian ({0}, {1}...) ----------
   // Van de lo más específico a lo más general (los últimos son comodines)
   const MOLDES = [
+    ['¡Mapa de tesoros! En el mapa (pausa) ves toda {0} y dónde quedan tesoros.', 'Treasure map! On the map (pause) you see all of {0} and where treasures remain.', 'Mapa do tesouro! No mapa (pausa) você vê toda a {0} e onde restam tesouros.'],
+    ['En el mapa (pausa) ves toda {0} y dónde quedan tesoros.', 'On the map (pause) you see all of {0} and where treasures remain.', 'No mapa (pausa) você vê toda a {0} e onde restam tesouros.'],
     ['Llevas {0} de {1} animales liberados.', 'You have freed {0} of {1} animals.', 'Você libertou {0} de {1} animais.'],
     ['Este portón se abre cuando la sala vuelve a sonar. Te faltan {0} instrumentos: mira sus casillas arriba.', 'This gate opens when the room plays again. You still need {0} instruments: look at their slots at the top.', 'Este portão abre quando a sala volta a tocar. Faltam {0} instrumentos: olhe as casinhas lá em cima.'],
     ['No llegó la música: {0}', "The music didn't load: {0}", 'A música não carregou: {0}'],

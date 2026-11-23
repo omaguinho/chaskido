@@ -251,7 +251,7 @@ const CATALOGO = (function () {
 
   // ---------- Vendedores (en las salitas de tienda) ----------
   const TIENDA = [
-    { id: 'mapa',   nombre: 'Rollo de mapa de la región', precio: 30,  que: 'El mapa completo de la región.' },
+    { id: 'mapa',   nombre: 'Mapa de tesoros de la región', precio: 30,  que: 'Marca en el mapa las salas de la región que todavía esconden tesoros (corazones, poliedros, poderes).' },
     { id: 'vida',   nombre: 'Vida',                       precio: 20,  que: '+1 vida.' },
     { id: 'aji',    nombre: 'Ají para llevar',            precio: 15,  que: 'Lo usas cuando quieras.' },
     { id: 'pista',  nombre: 'Pista',                      precio: 25,  que: 'Marca en el mapa una nota de la escala.' },
@@ -416,8 +416,8 @@ const CATALOGO = (function () {
       que: 'Con el gancho te cuelgas de ella.', pide: 'hook' },
     { id: 'poderOculto', ch: 'H', grupo: 'objeto', region: 2, nombre: 'Poder escondido', color: '#f0b860', forma: 'icon', ic: '✦', estado: 'hecho',
       que: 'Un poder que se toma sin jefe (hoy: el gancho).' },
-    { id: 'mapa',       ch: 'Z', grupo: 'objeto', region: 0, nombre: 'Rollo de mapa', color: '#e6d3a3', forma: 'icon', ic: '▤', estado: 'nuevo',
-      que: 'Muestra el mapa completo de la región.' },
+    { id: 'mapa',       ch: 'Z', grupo: 'objeto', region: 0, nombre: 'Mapa de tesoros', color: '#e6d3a3', forma: 'icon', ic: '▤', estado: 'nuevo',
+      que: 'Muestra la región entera y marca las salas que todavía esconden tesoros.' },
     { id: 'mercader',   ch: 'm', grupo: 'objeto', region: 0, nombre: 'Vendedor', color: '#ffb36b', forma: 'icon', ic: '☺', estado: 'nuevo',
       que: 'Vende cosas por monedas.', props: { tipo: ['viajero', 'coleccion', 'cocinera'] }, preset: { tipo: 'viajero' } },
     { id: 'llama',      ch: '&', grupo: 'objeto', region: 3, nombre: 'Llama de cuerda', color: '#f2e2c4', forma: 'icon', ic: '♞', estado: 'nuevo',

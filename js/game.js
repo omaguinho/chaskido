@@ -51,7 +51,7 @@ const TEXT = {
   poliedro: function (p) { return '¡' + p.nombre + '! ' + p.que; },
   heart: function (n) { return '¡Corazón extra! Ahora tienes ' + n + ' corazones.'; },
   colorKey: function (k) { return '¡Encontraste la ' + k.nombre.toLowerCase() + '! ' + k.abre; },
-  mapRoll: function (z) { return '¡Rollo de mapa! Ya ves toda ' + WORLD.regionInfo(z).nombre + ' en el mapa.'; },
+  mapRoll: function (z) { return '¡Mapa de tesoros! En el mapa (pausa) ves toda ' + WORLD.regionInfo(z).nombre + ' y dónde quedan tesoros.'; },
   bonusStart: function (n, t) { return n > 0 ? '¡Come las ' + n + ' frutas en ' + t + ' segundos!' : '¡Llega a la meta en ' + t + ' segundos!'; },
   bonusWon: function (coins) { return '¡Bonus completo! +' + coins + ' monedas.'; },
   bonusAgain: '¡Bonus completo otra vez!',
@@ -1683,11 +1683,11 @@ class Game {
     const region = WORLD.region(this.salitaReturn ? this.salitaReturn.room : this.level.id) || 1;
     if (good.id === 'mapa') {
       if (P.mapRegions[region]) {
-        O.note = 'Ya tienes el mapa de esta zona.';
+        O.note = 'Ya tienes el mapa de tesoros de esta zona.';
         return;
       }
       P.mapRegions[region] = true;
-      O.note = 'Ahora ves toda ' + WORLD.regionInfo(region).nombre + ' en el mapa (pausa).';
+      O.note = 'En el mapa (pausa) ves toda ' + WORLD.regionInfo(region).nombre + ' y dónde quedan tesoros.';
     } else if (good.id === 'vida') {
       if (this.hearts >= P.maxHearts) {
         O.note = 'Tus corazones ya están llenos.';
@@ -1819,11 +1819,16 @@ class Game {
     this.roomState(L.id).boss = true;
     if (L.boss && this.mode === 'story') Codex.boss(this, L.boss.type);
     L.arenaActive = false;
-    // Fanfarria: el tema de la zona 1, más lento, suena un rato y vuelve la música de la sala
-    const V = CONFIG.MUSIC.VICTORY;
-    Music.setRate(V.RATE);
-    Music.play(V.TRACK);
-    this.victoryT = V.TIME;
+    // Fanfarria: el tema de la zona 1, más lento, suena un rato y vuelve la música de la sala.
+    // En las salas del Rasgueador no hay fanfarria: vuelve directo su charango
+    if (this.charangoRoom()) {
+      Music.stop();
+    } else {
+      const V = CONFIG.MUSIC.VICTORY;
+      Music.setRate(V.RATE);
+      Music.play(V.TRACK);
+      this.victoryT = V.TIME;
+    }
     Sfx.play('bossWon');
     // El que pierde y se queda (el Rasgueador): aparece como vecino
     if (this.isStory()) this.vecinos = new Vecinos(L, this.roomState(L.id), true, this.progress);

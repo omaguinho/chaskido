@@ -1,5 +1,6 @@
 // Menú de pausa de Chaskido. Pestañas (izquierda/derecha o tocando el ícono):
-//   Mapa      mapa del mundo: salas visitadas o compradas con el rollo de mapa
+//   Mapa      mapa del mundo: salas visitadas; con el mapa de tesoros de una región,
+//             la región entera y las salas que todavía esconden tesoros
 //   Zona      la sala actual en chico: puertas, tótem, posta, vendedor y la papa
 //   Poderes   los 13 poderes (con el diapasón), las 7 llaves de color, corazones, notas,
 //             instrumentos y poliedros conseguidos
@@ -503,6 +504,12 @@ class PauseMenu {
       ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
       ctx.globalAlpha = 1;
       if (rs.boss) this.mark(ctx, PauseMenu.MARK.BOSS, x + w - 3, y + 3, '#ff6b8a');
+      // Mapa de tesoros: estrella que brilla en las salas con tesoros sin tomar
+      if (P.mapRegions[r.r] && WORLD.built(r.id) && this.treasuresLeft(r.id) > 0) {
+        ctx.globalAlpha = 0.6 + 0.4 * Math.sin(this.time * 5 + r.x);
+        this.mark(ctx, PauseMenu.MARK.HEART, x + w / 2, y + h / 2, '#ffd34d');
+        ctx.globalAlpha = 1;
+      }
       if (rs.afinada) this.mark(ctx, PauseMenu.MARK.TOTEM, x + 3, y + 3, '#9fd3e0');
     }, this);
 
@@ -516,7 +523,28 @@ class PauseMenu {
     UI.shadowText(ctx, WORLD.fullName(here), ox, 154, region.color, 7);
     UI.text(ctx, 'Salas afinadas: ' + afinadas + ' / 21', ox + 46 * UW, 154, '#fbf6ec', 6, 'right');
     if (shown === 0) UI.text(ctx, 'Todavía no hay salas en el mapa.', CONFIG.WIDTH / 2, 90, '#fbf6ec', 7, 'center');
-    if (!P.mapRegions[region.id]) UI.text(ctx, 'Compra el rollo de mapa para ver la región entera.', ox, 163, '#9a93b0', 5);
+    if (!P.mapRegions[region.id]) UI.text(ctx, 'Los vendedores tienen el mapa de tesoros de cada región.', ox, 163, '#9a93b0', 5);
+    else UI.text(ctx, tr('Tesoros que faltan en la región:') + ' ' + this.regionTreasures(region.id), ox, 163, '#ffd34d', 5);
+  }
+
+  // Tesoros de una sala (corazones *, poliedros y, poderes escondidos H) que no se tomaron
+  treasuresLeft(id) {
+    const cache = PauseMenu.treasureCells || (PauseMenu.treasureCells = {});
+    if (!cache[id]) {
+      const raw = LEVELS.find(function (l) { return l.id === id; });
+      const cells = [];
+      if (raw) raw.map.forEach(function (row, ty) {
+        for (let tx = 0; tx < row.length; tx++) if ('*yH'.indexOf(row[tx]) >= 0) cells.push(tx + ',' + ty);
+      });
+      cache[id] = cells;
+    }
+    const taken = ((this.game.progress.rooms[id] || {}).taken) || {};
+    return cache[id].filter(function (k) { return !taken[k]; }).length;
+  }
+
+  regionTreasures(region) {
+    return WORLD.ROOMS.filter(function (r) { return r.r === region && WORLD.built(r.id); })
+      .reduce(function (n, r) { return n + this.treasuresLeft(r.id); }.bind(this), 0);
   }
 
   // ---------- Mapa de la sala actual ----------

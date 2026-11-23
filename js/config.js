@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v101',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v102',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -365,7 +365,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.101.0.0',
+    VERSION: '0.102.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
