@@ -528,7 +528,6 @@ class Enemy {
   // Liberarlo (quena): queda en el fondo, ya no toca a la papa
   free() {
     this.freed = true;
-    this.frozen = 0;
     if (!this.isAliveState()) this.reset();
     this.state = 'walk';
     this.homeY = this.y;
@@ -1249,8 +1248,6 @@ class Shots {
   }
 
   update(dt, level) {
-    // Fermata: los disparos quedan quietos en el aire mientras dure
-    if (this.frozen > 0) { this.frozen -= dt; return; }
     this.list.forEach(function (s) {
       s.life -= dt;
       s.vy += s.g * dt;
@@ -1317,8 +1314,6 @@ class Enemies {
     this.list.forEach(function (e) {
       // Liberado por la quena: pasea en el fondo y no ataca
       if (e.freed) return e.wander(dt, level);
-      // Congelado por la fermata: no se mueve ni dispara
-      if (e.frozen > 0) { e.frozen -= dt; return; }
       e.update(dt, level, player);
       if (e.wantsShot) {
         this.shots.fire(e, e.wantsShot);
@@ -1401,19 +1396,6 @@ class Enemies {
     this.list.forEach(function (e) {
       if (e.freed) return;
       e.draw(ctx);
-      if (e.frozen > 0 && e.state !== 'dead') {
-        // Hipnotizado: una espiral color arena que gira sobre su cabeza
-        const cx = e.x + e.w / 2, cy = e.y - 5, a = e.frozen * 8;
-        ctx.strokeStyle = CONFIG.SKINS.shell;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let k = 0; k < 14; k++) {
-          const r = 1 + k * 0.35, ang = a + k * 0.7;
-          const px = cx + Math.cos(ang) * r, py = cy + Math.sin(ang) * r * 0.6;
-          if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-        }
-        ctx.stroke();
-      }
     });
     this.shots.draw(ctx);
   }

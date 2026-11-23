@@ -1,6 +1,7 @@
 // Chaskido · Informe de juego → Google Sheets
 // Pegar en Extensiones → Apps Script de la planilla y publicar como "Aplicación web".
-// Cada sesión que manda el juego entra como una fila en la hoja "Sesiones":
+// Cada sesión que manda el juego entra como una fila en la hoja "Sesiones" (una sola
+// por sesión: si llega dos veces, se reemplaza):
 // una columna por cada dato del resumen y, al final, el JSON completo.
 // Si el juego empieza a mandar datos nuevos, se agregan columnas solas.
 
@@ -32,7 +33,17 @@ function doPost(e) {
       const v = resumen[k];
       return v === undefined ? '' : v;
     });
-    hoja.appendRow(fila);
+    // Una fila por sesión: si la sesión ya llegó (reenvío), se reemplaza esa fila
+    const col = encabezados.indexOf('sesion') + 1;
+    let filaExistente = 0;
+    if (col > 0 && resumen.sesion && resumen.sesion !== 'prueba' && hoja.getLastRow() > 1) {
+      const ids = hoja.getRange(2, col, hoja.getLastRow() - 1, 1).getValues();
+      for (let i = ids.length - 1; i >= 0; i--) {
+        if (ids[i][0] === resumen.sesion) { filaExistente = i + 2; break; }
+      }
+    }
+    if (filaExistente) hoja.getRange(filaExistente, 1, 1, fila.length).setValues([fila]);
+    else hoja.appendRow(fila);
     return ContentService.createTextOutput('ok');
   } catch (err) {
     return ContentService.createTextOutput('error: ' + err);

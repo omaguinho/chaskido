@@ -50,5 +50,8 @@ const Pulso = (function () {
     ctx.globalAlpha = 1;
   }
 
-  return { update: update, check: check, draw: draw, beatLen: beatLen, barLen: barLen };
+  // Tiempos desde que partió la música (con decimales)
+  function beats() { return now.beats; }
+
+  return { update: update, check: check, draw: draw, beatLen: beatLen, barLen: barLen, beats: beats };
 })();

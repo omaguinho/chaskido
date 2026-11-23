@@ -58,7 +58,11 @@ const Registro = (function () {
       jefes: {},            // tipo -> { intentos, ganado, tiempos, golpes, corazones, danio }
       c: {},                // contadores
       poderes: {},          // poder -> { usos, ganado (s), primerUso (s) }
-      diapason: { usos: 0, efectivos: 0, notas: {} },
+      diapason: { usos: 0, efectivos: 0, notas: {}, otraNota: 0 },
+      ruta: [],             // { sala, t } en orden de entrada
+      nuevaSala: 0,         // segundo en que pisó una sala por primera vez (la última)
+      carteles: {},         // id del cartel -> veces leído
+      claves: { usos: 0, repelidos: 0 },
       golpes: {},           // causa -> cuántos
       muertes: [],          // { sala, x, y, causa, jefe }
       reaparece: [],        // salas donde volvió tras morir
@@ -111,7 +115,13 @@ const Registro = (function () {
       s.diapason.usos++;
       s.diapason.notas[d.nota] = (s.diapason.notas[d.nota] || 0) + 1;
       if (d.efectivo) s.diapason.efectivos++;
+      else if (d.otraNota) s.diapason.otraNota++;      // había un muro, pero de otra nota
       log('diapason', d);
+    } else if (tipo === 'cartel') {
+      s.carteles[d.id] = (s.carteles[d.id] || 0) + 1;
+    } else if (tipo === 'claves') {
+      s.claves.usos++;
+      s.claves.repelidos += d.repelidos || 0;
     } else if (tipo === 'compra') {
       s.compras[d.id] = (s.compras[d.id] || 0) + 1;
       log('compra', d);
@@ -259,6 +269,7 @@ const Registro = (function () {
     if (now.bossOn && now.bossHp < was.bossHp) s.bossHits += was.bossHp - now.bossHp;
     if (was.bossOn && !now.bossOn) {
       const B = boss(was.bossType);
+      if (g.arenaPhase !== 'done') (B.vidaAlPerder || (B.vidaAlPerder = [])).push(was.bossHp);
       B.tiempos.push(Math.round(s.t - s.bossStart));
       B.golpes.push(s.bossHits);
       if (g.arenaPhase === 'done') B.ganado = true;
@@ -278,6 +289,8 @@ const Registro = (function () {
     const r = room(id);
     r.entradas++;
     if (r.entradas > 1) count('vueltasAtras');
+    else s.nuevaSala = s.t;
+    s.ruta.push({ sala: id, t: s.t });
     const L = game.level;
     if (L && L.kind === 'prologo') s.prologo.tramos[id] = s.prologo.tramos[id] || Math.round(s.t);
     log('sala', {});
@@ -376,10 +389,45 @@ const Registro = (function () {
       reaparece_en: s.reaparece.join(' '),
       prologo_primer_pisoton_s: s.prologo.primerPisoton === null ? '' : s.prologo.primerPisoton,
       prologo_botones_antes: m.botonesPrologo,
+      // Para saber dónde y por qué se va la gente
+      seg_sala_final: last && s.salas[last] ? Math.round(s.salas[last].t) : 0,
+      seg_sin_sala_nueva: Math.round(s.t - s.nuevaSala),
+      ruta_final: routeTail(5),
+      muertes_por_sala: deathsBy(),
+      jefe_vida_al_perder: jefes.filter(function (k) { return s.jefes[k].vidaAlPerder; })
+        .map(function (k) { return k + ':' + s.jefes[k].vidaAlPerder.join(','); }).join(' '),
+      diapason_otra_nota: s.diapason.otraNota,
+      carteles_leidos: Object.keys(s.carteles).length,
+      claves_usos: s.claves.usos, claves_repelidos: s.claves.repelidos,
+      dev: !!load().dev,
       perfil: pf.perfil,
       p_experto: pf.score.experto, p_explorador: pf.score.explorador, p_apurado: pf.score.apurado,
       p_principiante: pf.score.principiante, p_enfocado: pf.score.enfocado
     };
+  }
+
+  // Las últimas n salas con los segundos que estuvo en cada una: "n2:40 n5:120"
+  function routeTail(n) {
+    const R2 = s.ruta.slice(-n);
+    return R2.map(function (r, i) {
+      const end = i + 1 < R2.length ? R2[i + 1].t : s.t;
+      return r.sala + ':' + Math.round(end - r.t);
+    }).join(' ');
+  }
+
+  // Muertes agrupadas por sala y causa: "p2:eco×10 n5:espinas×2"
+  function deathsBy() {
+    const g = {};
+    s.muertes.forEach(function (m) { const k = m.sala + ':' + m.causa; g[k] = (g[k] || 0) + 1; });
+    return Object.keys(g).map(function (k) { return k + '×' + g[k]; }).join(' ');
+  }
+
+  // Marca de desarrollador (para separar tus partidas en la planilla)
+  function toggleDev() {
+    const d = load();
+    d.dev = !d.dev;
+    store(d);
+    return d.dev;
   }
 
   function report(motivo) {
@@ -393,7 +441,8 @@ const Registro = (function () {
       }),
       jefes: s.jefes, poderes: s.poderes, diapason: s.diapason, golpes: s.golpes,
       muertes: s.muertes, compras: s.compras, vecinos: s.vecinos, prologo: s.prologo,
-      instrumentos_seg: s.instrumentos, eventos: s.eventos
+      instrumentos_seg: s.instrumentos, carteles: s.carteles, ruta: s.ruta.map(function (r) { return r.sala + '@' + Math.round(r.t); }),
+      eventos: s.eventos
     };
   }
 
@@ -514,5 +563,6 @@ const Registro = (function () {
   });
   window.addEventListener('online', function () { send(); });
 
-  return { tick: tick, ev: ev, end: end, send: send, test: test, download: download, newPlayer: newPlayer, last: last, text: text };
+  return { tick: tick, ev: ev, end: end, send: send, test: test, download: download, newPlayer: newPlayer, last: last, text: text,
+           toggleDev: toggleDev, isDev: function () { return !!load().dev; } };
 })();

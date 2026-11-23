@@ -13,8 +13,45 @@
 // Los textos van en español; las traducciones están en js/idiomas.js.
 // =====================================================================
 const PERSONAJES = {
-  // Guardián del portón de cada jefe (nombre por sala; sus frases en CONFIG.GATE_GUARD)
-  GUARDIAS: { n3: 'Alcato', n6: 'Guañito', n9: 'Capirolo', n12: 'Tomasina', n15: 'Perrichón', n18: 'Uniquí', n21: 'Ojo de Pardo' },
+  // Guardián del portón de cada jefe. Antes de abrirse da pistas (CONFIG.GATE_GUARD);
+  // con el portón abierto comenta cosas suyas, una al azar (despues)
+  GUARDIAS: {
+    n3: { name: 'Alcato', personalidad: 'Nervioso, todo lo cuenta con ritmo.',
+          saludos: ['¡Oye, tú!', '¡Pst, chasqui!', 'Tum... tum...'],
+          despues: ['Desde que volvió el tambor, mi corazón late a tiempo. Antes iba a destiempo.',
+                    'Mi abuela decía que el primer tambor se hizo con un tronco hueco y mucha paciencia.',
+                    'Hoy voy a cenar algo con ají. Mucho ají.'] },
+    n6: { name: 'Guañito', personalidad: 'Curioso y preguntón.',
+          saludos: ['¿Y tú quién eres?', '¡Ey, ey!', '¿Viste eso?'],
+          despues: ['¿Los cuyes sueñan? Yo creo que sueñan con alfalfa.',
+                    'Estoy contando las hojas de ese árbol. Voy en mil doscientas... o mil trescientas.',
+                    'Dicen que en la otra orilla hay una feria. Algún día voy.'] },
+    n9: { name: 'Capirolo', personalidad: 'Dormilón.',
+          saludos: ['Zzz... ¿eh?', 'Mmm...', '¡Ah! No estaba durmiendo.'],
+          despues: ['El barro calentito es lo mejor para una siesta.',
+                    'Soñé que era un charango. Sonaba un poco desafinado.',
+                    'Cuando llueve, el pantano canta. Escucha.'] },
+    n12: { name: 'Tomasina', personalidad: 'Orgullosa y elegante.',
+           saludos: ['¡Alto ahí!', 'Buenas, buenas.', '¿Me hablas a mí?'],
+           despues: ['Este sombrero es de mi bisabuela. Tiene más años que la ciudad.',
+                     'En las fiestas del templo, yo bailaba en primera fila. Siempre.',
+                     'El dorado no se pule solo, ¿sabes?'] },
+    n15: { name: 'Perrichón', personalidad: 'Poeta friolento.',
+           saludos: ['Brrr, ¡hola!', '¿Frío? ¿Qué frío?', 'Ejem...'],
+           despues: ['Si el hielo suena, es que está contento. Eso creo.',
+                     'Me pregunto si los osos tienen frío. Seguro que no.',
+                     'Estoy escribiendo un poema sobre la nieve. Solo tengo la primera palabra: nieve.'] },
+    n18: { name: 'Uniquí', personalidad: 'Soñadora del agua.',
+           saludos: ['¡Hola, hola!', 'Glub...', '¿Oíste a las ranas?'],
+           despues: ['Las ranas cantan en terceras. Lo aprendí escuchando toda la noche.',
+                     'El lago guarda todo lo que se le cae. Hasta canciones.',
+                     'A veces tiro una piedrita y cuento los círculos. Hoy fueron siete.'] },
+    n21: { name: 'Ojo de Pardo', personalidad: 'Vigía solemne.',
+           saludos: ['Atención.', 'Te vi venir.', 'Hum.'],
+           despues: ['Desde aquí se ve toda la ciudad. Cada día suena un poco más.',
+                     'El viento trae noticias. Hoy trae olor a pan.',
+                     'Los cóndores vuelan sin mover las alas. Yo lo intento y me caigo.'] }
+  },
   FIESTA: 'Tarmelina',                       // la vecina que habla en la fiesta del prólogo
   VENDEDORES: { viajero: 'Don Revuelo', cocinera: 'Doña Huevina', coleccion: 'Tío Torito' },
 
@@ -87,7 +124,7 @@ const PERSONAJES = {
       saludos: ['♪ Tran, tran...', 'Hmpf.', '¿Otra vez tú?'],
       inicio: 'Buen golpe, chasqui. Hace tiempo que nadie me ganaba.',
       lines: ['Ando buscando algo. No te voy a decir qué, pero tengo mis razones.',
-              'Dicen que en la Ciudadela de Niebla todavía se escucha un charango. Si quieres saber más, búscame por allá.'] },
+              'Dicen que en la Ciudadela de Niebla todavía se escucha un charango. Cuando toda la ciudad vuelva a sonar, búscame por allá.'] },
     { id: 'rasgueador7', name: 'El Rasgueador', room: 'j7', dx: 17, sprite: 'charanguero_tocar', bossBeaten: true,
       noStomp: true, gift: { power: 'zampona', when: function (game) { return Codex.freedLeft(game) === 0; } },
       personalidad: 'Ya sin orgullo: por fin cuenta lo que buscaba.',
@@ -150,6 +187,7 @@ const PERSONAJES = {
 
 // Lo que usa el resto del juego
 CONFIG.VECINOS = PERSONAJES.VECINOS;
-CONFIG.CODEX.GUARD_NAMES = PERSONAJES.GUARDIAS;
+CONFIG.CODEX.GUARD_NAMES = {};
+Object.keys(PERSONAJES.GUARDIAS).forEach(function (r) { CONFIG.CODEX.GUARD_NAMES[r] = PERSONAJES.GUARDIAS[r].name; });
 CONFIG.CODEX.FIESTA_NAME = PERSONAJES.FIESTA;
 CONFIG.CODEX.VENDOR_NAMES = PERSONAJES.VENDEDORES;

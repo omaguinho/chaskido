@@ -353,20 +353,7 @@ sprite_percusion: { file: 'sprite_percusion.png', fw: 16, fh: 16, fps: 8 },
 
   // ---------- Portada (en assets/bg/) ----------
   logo:    { file: '../bg/logo.png',    fw: 160, fh: 48 },
-  portada: { file: '../bg/portada.png', fw: 320, fh: 180 },
-
-  // ---------- Portada con parallax (assets/bg/titulo/; js/titulo.js) ----------
-  // Tamaño en px del juego; las hojas vienen a 4x (ej. tit_cielo 1408 x 792) y se suavizan
-  tit_cielo:      { file: '../bg/titulo/tit_cielo.png',      fw: 352, fh: 198 },
-  tit_humo_lejos: { file: '../bg/titulo/tit_humo_lejos.png', fw: 400, fh: 90 },
-  tit_maquina:    { file: '../bg/titulo/tit_maquina.png',    fw: 130, fh: 110 },   // 2 cuadros: ojo abierto, cerrado
-  tit_ciudad:     { file: '../bg/titulo/tit_ciudad.png',     fw: 400, fh: 120 },
-  tit_humo_cerca: { file: '../bg/titulo/tit_humo_cerca.png', fw: 400, fh: 80 },
-  tit_jefes_izq:  { file: '../bg/titulo/tit_jefes_izq.png',  fw: 120, fh: 100 },
-  tit_jefes_der:  { file: '../bg/titulo/tit_jefes_der.png',  fw: 120, fh: 100 },
-  tit_chasqui:    { file: '../bg/titulo/tit_chasqui.png',    fw: 120, fh: 130 },
-  tit_suelo:      { file: '../bg/titulo/tit_suelo.png',      fw: 400, fh: 40 },
-  tit_logo:       { file: '../bg/titulo/tit_logo.png',       fw: 240, fh: 56 }
+  portada: { file: '../bg/portada.png', fw: 320, fh: 180 }
 };
 
 // El Silencio (jefe final, sala 22): tres formas con los mismos estados que el Eco

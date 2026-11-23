@@ -71,7 +71,7 @@ const TIPS = {
   tuneOpen: 'El muro resonó con su nota y se deshizo. Los muros abiertos quedan abiertos.',
   mud: 'Barro: corres más lento. Salta para no quedarte pegado.',
   crack: 'El zapateo rompió el suelo agrietado. Queda roto para siempre.',
-  shellOpen: 'La fermata despertó las plataformas de la niebla. Ya no se van.'
+  shellOpen: 'Las claves despertaron las plataformas de la niebla. Ya no se van.'
 };
 
 const ENDINGS = {
@@ -273,6 +273,7 @@ class Game {
     this.player = new Player(L.spawn.x, L.spawn.y);
     this.player.abilities = this.abilities;
     this.instrumentos = new Instrumentos(L);
+    this.victoryT = 0;
     this.enemies = new Enemies(L, this.isStory() ? rs.libres : null);
     this.vecinos = new Vecinos(L, rs, this.mode === 'story', this.progress);
     this.gateBumps = 0;
@@ -605,6 +606,10 @@ class Game {
       this.registroNote = 'Enviando prueba…';
       Registro.send();                                   // y lo que haya en cola
       Registro.test().then(function (msg) { self.registroNote = msg; });
+      Sfx.play('select');
+    } else if (Input.pressed('up')) {
+      // Marca de desarrollador: tus partidas salen con dev = TRUE en la planilla
+      this.registroNote = Registro.toggleDev() ? 'Marcado como desarrollador.' : 'Ya no es desarrollador.';
       Sfx.play('select');
     } else if (Input.pressed('pause')) {
       this.state = 'title';
@@ -1028,14 +1033,15 @@ class Game {
       Pulso.check();
       this.onTone(tone);
     }
-    this.updateShell(dt);
     if (p.onGround && p.material(this.level) === CONFIG.MATERIALS.barro) this.showTip('mud');
     this.level.touchCrumbles(p);
     this.playerEvents();
     this.instrumentos.update(dt, this.level, p, this.level.id);
     this.enemies.update(dt, this.level, p, this.camera);
     this.updateQuena(dt);
+    this.updateShell(dt);              // claves (después de la quena: no usan el mismo toque)
     this.updateCharango();
+    this.updateVictory(dt);
     this.enemies.list.forEach(function (e) {           // animales vencidos: al Códex
       if (!e.codexed && (e.state === 'squashed' || e.state === 'dead')) { e.codexed = true; Codex.animal(this, e); }
     }, this);
@@ -1201,7 +1207,10 @@ class Game {
     else if (it.type === 'vendor') this.openShop(it);
     else if (it.type === 'salitaDoor') this.enterSalita(it);
     else if (it.type === 'backDoor') this.leaveSalita();
-    else if (it.type === 'sign') this.say(it.props.texto || '...', 6);
+    else if (it.type === 'sign') {
+      this.say(it.props.texto || '...', 6);
+      Registro.ev('cartel', { id: this.level.id + ':' + it.tx + ',' + it.ty });
+    }
   }
 
   // ---------- Misión del tótem ----------
@@ -1771,9 +1780,11 @@ class Game {
     this.roomState(L.id).boss = true;
     if (L.boss && this.mode === 'story') Codex.boss(this, L.boss.type);
     L.arenaActive = false;
-    Music.setRate(L.rate);
-    if (this.charangoRoom()) Music.stop();       // vuelve a sonar su charango
-    else Music.play(L.music);
+    // Fanfarria: el tema de la zona 1, más lento, suena un rato y vuelve la música de la sala
+    const V = CONFIG.MUSIC.VICTORY;
+    Music.setRate(V.RATE);
+    Music.play(V.TRACK);
+    this.victoryT = V.TIME;
     Sfx.play('bossWon');
     // El que pierde y se queda (el Rasgueador): aparece como vecino
     if (this.isStory()) this.vecinos = new Vecinos(L, this.roomState(L.id), true, this.progress);
@@ -2006,12 +2017,14 @@ stems.forEach(stem => {
   updateQuena(dt) {
     const Q = CONFIG.QUENA, p = this.player;
     this.quenaCool = Math.max(0, (this.quenaCool || 0) - dt);
+    this.quenaActed = false;            // si libera a alguien, ese toque no es de las claves
     if (!p.has('quena') || this.prompt || this.quenaCool > 0 || !Input.pressed('action')) return;
     const cx = p.x + p.w / 2, cy = p.y + p.h / 2, R = Q.RADIUS * CONFIG.TILE;
     const near = this.enemies.alive().filter(function (e) {
       return Codex.isAnimal(e) && !e.inArena && Math.hypot(e.x + e.w / 2 - cx, e.y + e.h / 2 - cy) < R;
     });
     if (!near.length) return;
+    this.quenaActed = true;
     this.quenaCool = Q.COOLDOWN;
     const rs = this.roomState(this.level.id);
     const libres = rs.libres || (rs.libres = {});
@@ -2025,37 +2038,61 @@ stems.forEach(stem => {
     Registro.ev('quena', { n: near.length });
   }
 
-  // Fermata: quieta y con Acción apretada un momento, el tiempo se sostiene. Los enemigos
-  // y sus disparos se congelan; las plataformas ocultas aparecen para siempre y la niebla se despeja
+  // Claves (poder del Cóndor; id 'shell' por las partidas guardadas). Con Acción:
+  //   · un toque: un golpe seco de claves; la onda desvía los proyectiles cercanos
+  //     (de enemigos y jefes) y revela lo escondido en la niebla
+  //   · mantenido: suena la clave del son (3-2) al pulso de la música, un golpe por nota
   updateShell(dt) {
-    const S = CONFIG.SHELL;
-    const p = this.player;
+    const S = CONFIG.SHELL, p = this.player;
     this.shellWaves = (this.shellWaves || []).filter(function (w) { w.t += dt; return w.t < S.WAVE_TIME; });
     this.shellCool = Math.max(0, (this.shellCool || 0) - dt);
-    const still = p.onGround && !Input.held('left') && !Input.held('right');
-    if (!p.has('shell') || this.prompt || !still || !Input.held('action') || this.shellCool > 0) {
+    if (!p.has('shell') || this.prompt || this.quenaActed || !Input.held('action')) {
       this.shellHold = 0;
+      this.claveStep = -1;
       return;
     }
+    if (Input.pressed('action')) {
+      if (this.shellCool > 0) return;
+      this.shellCool = S.COOLDOWN;
+      Pulso.check();
+      this.claveHit();
+      return;
+    }
+    // Mantenido: la clave del son, en corcheas (16 por cada dos compases)
     this.shellHold = (this.shellHold || 0) + dt;
     if (this.shellHold < S.HOLD) return;
-    this.shellHold = 0;
-    this.shellCool = S.COOLDOWN;
-    const T = CONFIG.TILE;
-    const cx = p.x + p.w / 2;
-    const cy = p.y + p.h / 2;
-    const shown = this.level.blowShell(cx, cy, S.RADIUS);
+    const step = Math.floor(Pulso.beats() * 2) % 16;
+    if (step === this.claveStep) return;
+    this.claveStep = step;
+    if (S.CLAVE.indexOf(step) >= 0) this.claveHit();
+  }
+
+  // Un golpe de claves: suena, sale la onda, desvía proyectiles y revela la niebla
+  claveHit() {
+    const S = CONFIG.SHELL, T = CONFIG.TILE, p = this.player;
+    const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+    Sfx.play('clave');
     this.shellWaves.push({ x: cx, y: cy, t: 0 });
-    Sfx.tune(196);
-    this.enemies.shots.frozen = S.FREEZE;        // los disparos también se detienen
-    // La onda congela: los enemigos cercanos quedan quietos S.FREEZE segundos
-    const reach = S.RADIUS * T;
-    this.enemies.list.forEach(function (e) {
-      if (e.state === 'dead' || e.npc) return;
-      if (Math.hypot(e.x + e.w / 2 - cx, e.y + e.h / 2 - cy) > reach) return;
-      e.frozen = S.FREEZE;
-      Effects.play('poof', e.x + e.w / 2, e.y);
+    this.claveFlash = 0.12;
+    // Proyectiles cercanos (chicos): se rompen con un poof
+    const R = S.REPEL * T;
+    const near = function (s) {
+      return s.w <= S.MAX_SHOT && s.h <= S.MAX_SHOT && Math.hypot(s.x + s.w / 2 - cx, s.y + s.h / 2 - cy) < R;
+    };
+    let n = 0;
+    const lists = [this.enemies.shots.list];
+    if (this.boss && this.boss.shots) lists.push(this.boss.shots);
+    lists.forEach(function (list) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (!near(list[i])) continue;
+        Effects.play('poof', list[i].x + list[i].w / 2, list[i].y + list[i].h / 2);
+        list.splice(i, 1);
+        n++;
+      }
     });
+    Registro.ev('claves', { repelidos: n });
+    // Lo escondido en la niebla
+    const shown = this.level.blowShell(cx, cy, S.RADIUS);
     if (!shown.length) return;
     shown.forEach(function (c, i) {
       if (i % 2 === 0) Effects.play('poof', c[0] * T + T / 2, c[1] * T + T / 2);
@@ -2067,42 +2104,43 @@ stems.forEach(stem => {
     this.showTip('shellOpen');
   }
 
-  // Ondas de la fermata (anillos color arena que se abren) y, mientras se carga, el
-  // signo de fermata (arco con un punto) que se dibuja sobre la papa
+  // Ondas de las claves (anillos color madera) y las dos claves que chocan sobre la papa
   drawShell(ctx) {
-    const S = CONFIG.SHELL;
-    const T = CONFIG.TILE;
+    const S = CONFIG.SHELL, T = CONFIG.TILE;
     this.shellWaves.forEach(function (w) {
       const k = w.t / S.WAVE_TIME;
-      for (let r = 0; r < 3; r++) {
-        const kk = k - r * 0.12;
+      for (let r = 0; r < 2; r++) {
+        const kk = k - r * 0.15;
         if (kk <= 0) continue;
         ctx.globalAlpha = (1 - kk) * 0.8;
-        ctx.strokeStyle = r === 0 ? '#fff6e0' : CONFIG.SKINS.shell;
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = r === 0 ? '#fff6e0' : S.COLOR;
+        ctx.lineWidth = r === 0 ? 1 : 2;
         ctx.beginPath();
-        ctx.arc(w.x, w.y, S.RADIUS * T * kk, 0, Math.PI * 2);
+        ctx.arc(w.x, w.y, S.REPEL * T * kk, 0, Math.PI * 2);
         ctx.stroke();
       }
       ctx.globalAlpha = 1;
-    });
-    if (this.shellHold > 0.08) {
-      const p = this.player, k = Math.min(1, this.shellHold / S.HOLD);
-      const cx = p.x + p.w / 2, cy = p.headY() - 4;
-      ctx.strokeStyle = CONFIG.SKINS.shell;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 6, Math.PI, Math.PI + Math.PI * k);   // el arco se va cerrando
-      ctx.stroke();
       ctx.lineWidth = 1;
-      if (k >= 1 || Math.floor(this.time * 10) % 2 === 0) { ctx.fillStyle = CONFIG.SKINS.shell; ctx.fillRect(Math.round(cx) - 1, Math.round(cy) - 3, 2, 2); }
+    });
+    this.claveFlash = Math.max(0, (this.claveFlash || 0) - 1 / 60);
+    if (this.claveFlash > 0 || this.shellHold >= S.HOLD) {
+      const p = this.player, cx = p.x + p.w / 2, cy = p.headY() - 6;
+      const open = this.claveFlash > 0 ? 0.25 : 0.6;
+      ctx.fillStyle = S.COLOR;
+      [-1, 1].forEach(function (d) {
+        ctx.save();
+        ctx.translate(cx + d * 3, cy);
+        ctx.rotate(d * open);
+        ctx.fillRect(-1, -5, 2, 10);
+        ctx.restore();
+      });
     }
   }
 
   // Sonó el diapasón: los muros de esa nota que alcanzó la onda se deshacen
   onTone(t) {
     const T = CONFIG.TILE;
-    Registro.ev('diapason', { nota: t.note, efectivo: t.opened.length > 0 });
+    Registro.ev('diapason', { nota: t.note, efectivo: t.opened.length > 0, otraNota: !!t.wrong });
     Sfx.tune(CONFIG.TUNER.NOTES[t.note].freq);
     if (t.opened.length) {
       t.opened.forEach(function (c, i) {
@@ -2377,11 +2415,23 @@ stems.forEach(stem => {
     else Music.play(this.level.music);
   }
 
+  // Termina la fanfarria de victoria: vuelve la música de la sala (o el charango)
+  updateVictory(dt) {
+    if (!(this.victoryT > 0)) return;
+    this.victoryT -= dt;
+    if (this.victoryT > 0) return;
+    Music.setRate(this.level.rate);
+    this.startRoomMusic();
+  }
+
   // Jefe que espera a otro (boss.after: id de la sala cuyo jefe hay que vencer antes)
+  // boss.allTuned: además, solo cuando todas las salas principales están afinadas
   bossReady(L) {
-    const need = L.boss && L.boss.after;
-    if (!need || !this.isStory()) return true;
-    const r = this.progress.rooms[need];
+    const B = L.boss || {};
+    if (!this.isStory()) return true;
+    if (B.allTuned && this.tunedCount() < CONFIG.ENDGAME.ROOMS) return false;
+    if (!B.after) return true;
+    const r = this.progress.rooms[B.after];
     return !!(r && r.boss);
   }
 

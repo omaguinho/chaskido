@@ -488,7 +488,7 @@ const LEVELS = [
       'BBBB..........J................G....S.........U.c...................................................................q..B',
       'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB..........................................................=====.B',
       'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB................................................................B',
-      'B...........................................................................................................%..........B',
+      'B.........................................................n.................................................%..........B',
       'B........................................................====..........$...............................$...............B',
       'B.................................................................$......................$$...........$................B',
       'B...............................................................................u...n.c................................B',
@@ -2970,9 +2970,10 @@ const LEVELS = [
     pitch: 0,
     bpm: 120,
     secret: true,
-    // El Rasgueador vuelve más fuerte; solo está si ya lo venciste en su sala de la zona 1 (j1).
+    // El Rasgueador vuelve más fuerte; solo está si ya lo venciste en su sala de la zona 1 (j1)
+    // y todos los niveles están afinados.
     // Al ganarle da la quena y pide liberar a todos los animales (después da la zampoña)
-    boss: { type: 'charanguero2', after: 'j1', gives: 'quena' },
+    boss: { type: 'charanguero2', after: 'j1', allTuned: true, gives: 'quena' },
     exits: [{ x: 0, y: 13, w: 1, h: 3, goes: 'n20' }],
     props: {
       '6,15': { texto: 'Mirador del Rasgueador. Se oye un charango entre la niebla.' }

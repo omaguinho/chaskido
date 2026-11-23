@@ -781,7 +781,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
     // Pantalla de inicio: la ciudad de noche con las notas que se escapan (js/prologo.js)
     // y el título armado con notas. Con CONFIG.TITLE_PORTADA en true usa portada.png
     drawLogo(ctx, time) {
-      if (Titulo.draw(ctx, time)) return;           // portada con parallax (si están sus capas)
+      if (Titulo.draw(ctx, time)) return;           // portada: paisajes de los niveles (js/titulo.js)
       if (CONFIG.TITLE_PORTADA && Sprites.drawFrame(ctx, 'portada', 0, 0, 0, false)) {
         if (!Sprites.drawFrame(ctx, 'logo', 0, W / 2 - 80, 8, false)) shadowText(ctx, 'CHASKIDO', W / 2, 24, '#ffd34d', 24, 'center');
         return;
@@ -795,7 +795,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       if (!canStart || Math.floor(time * 1.5) % 2 !== 0) return;
       const PRESS = ['Pulsa un botón', 'Press a button', 'Aperte um botão'];
       const str = firstTime ? PRESS[Math.floor(time / 1.333) % 3] : tr('Pulsa un botón');
-      shadowText(ctx, str, W / 2, Titulo.active() ? H - 16 : 118, '#fff6e0', 8, 'center');
+      shadowText(ctx, str, W / 2, 118, '#fff6e0', 8, 'center');
     },
 
     // Mensaje importante: pausa el juego hasta apretar Acción
@@ -876,7 +876,7 @@ if (game.mission === 'collect' || game.mission === 'escape' || game.mission === 
       ] : ['Todavía no hay sesiones.'];
       lines.forEach(function (l, i) { text(ctx, l, 20, 48 + i * 14, '#fbf6ec', 6); });
       if (note) text(ctx, note, W / 2, 118, '#7be0a0', 6, 'center');
-      text(ctx, 'Aceptar: descargar   ♪: nuevo jugador   Dash: probar envío   Pausa: volver', W / 2, H - 14, '#6b6580', 5, 'center');
+      text(ctx, 'Aceptar: descargar   ♪: nuevo jugador   Dash: probar envío   Arriba: desarrollador' + (Registro.isDev() ? ' (sí)' : '') + '   Pausa: volver', W / 2, H - 14, '#6b6580', 5, 'center');
     },
 
     drawTitle(ctx, time, items, index, plus, towerOpen) {

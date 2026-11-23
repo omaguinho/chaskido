@@ -27,7 +27,7 @@ class Vecinos {
         hello: Vecinos.saludo(v)
       };
     });
-    if (story && level.hasGate && level.boss && !level.gateOpen) this.addGuard(level);
+    if (story && level.hasGate && level.boss) this.addGuard(level);   // también con el portón abierto
   }
 
   // Guardián del portón (CONFIG.GATE_GUARD): espera junto al portón del jefe, del lado
@@ -45,9 +45,11 @@ class Vecinos {
     const side = A ? (A.left + A.right) / 2 < gate.x ? 1 : -1 : level.spawn.x < gate.x ? -1 : 1;
     const spot = Vecinos.findFloor(level, gate.x + side * G.DX * T, gate.y);
     if (A && spot.x > A.left && spot.x < A.right && spot.feet > A.top && spot.feet <= A.bottom + T) return;   // no dentro de la arena
+    const gd = PERSONAJES.GUARDIAS[level.id] || {};
+    const def = Object.assign({ id: 'guardia', guard: true, name: gd.name }, G, { saludos: gd.saludos || [G.BUBBLE], after: gd.despues || G.after });
     this.list.push({
-      def: Object.assign({ id: 'guardia', guard: true, name: CONFIG.CODEX.GUARD_NAMES[level.id] }, G), i: this.list.length, x: spot.x, feet: spot.feet,
-      vx: 0, vy: 0, hp: 1, inv: 0, down: false, line: 0, angry: false, hello: G.BUBBLE
+      def: def, i: this.list.length, x: spot.x, feet: spot.feet,
+      vx: 0, vy: 0, hp: 1, inv: 0, down: false, line: 0, angry: false, hello: Vecinos.saludo(def)
     });
   }
 
@@ -162,7 +164,9 @@ class Vecinos {
         const lines = (this.gave(v) || (v.def.guard && game.level.gateOpen)) && v.def.after ? v.def.after : v.def.lines;
         // Si ya cumpliste lo que pide, dice primero la frase del regalo
         const ready = !this.gave(v) && v.def.gift && v.def.gift.when && v.def.gift.when(game);
-        const line = ready ? lines[0] : lines[v.line % lines.length];
+        // El guardián con el portón abierto comenta cosas suyas, al azar
+        const chat = v.def.guard && game.level.gateOpen;
+        const line = ready ? lines[0] : chat ? lines[Math.floor(Math.random() * lines.length)] : lines[v.line % lines.length];
         // "Nombre: frase" (la frase se traduce aquí; el nombre es propio y no cambia)
         const name = v.def.name;
         const said = tr(typeof line === 'function' ? line(game) : line);

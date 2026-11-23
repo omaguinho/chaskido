@@ -291,6 +291,20 @@ const Sfx = (function () {
       tone({ freq: 110, to: 52, dur: 4, vol: 0.18, type: 'sawtooth', attack: 1.5, filter: 300 });
       noise({ dur: 4, vol: 0.2, freq: 120, to: 60, attack: 1.5 });
     },
+    // Claves: golpe seco de madera, digital y agudo, afinado en La 440
+    clave: function () {
+      tone({ freq: 440, dur: 0.09, vol: 0.16, type: 'triangle' });
+      tone({ freq: 2640, dur: 0.025, vol: 0.08, type: 'sine' });
+      noise({ dur: 0.02, vol: 0.06, freq: 3000, type: 'bandpass' });
+    },
+    // Último golpe a un jefe: como cuando el Silencio se robó la música, pero al revés
+    // y corto (cae hondo y se le escapa un brillo hacia arriba)
+    jefeCae: function () {
+      tone({ freq: 220, to: 40, dur: 1.6, vol: 0.45, type: 'sine', attack: 0.02 });
+      tone({ freq: 110, to: 30, dur: 1.4, vol: 0.16, type: 'sawtooth', attack: 0.02, filter: 500 });
+      noise({ dur: 1.5, vol: 0.22, freq: 900, to: 80 });
+      tone({ freq: 660, to: 1760, dur: 0.9, vol: 0.06, type: 'triangle', attack: 0.3 });
+    },
     collapse: function () {
       noise({ dur: 1.6, vol: 0.55, freq: 500, to: 60 });
       tone({ freq: 80, to: 30, dur: 1.5, vol: 0.5, type: 'sawtooth', filter: 400 });

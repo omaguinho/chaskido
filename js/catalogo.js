@@ -200,8 +200,8 @@ const CATALOGO = (function () {
       como: 'Abajo dentro del agua para sumergirte.', abre: 'Galerías bajo el agua y la cascada a la Ciudadela.', gana: 'Rana Gigante (Bajo el Espejo)', estado: 'hecho' },
     { id: 'shrink',     nombre: 'Encogerse',       region: 6, color: '#F7C9A8', simbolo: 'Círculo pequeño dentro de un círculo punteado',
       como: 'Abajo dos veces: la papa se achica; otra vez para crecer.', abre: 'Túneles de un bloque.', gana: 'Pez Linterna Abisal (Fondo Abisal)', estado: 'nuevo' },
-    { id: 'shell',      nombre: 'Fermata', region: 7, color: '#F7E3A1', simbolo: 'Arco con un punto (𝄐)',
-      como: 'Quieta, mantén Acción (E / Cuadrado): el tiempo se detiene. Los enemigos cercanos y sus disparos quedan congelados 3 segundos.', abre: 'Plataformas y puertas escondidas en la niebla.', gana: 'Cóndor de Bronce (Mirador del Eco)', estado: 'nuevo' },
+    { id: 'shell',      nombre: 'Claves', region: 7, color: '#C99A62', simbolo: 'Dos palitos de madera cruzados',
+      como: 'Acción (E / Cuadrado): un golpe de claves rompe los proyectiles cercanos, también los de los jefes. Mantén: suena la clave del son (3-2) y cada golpe hace lo mismo.', abre: 'Plataformas y puertas escondidas en la niebla.', gana: 'Cóndor de Bronce (Mirador del Eco)', estado: 'nuevo' },
     { id: 'quena',      nombre: 'Llamado de la quena', region: 7, color: '#9FE3C8', simbolo: 'Quena de caña',
       como: 'Cerca de un animal, toca Acción (E / Cuadrado): la quena lo libera. Pasa al fondo, pasea y baila como antes, sin atacar.', abre: 'El Códex y la misión del Rasgueador: liberar a todos los animales.', gana: 'El Rasgueador Maestro (Mirador del Rasgueador, en el Templo sin Nombre)', estado: 'nuevo' },
     { id: 'zampona',    nombre: 'Zampoña',         region: 7, color: '#F2A7C9', simbolo: 'Siete cañas en escalera',
@@ -384,9 +384,9 @@ const CATALOGO = (function () {
       que: 'Arriba y abajo para trepar; salto para soltarte.' },
     // --- Región 7 ---
     { id: 'oculta',     ch: 'h', grupo: 'terreno', region: 7, nombre: 'Plataforma oculta', color: '#ffcf4d', forma: 'half', ic: '?', estado: 'nuevo',
-      que: 'Invisible hasta que usas la fermata.', pide: 'shell' },
+      que: 'Invisible hasta que suenan las claves.', pide: 'shell' },
     { id: 'niebla',     ch: 'O', grupo: 'terreno', region: 7, nombre: 'Niebla', color: '#c4b5ff', forma: 'water', estado: 'nuevo',
-      que: 'Tapa lo que hay detrás; la fermata la despeja un rato.' },
+      que: 'Tapa lo que hay detrás; las claves la despejan un rato.' },
 
     // --- Objetos ---
     { id: 'inicio',     ch: 'P', grupo: 'objeto', region: 0, nombre: 'Inicio', color: '#ffb347', forma: 'icon', ic: 'P', estado: 'hecho',
@@ -498,7 +498,7 @@ const CATALOGO = (function () {
     [7, 'eco',         'Eco',                  '#8a7ad8', 'Sombra que copia tus movimientos con retraso. Pisarla.'],
     [7, 'centinela',   'Centinela de piedra',  '#8a87a8', 'Dispara cuando estás en su vista. Pisarlo por arriba.'],
     [7, 'lampara',     'Lámpara flotante',     '#ffe9a8', 'Ve a través de la niebla y te sigue. Pisarla.'],
-    [7, 'ojoNiebla',   'Ojo de niebla',        '#c4b5ff', 'Abre la niebla a su alrededor y lanza destellos. Fermata para verlo.'],
+    [7, 'ojoNiebla',   'Ojo de niebla',        '#c4b5ff', 'Abre la niebla a su alrededor y lanza destellos. claves para verlo.'],
     [8, 'sombraSilencio', 'Sombra del Silencio', '#5a5670', 'Versiones rápidas de enemigos anteriores.']
   ];
   POLIEDROS.forEach(function (c) {

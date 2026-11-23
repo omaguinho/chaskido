@@ -131,6 +131,7 @@ class ArenaBoss {
 
   hit() {
     this.hp--;
+    if (this.hp <= 0) Sfx.play('jefeCae');   // el último golpe: la música que se le escapa
     this.vx = 0;
     this.setState('hurt', CONFIG.BOSSES.HURT_TIME);
   }
@@ -3462,6 +3463,46 @@ class Silencio extends EcoSilencio {
 
   spriteName() { return this.formSprite(super.spriteName()); }
   baseSprite() { return this.formSprite(super.baseSprite()); }
+
+  // Efectos del jefe final (más fuertes en cada forma): un aura que se traga notas de
+  // colores, anillos oscuros que laten y un destello blanco cuando recibe un golpe
+  drawExtras(ctx) {
+    const FX = CONFIG.BOSSES.silencio.FX, k = this.form / 3, t = this.animTime;
+    const cx = this.centerX(), cy = this.y + this.h / 2;
+    if (this.state !== 'dying') {
+      // Anillos que laten hacia adentro
+      for (let i = 0; i < FX.RINGS; i++) {
+        const p = 1 - ((t * FX.RING_SPEED + i / FX.RINGS) % 1);
+        ctx.globalAlpha = (1 - p) * 0.35 * (0.5 + k);
+        ctx.strokeStyle = FX.RING;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, this.w * 0.6 + p * FX.REACH, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // Notas de colores que caen en espiral hacia su centro (la música que se traga)
+      const colors = FX.NOTES, n = Math.round(FX.NOTE_COUNT * (0.5 + k));
+      for (let i = 0; i < n; i++) {
+        const p = 1 - ((t * FX.NOTE_SPEED + i / n) % 1);
+        const a = i * 2.4 + t * 1.5 + p * 3;
+        const r = this.w * 0.4 + p * FX.REACH;
+        ctx.globalAlpha = Math.min(1, p * 2) * 0.85;
+        BossShow.drawNote(ctx, cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.7, colors[i % colors.length], i % 3);
+      }
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 1;
+    }
+    // Destello al recibir un golpe
+    if (this.state === 'hurt') {
+      ctx.globalAlpha = 0.6 * Math.max(0, this.timer / CONFIG.BOSSES.HURT_TIME);
+      ctx.fillStyle = '#fff6e0';
+      ctx.beginPath();
+      ctx.arc(cx, cy, this.w * (1.6 - this.timer), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    super.drawExtras(ctx);
+  }
 }
 
 const BOSS_TYPES = {

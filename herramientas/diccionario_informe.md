@@ -99,6 +99,15 @@ En el JSON, la parte `jefes` dice por cada jefe: intentos, segundos de cada pele
 |---|---|
 | `prologo_primer_pisoton_s` | Segundos en la sala hasta vencer al primer enemigo (la hormiga) |
 | `prologo_botones_antes` | Botones distintos que probó antes de ese primer pisotón. Muchos = busca un misterio; pocos y mucho tiempo = está perdido |
+| `seg_sala_final` | Segundos en la sala donde terminó. Mucho tiempo = probablemente se quedó atascado ahí |
+| `seg_sin_sala_nueva` | Segundos desde la última vez que pisó una sala nueva hasta que se fue. Mucho = no encontraba por dónde seguir |
+| `ruta_final` | Las últimas 5 salas con los segundos en cada una (ej. `n2:40 n5:300`) |
+| `muertes_por_sala` | Muertes agrupadas por sala y causa (ej. `p2:eco×10`). Muestra el punto más difícil |
+| `jefe_vida_al_perder` | Vida que le quedaba al jefe cada vez que perdió (ej. `eco:3,1`). Baja = estuvo cerca; alta = no tenía chance |
+| `diapason_otra_nota` | Veces que tocó el diapasón junto a un muro de otra nota (sabe qué hacer, pero no tiene esa nota) |
+| `carteles_leidos` | Carteles distintos que leyó |
+| `claves_usos` / `claves_repelidos` | Veces que usó las claves y proyectiles que desvió con ellas |
+| `dev` | TRUE si es una partida del desarrollador (se marca en la pantalla del informe con Arriba) |
 
 ## Perfil
 

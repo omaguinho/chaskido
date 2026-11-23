@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAME_VERSION: 'v98',   // se ve abajo a la izquierda en la pantalla de inicio
+  GAME_VERSION: 'v99',   // se ve abajo a la izquierda en la pantalla de inicio
   WIDTH: 320,             // la cámara muestra 20 x 11 bloques
   HEIGHT: 180,
   TILE: 16,
@@ -113,9 +113,9 @@ const CONFIG = {
       text: 'Ganaste el zapateo: abajo + salto en el aire. Rompe los suelos agrietados.' },
     { id: 'dive',       name: 'Buceo',  key: 'KeyI',   say: 'el buceo',
       text: 'Ganaste el buceo: abajo dentro del agua para sumergirte.' },
-    // Fermata (id 'shell' por las partidas guardadas): la da el Cóndor de Bronce
-    { id: 'shell',      name: 'Fermata', key: 'KeyO',  say: 'la fermata',
-      text: 'Ganaste la fermata: quieta, mantén E o Cuadrado y el tiempo se detiene un momento. Los enemigos y sus disparos se congelan, y aparece lo escondido en la niebla.' },
+    // Claves (id 'shell' por las partidas guardadas): las da el Cóndor de Bronce
+    { id: 'shell',      name: 'Claves', key: 'KeyO',  say: 'las claves',
+      text: 'Ganaste las claves: toca E o Cuadrado y su golpe seco rompe los proyectiles cercanos, también los de los jefes. Si las mantienes, suena la clave del son. Su sonido revela lo escondido en la niebla.' },
     { id: 'quena',      name: 'Quena', key: 'KeyH',  say: 'el llamado de la quena',
       text: 'Ganaste el llamado de la quena: cerca de un animal, toca E o Cuadrado y queda libre. Ahora entiendes a los animales: mira el Códex en la pausa.' },
     { id: 'zampona',    name: 'Zampoña', key: 'KeyJ',  say: 'la zampoña',
@@ -190,17 +190,20 @@ const CONFIG = {
            'cuygig_mirar', 'gusano_quieto', 'toro_quieto', 'oso_quieto', 'ranagig_quieta', 'condor_volar', 'eco_flotar']
   },
 
-  // ---------- Fermata (poder del Cóndor de Bronce, sala 21; id 'shell') ----------
-  // Quieta (sin moverte) y con E o Cuadrado apretado HOLD segundos: el tiempo se sostiene,
-  // como una nota con fermata. La onda congela a los enemigos y sus disparos FREEZE
-  // segundos, hace aparecer las plataformas ocultas (h) para siempre y despeja la niebla (O)
+  // ---------- Claves (poder del Cóndor de Bronce, sala 21; id 'shell') ----------
+  // Acción: un golpe de claves (sonido digital agudo en La 440) cuya onda rompe los
+  // proyectiles cercanos y revela plataformas ocultas (h) y despeja la niebla (O).
+  // Mantenido: suena la clave del son 3-2 al pulso de la música, un golpe por nota.
   SHELL: {
-    HOLD: 0.45,           // segundos apretando antes de soplar
-    RADIUS: 7,            // bloques que alcanza la onda
+    REPEL: 4,             // bloques donde la onda desvía (rompe) proyectiles
+    MAX_SHOT: 16,         // solo proyectiles chicos (px): no las olas ni columnas
+    RADIUS: 7,            // bloques donde revela lo escondido en la niebla
     CLEAR_TIME: 6,        // segundos que la niebla queda despejada
-    COOLDOWN: 0.8,
-    WAVE_TIME: 0.9,       // lo que dura el dibujo de la onda
-    FREEZE: 3,            // segundos que quedan congelados los enemigos cercanos y sus disparos
+    COOLDOWN: 0.25,       // entre toques
+    HOLD: 0.35,           // segundos apretando para que empiece la clave del son
+    CLAVE: [0, 3, 6, 10, 12],   // clave del son 3-2, en corcheas de dos compases (16)
+    WAVE_TIME: 0.6,       // lo que dura el dibujo de la onda
+    COLOR: '#c99a62',     // madera
     FOG_ALPHA: 0.78,      // qué tan tapada está la niebla (0 a 1)
     FOG_COLOR: '#c9bfe6'
   },
@@ -358,7 +361,7 @@ const CONFIG = {
   RANKING: {
     API: 'https://api.lootlocker.io',
     KEY: 'dev_4ceac918bf6b4616bd5bb29a6c60f6c0',
-    VERSION: '0.98.0.0',
+    VERSION: '0.99.0.0',
     COUNT: 10,             // cuántos se muestran
     REFRESH: 30,           // segundos antes de volver a pedir la lista
     NAME_MAX: 8,
@@ -463,7 +466,9 @@ const CONFIG = {
       p2: { teclado: 'teclado_zona_1.m4a', bajo: 'bajo_zona_1.m4a', percusion: 'percusion_zona_1.m4a', tema: 'tema_zona_1_3voces.m4a' },
       n2: z1,
       n5: { percusion: 'percusion_n5.mp3', kalimba: 'kalimba_n5.mp3', violin: 'violin_n5.mp3', tema: 'tema_n5.mp3' },
-      n3: z1,                                // Guardián del Tambor: los mismos instrumentos del nivel 1
+      // Guardián del Tambor: los del nivel 1 más el teclado 2, sobre la zona 1 a 4 voces
+      n3: { percusion: 'percusion_zona_1.m4a', teclado: 'teclado_zona_1.m4a', bajo: 'bajo_zona_1.m4a',
+            teclado2: 'teclado2_zona_1.mp3', tema: 'tema_zona_1_4voces.m4a' },
       n1: z2, n4: z2,
       n6: { bajo: 'bajo_n6.mp3', percusion: 'percusion_n6.mp3', teclado: 'teclado_n6.mp3', tema: 'tema_n6.mp3' },
       // Zona 3: el bosque suena con la música del pantano y el pantano con el vals del bosque
@@ -510,6 +515,9 @@ const CONFIG = {
   },
 
   // Música de cada jefe al cerrarse la arena (por sala)
+  // Al vencer a un jefe: el tema de la zona 1 a 100 BPM (RATE = 100/120) por TIME segundos
+  // (4 compases); después vuelve la música de la sala
+  VICTORY: { TRACK: 'main', RATE: 100 / 120, TIME: 9.6 },
   BOSS_MUSIC: {
     p2: { track: 'main' },                  // Eco del Silencio (prólogo): zona 1 a 3 voces
     n3: { track: 'main' },                  // Guardián del Tambor: zona 1 a 3 voces
@@ -898,6 +906,9 @@ const CONFIG = {
       IDLE_TIME: 1, HOVER: 4.6, SPIRAL_TIME: 3, SPIRAL_EVERY: 0.13, SPIRAL_SPEED: 70, SPIRAL_TURN: 2.8,
       COLUMNS: 4, COLUMN_WARN: 0.8, COLUMN_SPEED: 290, SLAM_SPEED: 420, WAVE_SPEED: 140,
       TIRED_TIME: 2.2, RISE_SPEED: 100,
+      // Efectos del jefe final (Silencio.drawExtras): anillos, notas que se traga
+      FX: { RINGS: 3, RING_SPEED: 0.6, RING: '#2a1a4a', REACH: 70, NOTE_COUNT: 10, NOTE_SPEED: 0.35,
+            NOTES: ['#e0465a', '#ffd34d', '#6bd17a', '#3ec8c8', '#9fd3e0', '#c9b8e3', '#f4b6c2'] },
       // Las tres peleas: lo que cambia en cada forma
       FORMS: [
         { NAME: 'EL SILENCIO', HP: 6 },
